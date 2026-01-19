@@ -1,0 +1,175 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\StoreMemberRequest;
+use App\Http\Requests\UpdateMemberRequest;
+use App\Models\Member;
+use App\Services\ActivityLogger;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
+
+class MemberController extends Controller
+{
+    use AuthorizesRequests;
+
+    public function __construct(
+        protected ActivityLogger $activityLogger
+    ) {
+    }
+
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
+    {
+        $this->authorize('viewAny', Member::class);
+
+        $query = Member::query();
+
+        // Search
+        if ($request->filled('search')) {
+            $query->search($request->search);
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            if ($request->status === 'active') {
+                $query->active();
+            } elseif ($request->status === 'inactive') {
+                $query->inactive();
+            }
+        }
+
+        $members = $query->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        return Inertia::render('Members/Index', [
+            'members' => $members,
+            'filters' => $request->only(['search', 'status']),
+        ]);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        $this->authorize('create', Member::class);
+
+        return Inertia::render('Members/Create');
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(StoreMemberRequest $request)
+    {
+        $data = $request->validated();
+
+        // Handle photo upload
+        if ($request->hasFile('photo')) {
+            $data['photo'] = $request->file('photo')->store('members/photos', 'public');
+        }
+
+        $member = Member::create($data);
+
+        // Log activity
+        $this->activityLogger->logCreate(
+            $member,
+            "Created new member: {$member->full_name} ({$member->member_code})"
+        );
+
+        return redirect()->route('members.index')
+            ->with('success', 'Anggota berhasil ditambahkan.');
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Member $member)
+    {
+        $this->authorize('view', $member);
+
+        $member->load(['user']);
+
+        // Load contribution history (will be empty until Phase 4)
+        // $contributions = $member->contributions()->latest()->get();
+
+        // Load event participation (will be empty until Phase 3)
+        // $events = $member->events()->latest()->get();
+
+        return Inertia::render('Members/Show', [
+            'member' => $member,
+            // 'contributions' => $contributions ?? [],
+            // 'events' => $events ?? [],
+        ]);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Member $member)
+    {
+        $this->authorize('update', $member);
+
+        return Inertia::render('Members/Edit', [
+            'member' => $member,
+        ]);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(UpdateMemberRequest $request, Member $member)
+    {
+        $data = $request->validated();
+
+        // Handle photo upload
+        if ($request->hasFile('photo')) {
+            // Delete old photo if exists
+            if ($member->photo) {
+                Storage::disk('public')->delete($member->photo);
+            }
+            $data['photo'] = $request->file('photo')->store('members/photos', 'public');
+        }
+
+        $oldData = $member->toArray();
+        $member->update($data);
+
+        // Log activity
+        $this->activityLogger->logUpdate(
+            $member,
+            "Updated member: {$member->full_name} ({$member->member_code})",
+            ['old' => $oldData, 'new' => $member->toArray()]
+        );
+
+        return redirect()->route('members.index')
+            ->with('success', 'Data anggota berhasil diperbarui.');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Member $member)
+    {
+        $this->authorize('delete', $member);
+
+        $memberName = $member->full_name;
+        $memberCode = $member->member_code;
+
+        $member->delete();
+
+        // Log activity
+        $this->activityLogger->logDelete(
+            $member,
+            "Deleted member: {$memberName} ({$memberCode})"
+        );
+
+        return redirect()->route('members.index')
+            ->with('success', 'Anggota berhasil dihapus.');
+    }
+}

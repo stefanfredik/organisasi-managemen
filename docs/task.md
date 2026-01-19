@@ -11,9 +11,9 @@
 - [x] Implement activity logging system
 
 ## Phase 2: Member Management Module
-- [ ] Create Member model, migration, and factory
-- [ ] Implement MemberController with CRUD operations
-- [ ] Create Member Policy for role-based access
+- [x] Create Member model, migration, and factory
+- [x] Implement MemberController with CRUD operations
+- [/] Create Member Policy for role-based access
 - [ ] Build Vue components (Index, Create, Edit, Show)
 - [ ] Implement member photo upload functionality
 - [ ] Create member search and filter functionality
