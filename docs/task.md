@@ -21,14 +21,14 @@
 - [x] Build member event participation history view
 
 ## Phase 3: Event Management Module
-- [ ] Create Event and EventParticipant models and migrations
-- [ ] Implement EventController with CRUD operations
-- [ ] Create Event Policy for role-based access
-- [ ] Build Vue components (Index, Create, Edit, Show, Calendar)
-- [ ] Implement event participant management
-- [ ] Create event documentation upload functionality
-- [ ] Build calendar view for events
-- [ ] Implement event status management (draft/published/completed)
+- [x] Create Event and EventParticipant models and migrations
+- [x] Implement EventController with CRUD operations
+- [x] Build Vue components (Index, Create, Edit, Show)
+- [x] Implement documentation upload functionality
+- [x] Implement participant management and attendance tracking
+- [x] Display upcoming events on public pages
+- [x] Build calendar view for events
+- [x] Implement event status management (draft/published/completed)
 
 ## Phase 4: Financial Management Module
 - [ ] Create Wallet, Finance, ContributionType, Contribution models
