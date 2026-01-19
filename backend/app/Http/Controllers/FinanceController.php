@@ -10,11 +10,38 @@ use Illuminate\Support\Facades\DB;
 
 class FinanceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $query = Finance::with(['wallet', 'creator']);
+
+        // Filters
+        $query->when($request->search, function ($q, $search) {
+            $q->where(function ($sub) use ($search) {
+                $sub->where('description', 'like', "%{$search}%")
+                    ->orWhere('category', 'like', "%{$search}%");
+            });
+        });
+
+        $query->when($request->wallet_id, function ($q, $walletId) {
+            $q->where('wallet_id', $walletId);
+        });
+
+        $query->when($request->type, function ($q, $type) {
+            $q->where('type', $type);
+        });
+
+        $query->when($request->date_from, function ($q, $dateFrom) {
+            $q->whereDate('transaction_date', '>=', $dateFrom);
+        });
+
+        $query->when($request->date_to, function ($q, $dateTo) {
+            $q->whereDate('transaction_date', '<=', $dateTo);
+        });
+
         return Inertia::render('Finances/Index', [
-            'finances' => Finance::with(['wallet', 'creator'])->latest()->paginate(10),
+            'finances' => $query->latest('transaction_date')->latest('id')->paginate(10)->withQueryString(),
             'wallets' => Wallet::where('is_active', true)->get(),
+            'filters' => $request->only(['search', 'wallet_id', 'type', 'date_from', 'date_to']),
         ]);
     }
 
