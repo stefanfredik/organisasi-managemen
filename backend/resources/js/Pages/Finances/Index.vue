@@ -86,7 +86,39 @@ const walletOptions = props.wallets.map(w => ({ value: w.id, label: w.name }));
 const typeOptions = [
     { value: 'in', label: 'Pemasukan' },
     { value: 'out', label: 'Pengeluaran' },
+    { value: 'out', label: 'Pengeluaran' },
 ];
+
+const categories = {
+    in: [
+        'Iuran Anggota',
+        'Donasi / Sumbangan',
+        'Sponsorship',
+        'Dana Hibah',
+        'Penjualan / Fundraising',
+        'Bunga Bank',
+        'Pengembalian Dana',
+        'Lainnya'
+    ],
+    out: [
+        'Konsumsi & Logistik',
+        'Transportasi & Perjalanan',
+        'Perlengkapan & Peralatan',
+        'Sewa Tempat / Gedung',
+        'Listrik, Air & Internet',
+        'Cetak, Fotokopi & ATK',
+        'Honorarium / Jasa',
+        'Pemeliharaan & Perbaikan',
+        'Acara / Kegiatan',
+        'Bantuan Sosial',
+        'Promosi & Publikasi',
+        'Lainnya'
+    ]
+};
+
+watch(() => form.type, () => {
+    form.category = '';
+});
 </script>
 
 <template>
@@ -244,82 +276,142 @@ const typeOptions = [
 
         <!-- Modal Catat Transaksi -->
         <Modal :show="showModal" @close="showModal = false">
-            <div class="p-8">
-                <div class="flex items-center justify-between mb-8">
-                    <h2 class="text-xl font-black text-gray-900 uppercase tracking-tight">Catat Transaksi Baru</h2>
-                    <button @click="showModal = false" class="text-gray-400 hover:text-gray-600 transition">
+            <div class="bg-white rounded-2xl overflow-hidden">
+                <div class="bg-gray-50/50 p-6 border-b border-gray-100 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-black text-gray-900 uppercase tracking-tight">Catat Transaksi Baru</h2>
+                        <p class="text-xs text-gray-500 mt-1">Masukkan detail pemasukan atau pengeluaran.</p>
+                    </div>
+                    <button @click="showModal = false" class="text-gray-400 hover:text-gray-600 transition p-2 rounded-full hover:bg-white">
                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
 
-                <form @submit.prevent="submit" class="space-y-6">
-                    <div class="grid grid-cols-2 gap-6">
-                        <div>
-                            <InputLabel value="Jenis Transaksi" class="text-xs font-black uppercase text-gray-400 mb-2" />
-                            <div class="flex gap-2">
-                                <button type="button" @click="form.type = 'in'" 
-                                    class="flex-1 py-3 px-4 rounded-xl border-2 font-bold transition flex items-center justify-center gap-2"
-                                    :class="form.type === 'in' ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-100 text-gray-400 hover:bg-gray-50'">
-                                    <span class="w-2 h-2 rounded-full bg-green-500"></span> Pemasukan
-                                </button>
-                                <button type="button" @click="form.type = 'out'" 
-                                    class="flex-1 py-3 px-4 rounded-xl border-2 font-bold transition flex items-center justify-center gap-2"
-                                    :class="form.type === 'out' ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-100 text-gray-400 hover:bg-gray-50'">
-                                    <span class="w-2 h-2 rounded-full bg-red-500"></span> Pengeluaran
-                                </button>
+                <div class="p-8">
+                    <form @submit.prevent="submit" class="space-y-6">
+                        
+                        <!-- Main Type Selector (Segmented Control Style) -->
+                        <div class="grid grid-cols-2 gap-4 p-1 bg-gray-100/80 rounded-2xl">
+                            <button type="button" @click="form.type = 'in'" 
+                                class="relative py-3 rounded-xl font-black uppercase tracking-wider text-xs transition-all duration-200 flex items-center justify-center gap-2 overflow-hidden"
+                                :class="form.type === 'in' ? 'bg-white shadow-sm text-green-600 ring-2 ring-green-500/20' : 'text-gray-400 hover:text-gray-600'">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12" /></svg>
+                                Pemasukan
+                            </button>
+                            <button type="button" @click="form.type = 'out'" 
+                                class="relative py-3 rounded-xl font-black uppercase tracking-wider text-xs transition-all duration-200 flex items-center justify-center gap-2 overflow-hidden"
+                                :class="form.type === 'out' ? 'bg-white shadow-sm text-red-600 ring-2 ring-red-500/20' : 'text-gray-400 hover:text-gray-600'">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6" /></svg>
+                                Pengeluaran
+                            </button>
+                        </div>
+
+                        <!-- Amount Input (Large & Centered) -->
+                        <div class="relative">
+                            <label class="block text-center text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">
+                                Nominal (Rp)
+                            </label>
+                            <div class="relative max-w-xs mx-auto">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">Rp</span>
+                                <input type="number" v-model="form.amount" required step="0.01" placeholder="0"
+                                    class="w-full pl-12 pr-4 py-4 text-3xl font-black text-center border-2 border-gray-100 rounded-2xl focus:border-indigo-500 focus:ring-0 transition placeholder-gray-200" 
+                                    :class="form.type === 'in' ? 'text-green-600' : 'text-red-600'" />
                             </div>
                         </div>
-                        <div>
-                            <InputLabel value="Tanggal" class="text-xs font-black uppercase text-gray-400 mb-2" />
-                            <TextInput type="date" class="w-full border-gray-100 rounded-xl font-bold" v-model="form.transaction_date" required />
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Wallet Selection with Info -->
+                            <div class="space-y-2">
+                                <InputLabel value="Dompet / Sumber Dana" class="text-[10px] font-black uppercase text-gray-400" />
+                                <div class="relative">
+                                    <select v-model="form.wallet_id" class="w-full pl-10 pr-4 py-3 border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:ring-indigo-500 focus:border-indigo-500 appearance-none bg-white">
+                                        <option value="">-- Pilih Dompet --</option>
+                                        <option v-for="wallet in wallets" :key="wallet.id" :value="wallet.id">
+                                            {{ wallet.name }}
+                                        </option>
+                                    </select>
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                                    </div>
+                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                                    </div>
+                                </div>
+                                <!-- Informative Balance -->
+                                <div v-if="form.wallet_id" class="flex items-center justify-between px-3 py-2 bg-indigo-50 rounded-lg border border-indigo-100">
+                                    <span class="text-[10px] uppercase font-bold text-indigo-400">Saldo Saat Ini</span>
+                                    <span class="text-xs font-black text-indigo-700 font-mono">
+                                        {{ formatCurrency(wallets.find(w => w.id === form.wallet_id)?.balance || 0) }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Date Input -->
+                            <div class="space-y-2">
+                                <InputLabel value="Tanggal Transaksi" class="text-[10px] font-black uppercase text-gray-400" />
+                                <div class="relative">
+                                    <input type="date" v-model="form.transaction_date" required class="w-full pl-10 pr-4 py-3 border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:ring-indigo-500 focus:border-indigo-500" />
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
-                    <div>
-                        <InputLabel value="Pilih Dompet (Kas)" class="text-xs font-black uppercase text-gray-400 mb-2" />
-                        <select v-model="form.wallet_id" class="w-full border-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl shadow-sm font-bold text-gray-700" required>
-                            <option value="">-- Pilih Dompet --</option>
-                            <option v-for="wallet in wallets" :key="wallet.id" :value="wallet.id">
-                                {{ wallet.name }} (Saldo: {{ formatCurrency(wallet.balance) }})
-                            </option>
-                        </select>
-                        <InputError class="mt-2" :message="form.errors.wallet_id" />
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-6">
-                        <div>
-                            <InputLabel value="Kategori" class="text-xs font-black uppercase text-gray-400 mb-2" />
-                            <TextInput type="text" class="w-full border-gray-100 rounded-xl font-bold" v-model="form.category" required placeholder="Misal: Konsumsi, Sewa, Donasi" />
-                            <InputError class="mt-2" :message="form.errors.category" />
+                        <!-- Category -->
+                        <div class="space-y-2">
+                            <InputLabel value="Kategori" class="text-[10px] font-black uppercase text-gray-400" />
+                            <div class="relative">
+                                <select v-model="form.category" required class="w-full pl-10 pr-10 py-3 border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:ring-indigo-500 focus:border-indigo-500 appearance-none bg-white">
+                                    <option value="" disabled selected>-- Pilih Kategori --</option>
+                                    <option v-for="cat in categories[form.type]" :key="cat" :value="cat">
+                                        {{ cat }}
+                                    </option>
+                                </select>
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
+                                </div>
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <InputLabel value="Jumlah (Rp)" class="text-xs font-black uppercase text-gray-400 mb-2" />
-                            <TextInput type="number" step="0.01" class="w-full border-gray-100 rounded-xl font-black text-indigo-600" v-model="form.amount" required placeholder="0" />
-                            <InputError class="mt-2" :message="form.errors.amount" />
+
+                        <!-- Description -->
+                        <div class="space-y-2">
+                             <InputLabel value="Keterangan (Opsional)" class="text-[10px] font-black uppercase text-gray-400" />
+                            <textarea v-model="form.description" rows="2" placeholder="Tulis rincian tambahan..." class="w-full p-4 border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:ring-indigo-500 focus:border-indigo-500 placeholder-gray-400 resize-none bg-gray-50/30"></textarea>
                         </div>
-                    </div>
 
-                    <div>
-                        <InputLabel value="Keterangan" class="text-xs font-black uppercase text-gray-400 mb-2" />
-                        <textarea v-model="form.description" rows="3" class="w-full border-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl shadow-sm font-medium" placeholder="Tulis rincian transaksi di sini..." required></textarea>
-                        <InputError class="mt-2" :message="form.errors.description" />
-                    </div>
+                         <!-- File Upload -->
+                        <div class="group relative border-2 border-dashed border-gray-200 hover:border-indigo-400 rounded-2xl p-6 text-center transition-colors cursor-pointer" @click="$refs.fileInput.click()">
+                            <input ref="fileInput" type="file" @input="form.receipt = $event.target.files[0]" accept="image/*" class="hidden" />
+                            <div class="space-y-1">
+                                <svg class="mx-auto h-8 w-8 text-gray-400 group-hover:text-indigo-500 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                <div class="text-xs text-gray-500">
+                                    <span v-if="!form.receipt" class="font-bold text-indigo-600 group-hover:text-indigo-700">Upload Bukti Foto</span>
+                                    <span v-else class="font-bold text-green-600 truncate max-w-[200px] block mx-auto">{{ form.receipt.name }}</span>
+                                </div>
+                                <p v-if="!form.receipt" class="text-[10px] text-gray-400">PNG, JPG, max 2MB</p>
+                            </div>
+                        </div>
 
-                    <div class="bg-gray-50 p-6 rounded-2xl border-2 border-dashed border-gray-100">
-                        <InputLabel value="Lampirkan Bukti Foto (Opsional)" class="text-[10px] font-black uppercase text-indigo-400 mb-3" />
-                        <input type="file" @input="form.receipt = $event.target.files[0]" accept="image/*" class="block w-full text-xs text-gray-400 file:mr-4 file:py-2.5 file:px-6 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 transition file:cursor-pointer" />
-                        <InputError class="mt-2" :message="form.errors.receipt" />
-                    </div>
-
-                    <div class="flex justify-end gap-3 pt-4">
-                        <SecondaryButton @click="showModal = false" class="px-8 py-3 rounded-xl"> Batal </SecondaryButton>
-                        <PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing" class="px-10 py-3 rounded-xl shadow-lg shadow-indigo-100 font-black uppercase tracking-widest">
-                            Simpan Transaksi
-                        </PrimaryButton>
-                    </div>
-                </form>
+                        <div class="flex items-center gap-4 pt-4 border-t border-gray-100 mt-6">
+                            <button type="button" @click="showModal = false" class="flex-1 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest text-gray-500 hover:bg-gray-100 transition">
+                                Batal
+                            </button>
+                            <button type="submit" 
+                                class="flex-[2] py-3.5 rounded-xl text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-indigo-200 transition transform active:scale-95 flex items-center justify-center gap-2"
+                                :class="form.processing ? 'bg-indigo-400 cursor-wait' : 'bg-indigo-600 hover:bg-indigo-700 hover:shadow-indigo-300'">
+                                <svg v-if="!form.processing" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                                <span v-if="form.processing">Menyimpan...</span>
+                                <span v-else>Simpan Transaksi</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </Modal>
 
