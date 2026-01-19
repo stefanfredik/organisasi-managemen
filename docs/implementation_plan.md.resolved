@@ -1,0 +1,1091 @@
+# Implementation Plan - Sistem Manajemen Organisasi
+
+Rencana implementasi bertahap untuk membangun Sistem Manajemen Organisasi berbasis web menggunakan Laravel 12 + Vue.js 3 + Inertia.js sesuai dengan dokumen SRS.
+
+---
+
+## Technology Stack
+
+### Backend
+- **Framework**: Laravel 12 (PHP 8.2+)
+- **Authentication**: Laravel Breeze
+- **ORM**: Eloquent
+- **Bridge**: Inertia.js Laravel Adapter
+
+### Frontend
+- **Framework**: Vue.js 3 (Composition API)
+- **Bridge**: Inertia.js Vue Adapter
+- **CSS**: Tailwind CSS 3.x
+- **Build Tool**: Vite
+
+### Database & Cache
+- **Database**: MySQL 8.0+
+- **Cache**: Redis 6+
+
+### DevOps
+- **Containerization**: Docker + Docker Compose
+- **Web Server**: Nginx
+- **Process Manager**: Supervisor
+
+---
+
+## Phase 1: Foundation & Authentication
+
+### Duration: 1-2 weeks
+
+### Objectives
+Membangun fondasi proyek dengan setup Laravel Breeze Vue, konfigurasi Docker, dan implementasi sistem autentikasi berbasis role.
+
+### Deliverables
+
+#### 1.1 Project Setup
+- [x] Install Laravel 12 dengan Breeze Vue starter kit
+- [ ] Configure `.env` file dengan database credentials
+- [ ] Setup Docker Compose dengan services: app, nginx, mysql, redis, phpmyadmin
+- [ ] Configure Vite untuk asset bundling
+- [ ] Install dependencies (Composer + NPM)
+
+#### 1.2 Database Foundation
+- [ ] Create migrations untuk core tables:
+  - `users` (extend Breeze default dengan `role` dan `status`)
+  - `password_reset_tokens` (Breeze default)
+  - `sessions` (Breeze default)
+  - `activity_logs`
+- [ ] Create seeders untuk:
+  - Admin user default
+  - Sample users untuk setiap role
+- [ ] Run migrations dan seeders
+
+#### 1.3 Authentication & Authorization
+- [ ] Extend User model dengan role enum: `admin`, `ketua`, `bendahara`, `sekretaris`, `anggota`
+- [ ] Create `HasRole` trait untuk User model
+- [ ] Create `RoleMiddleware` untuk route protection
+- [ ] Setup Laravel Gates untuk basic permissions
+- [ ] Configure `HandleInertiaRequests` middleware untuk shared data:
+  - User info (id, name, email, role)
+  - Flash messages (success, error, warning, info)
+  - Permissions object
+
+#### 1.4 Base Layouts
+- [ ] Customize `AuthenticatedLayout.vue` dengan sidebar navigation
+- [ ] Create `PublicLayout.vue` untuk halaman publik
+- [ ] Update `GuestLayout.vue` untuk auth pages
+- [ ] Create navigation menu component dengan role-based visibility
+
+#### 1.5 Activity Logging
+- [ ] Create `ActivityLog` model dan migration
+- [ ] Create `LogsActivity` trait
+- [ ] Create `LogActivity` middleware
+- [ ] Create `ActivityLogService` untuk centralized logging
+
+### Technical Approach
+- Gunakan Laravel Breeze sebagai starting point
+- Extend Breeze components sesuai kebutuhan
+- Implementasi RBAC menggunakan Laravel Policies dan Gates
+- Session-based authentication (Laravel default)
+
+### Verification
+- [ ] User dapat login dengan role yang berbeda
+- [ ] Navigation menu menampilkan item sesuai role
+- [ ] Activity logs tercatat untuk login/logout
+- [ ] Docker containers berjalan dengan baik
+- [ ] Vite dev server berjalan tanpa error
+
+---
+
+## Phase 2: Member Management Module
+
+### Duration: 1 week
+
+### Objectives
+Membangun modul manajemen keanggotaan dengan CRUD lengkap, upload foto, dan tracking riwayat.
+
+### Deliverables
+
+#### 2.1 Backend
+- [ ] Create `Member` model dengan relationships:
+  - `belongsTo(User)` - optional user account
+  - `hasMany(Contribution)` - contribution history
+  - `belongsToMany(Event)` through `EventParticipant`
+- [ ] Create migration untuk `members` table
+- [ ] Create `MemberPolicy` dengan rules:
+  - viewAny: admin, ketua, bendahara, sekretaris
+  - create/update: admin, ketua
+  - delete: admin only
+- [ ] Create `MemberController` dengan methods:
+  - index (with search, filter, pagination)
+  - create, store, edit, update, destroy
+  - show (detail member)
+  - contributions (riwayat iuran)
+  - events (riwayat kegiatan)
+  - uploadPhoto
+- [ ] Create `MemberRequest` untuk validation
+- [ ] Create `MemberResource` untuk data transformation
+
+#### 2.2 Frontend
+- [ ] Create `Members/Index.vue` dengan:
+  - DataTable component
+  - Search bar
+  - Filter (status: active/inactive)
+  - Pagination
+  - Action buttons (view, edit, delete)
+- [ ] Create `Members/Create.vue` dengan form:
+  - Full name, email, phone, address
+  - Date of birth, join date
+  - Status, photo upload
+  - Notes
+- [ ] Create `Members/Edit.vue` (similar to Create)
+- [ ] Create `Members/Show.vue` dengan tabs:
+  - Member details
+  - Contribution history
+  - Event participation history
+- [ ] Create `Members/Contributions.vue` untuk riwayat iuran
+
+#### 2.3 Reusable Components
+- [ ] Create `ImageUpload.vue` component
+- [ ] Create `MemberCard.vue` component untuk display
+
+### Technical Approach
+- Soft delete untuk member records
+- Auto-generate unique member code
+- Image upload menggunakan Laravel Storage
+- Resize dan create thumbnail untuk photos
+
+### Verification
+- [ ] Admin/Ketua dapat create, edit, delete members
+- [ ] Bendahara/Sekretaris dapat view members (read-only)
+- [ ] Search dan filter berfungsi dengan baik
+- [ ] Photo upload berfungsi dan tersimpan di storage
+- [ ] Member detail menampilkan riwayat lengkap
+
+---
+
+## Phase 3: Event Management Module
+
+### Duration: 1 week
+
+### Objectives
+Membangun modul manajemen event/kegiatan dengan kalender, peserta, dan dokumentasi.
+
+### Deliverables
+
+#### 3.1 Backend
+- [ ] Create `Event` model dengan relationships:
+  - `belongsTo(Member, 'pic_id')` - penanggung jawab
+  - `belongsTo(User, 'created_by')`
+  - `belongsToMany(Member)` through `EventParticipant`
+  - `hasOne(Album)` - dokumentasi foto
+- [ ] Create `EventParticipant` model
+- [ ] Create migrations untuk `events` dan `event_participants`
+- [ ] Create `EventPolicy` dengan rules:
+  - viewAny: all authenticated users
+  - create/update: admin, ketua, sekretaris
+  - delete: admin only
+- [ ] Create `EventController` dengan methods:
+  - index, create, store, edit, update, destroy
+  - show, calendar
+- [ ] Create `EventParticipantController` untuk manage peserta
+- [ ] Create `EventRequest` untuk validation
+
+#### 3.2 Frontend
+- [ ] Create `Events/Index.vue` dengan:
+  - List view dengan filter (status, date range)
+  - Search functionality
+  - Status badges (draft/published/ongoing/completed)
+- [ ] Create `Events/Create.vue` dengan form:
+  - Name, description, slug (auto-generate)
+  - Start date, end date, location
+  - PIC selection, max participants
+  - Status, is_public checkbox
+- [ ] Create `Events/Edit.vue`
+- [ ] Create `Events/Show.vue` dengan:
+  - Event details
+  - Participant list dengan attendance status
+  - Add/remove participant functionality
+  - Link to photo album
+- [ ] Create `Events/Calendar.vue` dengan calendar view
+
+#### 3.3 Components
+- [ ] Create `EventCard.vue` untuk display
+- [ ] Create `DatePicker.vue` component
+- [ ] Create calendar component (atau gunakan library seperti FullCalendar)
+
+### Technical Approach
+- Auto-generate slug dari event name
+- Status workflow: draft → published → ongoing → completed
+- Public events ditampilkan di halaman publik
+- Soft delete untuk events
+
+### Verification
+- [ ] Sekretaris dapat create dan manage events
+- [ ] Calendar view menampilkan events dengan benar
+- [ ] Participant management berfungsi
+- [ ] Public events muncul di halaman publik
+- [ ] Status transitions berfungsi dengan baik
+
+---
+
+## Phase 4: Financial Management Module
+
+### Duration: 2 weeks
+
+### Objectives
+Membangun modul keuangan komprehensif mencakup wallet, transaksi, iuran, dan pelaporan.
+
+### Deliverables
+
+#### 4.1 Wallet Management
+- [ ] Create `Wallet` model
+- [ ] Create migration untuk `wallets` table
+- [ ] Create `WalletController` dengan CRUD
+- [ ] Create `Wallets/Index.vue` - list kas/dompet
+- [ ] Create `Wallets/Create.vue` - buat kas baru
+- [ ] Create `Wallets/Transactions.vue` - riwayat transaksi per kas
+
+#### 4.2 Finance Transactions
+- [ ] Create `Finance` model dengan relationships:
+  - `belongsTo(Wallet)`
+  - `belongsTo(User, 'recorded_by')`
+  - Polymorphic relation untuk reference (contribution, donation, etc.)
+- [ ] Create migration untuk `finances` table
+- [ ] Create `FinancePolicy`
+- [ ] Create `FinanceController` dengan:
+  - index (with filter by type, category, date range)
+  - create, store (uang masuk/keluar)
+  - uploadReceipt
+- [ ] Create `FinanceService` untuk business logic:
+  - Auto-update wallet balance
+  - Validate sufficient balance untuk uang keluar
+- [ ] Create `Finance/Index.vue` dengan:
+  - Filter by wallet, type, category, date
+  - Display balance summary
+- [ ] Create `Finance/Create.vue` untuk record transaksi
+
+#### 4.3 Contribution Management
+- [ ] Create `ContributionType` model
+- [ ] Create `Contribution` model dengan relationships:
+  - `belongsTo(Member)`
+  - `belongsTo(ContributionType)`
+  - `belongsTo(User, 'recorded_by')`
+- [ ] Create migrations untuk `contribution_types` dan `contributions`
+- [ ] Create `ContributionTypeController`
+- [ ] Create `ContributionController` dengan:
+  - index, create, store, edit, update
+  - overdue (list iuran terlambat)
+  - myContributions (untuk anggota)
+- [ ] Create `Contributions/Types/Index.vue` - manage jenis iuran
+- [ ] Create `Contributions/Index.vue` - record pembayaran
+- [ ] Create `Contributions/Overdue.vue` - iuran terlambat
+- [ ] Create `Contributions/MyContributions.vue` - view untuk anggota
+
+#### 4.4 Auto-Integration
+- [ ] Implement auto-create Finance record saat contribution paid
+- [ ] Update wallet balance otomatis
+- [ ] Calculate overdue contributions
+
+### Technical Approach
+- Gunakan decimal(15,2) untuk amount fields
+- Implement transaction untuk ensure data consistency
+- Soft delete untuk finance records
+- Upload receipt ke storage/finances/receipts/
+
+### Verification
+- [ ] Bendahara dapat create wallets dan record transaksi
+- [ ] Wallet balance update otomatis
+- [ ] Contribution payment tercatat di finance
+- [ ] Overdue tracking berfungsi
+- [ ] Members dapat view own contributions
+- [ ] Receipt upload berfungsi
+
+---
+
+## Phase 5: Donation Management Module
+
+### Duration: 1 week
+
+### Objectives
+Membangun modul penggalangan dana dengan tracking progress dan pelaporan.
+
+### Deliverables
+
+#### 5.1 Backend
+- [ ] Create `Donation` model dengan relationships:
+  - `hasMany(DonationTransaction)`
+  - `belongsTo(User, 'created_by')`
+- [ ] Create `DonationTransaction` model
+- [ ] Create migrations untuk `donations` dan `donation_transactions`
+- [ ] Create `DonationPolicy`
+- [ ] Create `DonationController` dengan:
+  - index, create, store, edit, update, destroy
+  - show, report (laporan penggunaan dana)
+- [ ] Create `DonationTransactionController` untuk record donasi masuk
+
+#### 5.2 Frontend
+- [ ] Create `Donations/Index.vue` dengan:
+  - List program donasi
+  - Progress bar (collected vs target)
+  - Status badges
+- [ ] Create `Donations/Create.vue`
+- [ ] Create `Donations/Show.vue` dengan:
+  - Program details
+  - Progress visualization
+  - List of donations (dengan option anonymous)
+  - Add donation transaction
+- [ ] Create `Donations/Report.vue` untuk laporan penggunaan dana
+
+#### 5.3 Public Display
+- [ ] Add donations list di `Public/Donations.vue`
+- [ ] Display active donation programs dengan progress
+
+### Technical Approach
+- Auto-calculate collected_amount dari transactions
+- Support anonymous donations
+- Public donations visible di halaman publik
+- Auto-generate slug dari program name
+
+### Verification
+- [ ] Bendahara dapat create donation programs
+- [ ] Progress tracking akurat
+- [ ] Donation transactions tercatat
+- [ ] Anonymous donations tidak tampilkan donor info
+- [ ] Public page menampilkan active programs
+
+---
+
+## Phase 6: Content Management Module
+
+### Duration: 2 weeks
+
+### Objectives
+Membangun modul konten untuk album foto, visi/misi, dan struktur organisasi.
+
+### Deliverables
+
+#### 6.1 Album & Photo Management
+- [ ] Create `Album` model dengan relationships:
+  - `hasMany(Photo)`
+  - `belongsTo(Event)` - optional
+  - `belongsTo(User, 'created_by')`
+- [ ] Create `Photo` model dengan relationship:
+  - `belongsTo(Album)`
+  - `belongsTo(User, 'uploaded_by')`
+- [ ] Create migrations untuk `albums` dan `photos`
+- [ ] Create `AlbumController` dengan CRUD
+- [ ] Create `PhotoController` untuk upload multiple photos
+- [ ] Create `Albums/Index.vue`
+- [ ] Create `Albums/Create.vue`
+- [ ] Create `Albums/Show.vue` dengan:
+  - Photo gallery
+  - Upload multiple photos
+  - Edit photo descriptions
+  - Delete photos
+- [ ] Create `AlbumGallery.vue` component
+
+#### 6.2 Vision & Mission
+- [ ] Create `VisionMission` model
+- [ ] Create migration untuk `vision_missions` table
+- [ ] Create `VisionMissionController`
+- [ ] Create `VisionMissions/Index.vue` - list dengan history
+- [ ] Create `VisionMissions/Create.vue` dengan:
+  - Vision text area
+  - Multiple mission points (dynamic array)
+  - Period (start year, end year)
+  - Status (active/inactive)
+- [ ] Implement audit trail untuk perubahan
+
+#### 6.3 Organization Structure
+- [ ] Create `OrganizationStructure` model dengan:
+  - Self-referencing relationship untuk hierarchy
+  - `belongsTo(Member)`
+- [ ] Create migration untuk `organization_structures`
+- [ ] Create `OrganizationStructureController`
+- [ ] Create `Structures/Index.vue` dengan hierarchical display
+- [ ] Create `Structures/Create.vue`
+- [ ] Create `StructureChart.vue` component untuk visualisasi
+
+### Technical Approach
+- Multiple photo upload menggunakan FormData
+- Create thumbnails untuk photos
+- Store photos di storage/albums/photos/
+- JSON field untuk missions array
+- Hierarchical structure menggunakan parent_position_id
+
+### Verification
+- [ ] Album creation dan photo upload berfungsi
+- [ ] Multiple photos dapat diupload sekaligus
+- [ ] Public albums muncul di gallery
+- [ ] Vision/Mission history tracking berfungsi
+- [ ] Structure hierarchy display dengan benar
+- [ ] Photo thumbnails ter-generate
+
+---
+
+## Phase 7: Administration Module
+
+### Duration: 1 week
+
+### Objectives
+Membangun modul administrasi untuk pengumuman, notulensi, dan dokumen.
+
+### Deliverables
+
+#### 7.1 Announcements
+- [ ] Create `Announcement` model
+- [ ] Create migration untuk `announcements` table
+- [ ] Create `AnnouncementController`
+- [ ] Create `AnnouncementPolicy`
+- [ ] Create `Announcements/Index.vue` dengan filter by status
+- [ ] Create `Announcements/Create.vue` dengan:
+  - Title, content (rich text editor)
+  - Publish date, status
+  - Target audience selection
+  - Priority level
+- [ ] Create `Announcements/Show.vue`
+- [ ] Display announcements di dashboard sesuai target audience
+
+#### 7.2 Meeting Minutes
+- [ ] Create `MeetingMinute` model
+- [ ] Create migration untuk `meeting_minutes` table
+- [ ] Create `MeetingMinuteController`
+- [ ] Create `MeetingMinutes/Index.vue`
+- [ ] Create `MeetingMinutes/Create.vue` dengan:
+  - Meeting date, agenda
+  - Participants (JSON array atau select multiple)
+  - Results (rich text)
+  - Attachments upload
+- [ ] Create `MeetingMinutes/Show.vue`
+
+#### 7.3 Documents
+- [ ] Create `Document` model
+- [ ] Create migration untuk `documents` table
+- [ ] Create `DocumentController` dengan:
+  - index, create, store, destroy
+  - search functionality
+- [ ] Create `Documents/Index.vue` dengan:
+  - Category filter
+  - Search bar
+  - File type icons
+- [ ] Create `Documents/Create.vue` untuk upload
+- [ ] Create `Documents/Search.vue`
+
+#### 7.4 Rich Text Editor
+- [ ] Create `RichTextEditor.vue` component
+- [ ] Integrate TinyMCE atau Tiptap
+
+### Technical Approach
+- Store attachments di storage/meeting-minutes/attachments/
+- Store documents di storage/documents/
+- Validate file types dan sizes
+- Implement full-text search untuk documents
+
+### Verification
+- [ ] Announcements dapat dibuat dan filtered by target
+- [ ] Meeting minutes dengan attachments berfungsi
+- [ ] Document upload dan search berfungsi
+- [ ] Rich text editor berfungsi dengan baik
+- [ ] File downloads berfungsi
+
+---
+
+## Phase 8: Dashboard & Reporting
+
+### Duration: 1-2 weeks
+
+### Objectives
+Membangun dashboard interaktif dan sistem pelaporan keuangan.
+
+### Deliverables
+
+#### 8.1 Dashboard
+- [ ] Create `DashboardController` dengan methods untuk:
+  - Member statistics (total, active, inactive)
+  - Finance summary (balance, income, expense this month)
+  - Upcoming events
+  - Recent activities
+  - Role-specific widgets
+- [ ] Create `Dashboard.vue` dengan:
+  - Stat cards untuk metrics
+  - Charts (line chart, pie chart)
+  - Upcoming events widget
+  - Notifications panel
+  - Role-based widget visibility
+
+#### 8.2 Dashboard Components
+- [ ] Create `StatCard.vue` component
+- [ ] Create `ChartWidget.vue` menggunakan Chart.js atau ApexCharts
+- [ ] Create `NotificationPanel.vue`
+- [ ] Create `UpcomingEvents.vue` widget
+
+#### 8.3 Reporting
+- [ ] Create `ReportController` dengan methods:
+  - finance (laporan keuangan)
+  - cashFlow (arus kas)
+  - balanceSheet (neraca)
+  - export (PDF/Excel)
+- [ ] Install `barryvdh/laravel-dompdf` untuk PDF
+- [ ] Install `maatwebsite/excel` untuk Excel export
+- [ ] Create `ReportService` untuk generate reports
+- [ ] Create `Reports/Finance.vue` dengan:
+  - Date range filter
+  - Wallet filter
+  - Category filter
+  - Export buttons (PDF, Excel)
+- [ ] Create `Reports/CashFlow.vue`
+- [ ] Create `Reports/BalanceSheet.vue`
+
+### Technical Approach
+- Cache dashboard statistics (5 minutes)
+- Generate PDF reports menggunakan DomPDF
+- Export Excel menggunakan Laravel Excel
+- Charts menggunakan Chart.js
+- Implement date range picker
+
+### Verification
+- [ ] Dashboard menampilkan statistics yang akurat
+- [ ] Charts render dengan benar
+- [ ] Role-based widgets tampil sesuai role
+- [ ] Financial reports generate dengan benar
+- [ ] PDF export berfungsi
+- [ ] Excel export berfungsi
+- [ ] Date range filter berfungsi
+
+---
+
+## Phase 9: Public Portal
+
+### Duration: 1 week
+
+### Objectives
+Membangun portal publik yang responsive dan menarik untuk visitor.
+
+### Deliverables
+
+#### 9.1 Public Controller
+- [ ] Create `PublicController` dengan methods:
+  - home, about, visionMission, structure
+  - events, eventDetail
+  - gallery, albumDetail
+  - contact, donations
+
+#### 9.2 Public Pages
+- [ ] Create `Public/Home.vue` dengan:
+  - Hero section
+  - Tentang organisasi (ringkasan)
+  - Upcoming events
+  - Recent gallery
+  - Call to action
+- [ ] Create `Public/About.vue`
+- [ ] Create `Public/VisionMission.vue` - display active vision/mission
+- [ ] Create `Public/Structure.vue` - display active structure
+- [ ] Create `Public/Events.vue` - list public events
+- [ ] Create `Public/EventDetail.vue` - event details
+- [ ] Create `Public/Gallery.vue` - list public albums
+- [ ] Create `Public/AlbumDetail.vue` - album photos
+- [ ] Create `Public/Contact.vue` dengan:
+  - Contact information
+  - Location map (optional: Google Maps embed)
+  - Contact form (optional)
+- [ ] Create `Public/Donations.vue` - active donation programs
+
+#### 9.3 Public Layout
+- [ ] Enhance `PublicLayout.vue` dengan:
+  - Top navigation
+  - Footer dengan contact info
+  - Responsive mobile menu
+  - SEO meta tags
+
+### Technical Approach
+- No authentication required
+- Only display public content (is_public = true)
+- Responsive design dengan Tailwind
+- Optimize images untuk web
+- Implement lazy loading
+
+### Verification
+- [ ] All public pages accessible tanpa login
+- [ ] Responsive di mobile, tablet, desktop
+- [ ] Images load dengan baik
+- [ ] Navigation berfungsi
+- [ ] Only public content ditampilkan
+
+---
+
+## Phase 10: User Management (Admin)
+
+### Duration: 1 week
+
+### Objectives
+Membangun modul user management khusus Admin dengan activity logs.
+
+### Deliverables
+
+#### 10.1 User Management
+- [ ] Create `UserController` dengan methods:
+  - index, create, store, edit, update, destroy
+  - resetPassword, toggleStatus
+- [ ] Create `UserPolicy` (admin only)
+- [ ] Create `Users/Index.vue` dengan:
+  - List users dengan role badges
+  - Status indicators
+  - Search dan filter by role
+- [ ] Create `Users/Create.vue` dengan:
+  - Name, email, password
+  - Role selection
+  - Status
+- [ ] Create `Users/Edit.vue`
+- [ ] Implement password reset functionality
+- [ ] Implement user status toggle (active/inactive)
+
+#### 10.2 Activity Logs
+- [ ] Create `ActivityLogController` dengan:
+  - index (with filters)
+  - show (detail log)
+- [ ] Create `ActivityLogs/Index.vue` dengan:
+  - Filter by user, action, date range
+  - Search functionality
+  - Pagination
+- [ ] Create `ActivityLogs/Show.vue` untuk detail
+
+#### 10.3 System Settings
+- [ ] Create `SettingController`
+- [ ] Create settings table untuk key-value config
+- [ ] Create `Settings/Index.vue` dengan:
+  - Organization name, logo
+  - Contact information
+  - Social media links
+  - System preferences
+
+#### 10.4 Backup & Restore
+- [ ] Create `BackupController` dengan:
+  - index (list backups)
+  - create (manual backup)
+  - download, restore
+- [ ] Create `BackupService` untuk:
+  - Database backup (mysqldump)
+  - File backup (storage folder)
+- [ ] Create `Backup/Index.vue`
+- [ ] Setup Laravel Scheduler untuk daily auto-backup
+
+### Technical Approach
+- Hash passwords dengan bcrypt
+- Send password reset email (Laravel Mail)
+- Store backups di storage/backups/
+- Implement backup rotation (keep last 7)
+- Activity logs untuk semua critical actions
+
+### Verification
+- [ ] Admin dapat create, edit, delete users
+- [ ] Password reset berfungsi
+- [ ] User status toggle berfungsi
+- [ ] Activity logs tercatat dengan lengkap
+- [ ] Manual backup berfungsi
+- [ ] Auto-backup via scheduler berfungsi
+- [ ] Restore functionality berfungsi
+
+---
+
+## Phase 11: Reusable Components
+
+### Duration: 1 week
+
+### Objectives
+Membangun library komponen Vue yang reusable untuk consistency.
+
+### Deliverables
+
+#### 11.1 Data Display Components
+- [ ] Create `DataTable.vue` dengan features:
+  - Sortable columns
+  - Searchable
+  - Filterable
+  - Pagination
+  - Customizable columns
+  - Action buttons
+- [ ] Create `Pagination.vue` component
+- [ ] Create `SearchBar.vue` component
+- [ ] Create `FilterDropdown.vue` component
+
+#### 11.2 Form Components
+- [ ] Create `ImageUpload.vue` dengan:
+  - Preview
+  - Validation (type, size)
+  - Crop functionality (optional)
+- [ ] Create `MultipleImageUpload.vue`
+- [ ] Create `DatePicker.vue` menggunakan library (e.g., VueDatePicker)
+- [ ] Create `RichTextEditor.vue` (TinyMCE/Tiptap)
+- [ ] Create `FileUpload.vue` dengan:
+  - Drag and drop
+  - Progress bar
+  - File type validation
+
+#### 11.3 Display Components
+- [ ] Create `EventCard.vue` untuk display event
+- [ ] Create `MemberCard.vue` untuk display member
+- [ ] Create `AlbumGallery.vue` untuk photo gallery
+- [ ] Create `StructureChart.vue` untuk org chart
+- [ ] Create `ConfirmDialog.vue` untuk confirmations
+
+#### 11.4 Utility Components
+- [ ] Create `LoadingSpinner.vue`
+- [ ] Create `EmptyState.vue`
+- [ ] Create `ErrorState.vue`
+- [ ] Create `Toast.vue` untuk notifications
+
+### Technical Approach
+- Gunakan Composition API
+- Props validation
+- Emit events untuk parent communication
+- Slot support untuk flexibility
+- Tailwind CSS untuk styling
+
+### Verification
+- [ ] All components reusable dan customizable
+- [ ] Props validation berfungsi
+- [ ] Events emit dengan benar
+- [ ] Styling consistent
+- [ ] Components documented
+
+---
+
+## Phase 12: Testing & Quality Assurance
+
+### Duration: 2 weeks
+
+### Objectives
+Memastikan kualitas kode dengan comprehensive testing dan achieve 80%+ coverage.
+
+### Deliverables
+
+#### 12.1 Unit Testing
+- [ ] Write unit tests untuk all models:
+  - Relationships
+  - Scopes
+  - Accessors/Mutators
+  - Custom methods
+- [ ] Write unit tests untuk services:
+  - ActivityLogService
+  - BackupService
+  - FinanceService
+  - ReportService
+- [ ] Write tests untuk validation rules
+- [ ] Write tests untuk policies:
+  - All policy methods
+  - All roles
+
+#### 12.2 Feature Testing
+- [ ] Write feature tests untuk authentication:
+  - Login, logout
+  - Password reset
+  - Email verification
+- [ ] Write feature tests untuk member management:
+  - CRUD operations
+  - Photo upload
+  - Authorization checks
+- [ ] Write feature tests untuk event management
+- [ ] Write feature tests untuk financial management
+- [ ] Write feature tests untuk donations
+- [ ] Write feature tests untuk content management
+- [ ] Write Inertia response tests:
+  - Correct component rendered
+  - Correct props passed
+
+#### 12.3 Browser Testing (Dusk)
+- [ ] Setup Laravel Dusk
+- [ ] Write browser tests untuk:
+  - User login flow
+  - Create member flow
+  - Record payment flow
+  - Create event flow
+  - Upload photos flow
+- [ ] Test responsive design di berbagai viewports
+
+#### 12.4 Security Testing
+- [ ] Test CSRF protection
+- [ ] Test SQL injection prevention
+- [ ] Test XSS prevention
+- [ ] Test authentication bypass attempts
+- [ ] Test authorization for all roles
+- [ ] Test file upload security
+
+#### 12.5 Performance Testing
+- [ ] Load testing dengan 100 concurrent users
+- [ ] Database query optimization dengan Telescope
+- [ ] Page load time testing (target < 3s)
+- [ ] File upload performance testing
+
+### Technical Approach
+- Use PHPUnit untuk unit dan feature tests
+- Use Laravel Dusk untuk browser tests
+- Use factories untuk test data
+- Mock external services
+- Database transactions untuk test isolation
+
+### Verification
+- [ ] Test coverage >= 80%
+- [ ] All tests passing
+- [ ] No critical security vulnerabilities
+- [ ] Performance meets requirements
+- [ ] Browser tests pass di Chrome, Firefox
+
+---
+
+## Phase 13: Optimization & Polish
+
+### Duration: 1 week
+
+### Objectives
+Optimize performance, implement caching, dan polish user experience.
+
+### Deliverables
+
+#### 13.1 Database Optimization
+- [ ] Add indexes untuk frequently queried columns
+- [ ] Optimize N+1 queries dengan eager loading
+- [ ] Implement database query caching
+- [ ] Analyze slow queries dengan Telescope
+
+#### 13.2 Caching Implementation
+- [ ] Setup Redis untuk cache
+- [ ] Cache dashboard statistics (5 min TTL)
+- [ ] Cache public pages (15 min TTL)
+- [ ] Cache settings (until updated)
+- [ ] Implement cache tags untuk selective clearing
+
+#### 13.3 Image Optimization
+- [ ] Implement automatic image resize on upload
+- [ ] Generate thumbnails (small, medium, large)
+- [ ] Implement lazy loading untuk images
+- [ ] Use WebP format untuk better compression
+
+#### 13.4 Queue Implementation
+- [ ] Setup Laravel Queue dengan Redis driver
+- [ ] Queue email sending
+- [ ] Queue file processing (images, documents)
+- [ ] Queue report generation
+- [ ] Setup Supervisor untuk queue workers
+
+#### 13.5 Frontend Optimization
+- [ ] Optimize Vite build configuration
+- [ ] Implement code splitting
+- [ ] Lazy load Vue components
+- [ ] Minify CSS dan JavaScript
+- [ ] Optimize bundle size
+
+#### 13.6 Monitoring & Debugging
+- [ ] Install Laravel Telescope (dev/staging only)
+- [ ] Setup error tracking (optional: Sentry/Flare)
+- [ ] Configure logging channels
+- [ ] Implement health check endpoint
+
+### Technical Approach
+- Use Redis for caching dan queues
+- Intervention/Image untuk image processing
+- Laravel Horizon untuk queue monitoring (optional)
+- Vite plugins untuk optimization
+
+### Verification
+- [ ] Page load time < 3s
+- [ ] No N+1 queries
+- [ ] Cache hit rate > 80%
+- [ ] Images optimized dan lazy loaded
+- [ ] Queue workers running
+- [ ] Error tracking berfungsi
+
+---
+
+## Phase 14: Documentation
+
+### Duration: 1 week
+
+### Objectives
+Create comprehensive documentation untuk users, admins, dan developers.
+
+### Deliverables
+
+#### 14.1 User Documentation (Bahasa Indonesia)
+- [ ] Create user manual PDF dengan sections:
+  - Pendahuluan
+  - Login dan navigasi
+  - Manajemen anggota
+  - Manajemen kegiatan
+  - Manajemen keuangan
+  - Manajemen konten
+  - FAQ
+- [ ] Create video tutorials untuk key features
+- [ ] Create quick start guide
+
+#### 14.2 Admin Documentation
+- [ ] Create admin guide dengan:
+  - User management
+  - System settings
+  - Backup dan restore
+  - Troubleshooting
+  - Maintenance tasks
+- [ ] Create role permission matrix
+- [ ] Create security best practices guide
+
+#### 14.3 Technical Documentation
+- [ ] Document database schema dengan ER diagram
+- [ ] Create API documentation (jika ada external API)
+- [ ] Document deployment process
+- [ ] Create developer setup guide
+- [ ] Document code architecture
+- [ ] Create troubleshooting guide
+
+#### 14.4 Code Documentation
+- [ ] Add PHPDoc blocks untuk all classes dan methods
+- [ ] Add JSDoc untuk Vue components
+- [ ] Document complex business logic
+- [ ] Create CHANGELOG.md
+- [ ] Update README.md
+
+### Technical Approach
+- Use tools seperti phpDocumentor
+- Create diagrams dengan draw.io atau Mermaid
+- Host documentation di wiki atau docs site
+
+### Verification
+- [ ] User manual complete dan clear
+- [ ] Admin guide comprehensive
+- [ ] Technical docs accurate
+- [ ] Code well-documented
+- [ ] README up-to-date
+
+---
+
+## Phase 15: Deployment & Production
+
+### Duration: 1 week
+
+### Objectives
+Deploy aplikasi ke production environment dan conduct UAT.
+
+### Deliverables
+
+#### 15.1 Production Environment Setup
+- [ ] Setup production server (Ubuntu 22.04 LTS)
+- [ ] Install required software:
+  - PHP 8.2+ dengan extensions
+  - Nginx
+  - MySQL 8.0+
+  - Redis 6+
+  - Supervisor
+  - Certbot untuk SSL
+- [ ] Configure firewall (ufw)
+- [ ] Setup Docker Compose untuk production
+
+#### 15.2 Application Configuration
+- [ ] Configure production `.env`:
+  - APP_ENV=production
+  - APP_DEBUG=false
+  - Database credentials
+  - Redis configuration
+  - Mail configuration
+  - Cache/Session drivers
+- [ ] Generate APP_KEY
+- [ ] Configure file permissions
+- [ ] Setup storage symlink
+
+#### 15.3 SSL/TLS Configuration
+- [ ] Install SSL certificate (Let's Encrypt)
+- [ ] Configure Nginx untuk HTTPS
+- [ ] Setup auto-renewal untuk SSL
+- [ ] Force HTTPS redirect
+
+#### 15.4 Deployment Process
+- [ ] Clone repository ke production server
+- [ ] Run `composer install --no-dev --optimize-autoloader`
+- [ ] Run `npm ci && npm run build`
+- [ ] Run migrations: `php artisan migrate --force`
+- [ ] Run seeders (initial data only)
+- [ ] Cache configs: `php artisan config:cache`
+- [ ] Cache routes: `php artisan route:cache`
+- [ ] Optimize: `php artisan optimize`
+
+#### 15.5 Monitoring & Backup Setup
+- [ ] Configure automated database backups (daily)
+- [ ] Setup log rotation
+- [ ] Configure monitoring (CPU, RAM, Disk)
+- [ ] Setup uptime monitoring
+- [ ] Configure email alerts untuk errors
+
+#### 15.6 User Acceptance Testing
+- [ ] Create UAT test plan
+- [ ] Conduct UAT dengan stakeholders
+- [ ] Collect feedback
+- [ ] Fix critical issues
+- [ ] Re-test
+
+#### 15.7 Training & Handover
+- [ ] Conduct user training sessions
+- [ ] Train admin users
+- [ ] Handover documentation
+- [ ] Setup support channels
+
+### Technical Approach
+- Use Docker Compose untuk consistent deployment
+- Implement CI/CD (optional: GitHub Actions)
+- Blue-green deployment strategy (optional)
+- Database backup rotation (keep last 30 days)
+
+### Verification
+- [ ] Application accessible via HTTPS
+- [ ] All features working in production
+- [ ] SSL certificate valid
+- [ ] Automated backups running
+- [ ] Monitoring active
+- [ ] UAT passed dengan satisfaction >= 85%
+- [ ] Users trained
+- [ ] Documentation handed over
+
+---
+
+## Success Criteria
+
+The implementation is considered successful when:
+
+1. **Functional Requirements**: All FR-XXX-XXX dari SRS terimplement 100%
+2. **Performance**: Page load time < 3 seconds, supports 100+ concurrent users
+3. **Security**: Pass security audit, no critical vulnerabilities
+4. **Quality**: Test coverage >= 80%, zero critical bugs in production
+5. **Uptime**: System uptime >= 99% per month
+6. **User Satisfaction**: UAT satisfaction score >= 85%
+7. **Documentation**: Complete user, admin, dan technical documentation
+8. **Training**: Users dapat operate system dengan minimal training
+
+---
+
+## Risk Mitigation
+
+### Technical Risks
+- **Risk**: Complex Inertia.js integration
+  - **Mitigation**: Follow official documentation, use Breeze starter kit
+  
+- **Risk**: Performance issues dengan large datasets
+  - **Mitigation**: Implement pagination, caching, database indexing
+
+- **Risk**: File upload failures
+  - **Mitigation**: Implement chunked uploads, validate file sizes
+
+### Project Risks
+- **Risk**: Scope creep
+  - **Mitigation**: Stick to SRS, defer Phase 2 features
+
+- **Risk**: Timeline delays
+  - **Mitigation**: Prioritize core features, parallel development
+
+- **Risk**: Resource constraints
+  - **Mitigation**: Use proven technologies, leverage existing packages
+
+---
+
+## Next Steps
+
+1. **Review dan Approval**: Review implementation plan dengan stakeholders
+2. **Environment Setup**: Setup development environment (Phase 1)
+3. **Sprint Planning**: Break down phases into 2-week sprints
+4. **Start Development**: Begin with Phase 1 - Foundation & Authentication
+
+---
+
+**Note**: Estimasi waktu total untuk complete implementation: **12-16 minggu** (3-4 bulan) dengan 1-2 developers full-time.
