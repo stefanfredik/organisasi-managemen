@@ -10,7 +10,8 @@ const navigation = [
     { name: 'Tentang', href: '/about' },
     { name: 'Visi & Misi', href: '/vision-mission' },
     { name: 'Struktur', href: '/structure' },
-    { name: 'Kegiatan', href: '/events' },
+    { name: 'Kegiatan', href: route('public.events.index') },
+    { name: 'Donasi', href: route('public.donations.index') },
     { name: 'Galeri', href: '/gallery' },
     { name: 'Kontak', href: '/contact' },
 ];

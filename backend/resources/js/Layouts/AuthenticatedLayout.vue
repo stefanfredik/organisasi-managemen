@@ -138,6 +138,19 @@ const toggleSidebar = () => {
                                 </svg>
                                 <span v-show="isSidebarOpen">Jenis Iuran</span>
                             </Link>
+                            <Link 
+                                v-if="route().has('donations.index')"
+                                :href="route('donations.index')" 
+                                :class="[
+                                    'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-bold text-sm',
+                                    route().current('donations.*') ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                                ]"
+                            >
+                                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span v-show="isSidebarOpen">Donasi</span>
+                            </Link>
                         </div>
                     </div>
                 </nav>
@@ -242,6 +255,7 @@ const toggleSidebar = () => {
                             <ResponsiveNavLink v-if="$page.props.auth.user.role !== 'member'" :href="route('finances.index')" :active="route().current('finances.*')">Transaksi</ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('contributions.index')" :active="route().current('contributions.*')">{{ $page.props.auth.user.role === 'member' ? 'Iuran Saya' : 'Iuran Anggota' }}</ResponsiveNavLink>
                             <ResponsiveNavLink v-if="$page.props.auth.user.role !== 'member'" :href="route('contribution-types.index')" :active="route().current('contribution-types.*')">Jenis Iuran</ResponsiveNavLink>
+                            <ResponsiveNavLink v-if="route().has('donations.index')" :href="route('donations.index')" :active="route().current('donations.*')">Donasi</ResponsiveNavLink>
                         </div>
                     </div>
                 </div>

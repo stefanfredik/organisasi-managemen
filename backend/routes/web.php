@@ -21,6 +21,8 @@ Route::get('/dashboard', function () {
 // Public Event Routes
 Route::get('/events/public', [\App\Http\Controllers\PublicEventController::class, 'index'])->name('public.events.index');
 Route::get('/events/public/{slug}', [\App\Http\Controllers\PublicEventController::class, 'show'])->name('public.events.show');
+Route::get('/donations/public', [\App\Http\Controllers\PublicDonationController::class, 'index'])->name('public.donations.index');
+Route::get('/donations/public/{slug}', [\App\Http\Controllers\PublicDonationController::class, 'show'])->name('public.donations.show');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -49,6 +51,10 @@ Route::middleware('auth')->group(function () {
 
     // Resource route comes AFTER custom routes
     Route::resource('contributions', \App\Http\Controllers\ContributionController::class);
+    // Donation Management
+    Route::get('donations/report', [\App\Http\Controllers\DonationController::class, 'report'])->name('donations.report');
+    Route::post('donations/{donation}/transactions', [\App\Http\Controllers\DonationController::class, 'recordTransaction'])->name('donations.transactions.store');
+    Route::resource('donations', \App\Http\Controllers\DonationController::class);
 });
 
 require __DIR__ . '/auth.php';
