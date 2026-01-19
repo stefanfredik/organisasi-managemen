@@ -15,6 +15,15 @@ class Member extends Model
     use HasFactory, SoftDeletes;
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = [
+        'photo_url',
+    ];
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
@@ -150,7 +159,7 @@ class Member extends Model
             return null;
         }
 
-        return Storage::url($this->photo);
+        return Storage::disk('public')->url($this->photo);
     }
 
     /**
