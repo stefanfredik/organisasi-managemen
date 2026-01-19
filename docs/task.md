@@ -13,12 +13,12 @@
 ## Phase 2: Member Management Module
 - [x] Create Member model, migration, and factory
 - [x] Implement MemberController with CRUD operations
-- [/] Create Member Policy for role-based access
-- [ ] Build Vue components (Index, Create, Edit, Show)
-- [ ] Implement member photo upload functionality
-- [ ] Create member search and filter functionality
-- [ ] Build member contribution history view
-- [ ] Build member event participation history view
+- [x] Create Member Policy for role-based access
+- [x] Build Vue components (Index, Create, Edit, Show)
+- [x] Implement member photo upload functionality
+- [x] Create member search and filter functionality
+- [x] Build member contribution history view
+- [x] Build member event participation history view
 
 ## Phase 3: Event Management Module
 - [ ] Create Event and EventParticipant models and migrations
