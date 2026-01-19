@@ -10,8 +10,17 @@ class WalletController extends Controller
 {
     public function index()
     {
+        $total_balance = \App\Models\Wallet::sum('balance');
+        $total_income = \App\Models\Finance::where('type', 'in')->sum('amount') + \App\Models\Contribution::where('status', 'paid')->sum('amount');
+        $total_expense = \App\Models\Finance::where('type', 'out')->sum('amount');
+
         return Inertia::render('Wallets/Index', [
             'wallets' => Wallet::withCount(['finances', 'contributions'])->get(),
+            'stats' => [
+                'total_balance' => (float) $total_balance,
+                'total_income' => (float) $total_income,
+                'total_expense' => (float) $total_expense,
+            ],
         ]);
     }
 
