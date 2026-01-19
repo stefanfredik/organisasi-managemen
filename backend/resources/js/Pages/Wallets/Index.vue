@@ -80,7 +80,7 @@ const formatCurrency = (amount) => {
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">
                     Kas & Dompet Organisasi
                 </h2>
-                <PrimaryButton @click="openModal()">
+                <PrimaryButton @click="openModal()" v-if="$page.props.auth.user.role === 'admin' || $page.props.auth.user.role === 'bendahara'">
                     Tambah Dompet
                 </PrimaryButton>
             </div>
@@ -170,7 +170,7 @@ const formatCurrency = (amount) => {
                                 <div class="text-[11px] text-gray-400 font-medium">
                                     {{ wallet.finances_count }} Transaksi | {{ wallet.contributions_count }} Iuran
                                 </div>
-                                <div class="flex gap-3">
+                                <div class="flex gap-3" v-if="$page.props.auth.user.role === 'admin' || $page.props.auth.user.role === 'bendahara'">
                                     <button @click="openModal(wallet)" class="text-indigo-600 hover:text-indigo-900 text-sm font-bold transition">Edit</button>
                                     <button @click="deleteWallet(wallet)" class="text-red-500 hover:text-red-700 text-sm font-bold transition">Hapus</button>
                                 </div>

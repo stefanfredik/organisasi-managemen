@@ -8,6 +8,10 @@ use Inertia\Inertia;
 
 class WalletController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Wallet::class, 'wallet');
+    }
     public function index()
     {
         $total_balance = \App\Models\Wallet::sum('balance');

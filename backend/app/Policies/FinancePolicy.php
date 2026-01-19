@@ -11,8 +11,7 @@ class FinancePolicy extends BasePolicy
      */
     public function viewAny(?User $user): bool
     {
-        // Admin, Ketua, Bendahara can view finance records
-        return $this->hasAnyRole($user, ['admin', 'ketua', 'bendahara']);
+        return $this->isAuthenticated($user);
     }
 
     /**
@@ -20,8 +19,7 @@ class FinancePolicy extends BasePolicy
      */
     public function view(?User $user, $finance): bool
     {
-        // Admin, Ketua, Bendahara can view finance details
-        return $this->hasAnyRole($user, ['admin', 'ketua', 'bendahara']);
+        return $this->isAuthenticated($user);
     }
 
     /**
@@ -47,8 +45,8 @@ class FinancePolicy extends BasePolicy
      */
     public function delete(?User $user, $finance): bool
     {
-        // Only Admin can delete finance records
-        return $this->isAdmin($user);
+        // Admin and Bendahara can delete finance records
+        return $this->hasAnyRole($user, ['admin', 'bendahara']);
     }
 
     /**

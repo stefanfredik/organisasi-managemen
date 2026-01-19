@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\DB;
 
 class FinanceController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Finance::class, 'finance');
+    }
     public function index(Request $request)
     {
         $query = Finance::with(['wallet', 'creator']);
