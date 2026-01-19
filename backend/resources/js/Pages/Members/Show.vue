@@ -2,12 +2,14 @@
 import { ref } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import Modal from '@/Components/Modal.vue';
 
 const props = defineProps({
     member: Object,
 });
 
 const activeTab = ref('profile');
+const isPhotoZoomed = ref(false);
 
 const tabs = [
     { id: 'profile', name: 'Profil' },
@@ -61,7 +63,8 @@ const formatDate = (date) => {
                                     v-if="member.photo_url"
                                     :src="member.photo_url"
                                     :alt="member.full_name"
-                                    class="h-32 w-32 rounded-lg object-cover"
+                                    class="h-32 w-32 rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                                    @click="isPhotoZoomed = true"
                                 />
                                 <div
                                     v-else
@@ -205,5 +208,27 @@ const formatDate = (date) => {
                 </div>
             </div>
         </div>
+
+        <!-- Photo Zoom Modal -->
+        <Modal :show="isPhotoZoomed" @close="isPhotoZoomed = false" maxWidth="2xl">
+            <div class="p-4 flex flex-col items-center">
+                <div class="w-full flex justify-end mb-2">
+                    <button @click="isPhotoZoomed = false" class="text-gray-500 hover:text-gray-700">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <img
+                    :src="member.photo_url"
+                    :alt="member.full_name"
+                    class="max-w-full max-h-[80vh] rounded-lg shadow-lg"
+                />
+                <div class="mt-4 text-center">
+                    <h3 class="text-lg font-medium text-gray-900">{{ member.full_name }}</h3>
+                    <p class="text-sm text-gray-500">{{ member.member_code }}</p>
+                </div>
+            </div>
+        </Modal>
     </AuthenticatedLayout>
 </template>

@@ -38,6 +38,13 @@ Route::middleware('auth')->group(function () {
     Route::patch('events/{event}/participants/{member}', [\App\Http\Controllers\EventController::class, 'updateParticipantStatus'])->name('events.participants.update-status');
     Route::post('events/{event}/documentations', [\App\Http\Controllers\EventController::class, 'uploadDocumentation'])->name('events.documentations.upload');
     Route::delete('events/{event}/documentations/{documentation}', [\App\Http\Controllers\EventController::class, 'deleteDocumentation'])->name('events.documentations.destroy');
+
+    // Financial Management
+    Route::resource('wallets', \App\Http\Controllers\WalletController::class);
+    Route::resource('finances', \App\Http\Controllers\FinanceController::class);
+    Route::resource('contribution-types', \App\Http\Controllers\ContributionTypeController::class);
+    Route::resource('contributions', \App\Http\Controllers\ContributionController::class);
+    Route::post('contributions/{contribution}/verify', [\App\Http\Controllers\ContributionController::class, 'verify'])->name('contributions.verify');
 });
 
 require __DIR__ . '/auth.php';

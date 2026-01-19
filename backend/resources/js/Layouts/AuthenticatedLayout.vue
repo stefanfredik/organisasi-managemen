@@ -51,6 +51,35 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     Kegiatan
                                 </NavLink>
+
+                                <!-- Financial Menu -->
+                                <NavLink
+                                    v-if="$page.props.auth.user.role !== 'member'"
+                                    :href="route('wallets.index')"
+                                    :active="route().current('wallets.*')"
+                                >
+                                    Kas
+                                </NavLink>
+                                <NavLink
+                                    v-if="$page.props.auth.user.role !== 'member'"
+                                    :href="route('finances.index')"
+                                    :active="route().current('finances.*')"
+                                >
+                                    Transaksi
+                                </NavLink>
+                                <NavLink
+                                    :href="route('contributions.index')"
+                                    :active="route().current('contributions.*')"
+                                >
+                                    {{ $page.props.auth.user.role === 'member' ? 'Iuran Saya' : 'Iuran Anggota' }}
+                                </NavLink>
+                                <NavLink
+                                    v-if="$page.props.auth.user.role !== 'member'"
+                                    :href="route('contribution-types.index')"
+                                    :active="route().current('contribution-types.*')"
+                                >
+                                    Jenis Iuran
+                                </NavLink>
                             </div>
                         </div>
 
@@ -169,6 +198,35 @@ const showingNavigationDropdown = ref(false);
                             :active="route().current('events.*')"
                         >
                             Kegiatan
+                        </ResponsiveNavLink>
+
+                        <!-- Financial Menu (Responsive) -->
+                        <ResponsiveNavLink
+                            v-if="$page.props.auth.user.role !== 'member'"
+                            :href="route('wallets.index')"
+                            :active="route().current('wallets.*')"
+                        >
+                            Kas
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="$page.props.auth.user.role !== 'member'"
+                            :href="route('finances.index')"
+                            :active="route().current('finances.*')"
+                        >
+                            Transaksi
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('contributions.index')"
+                            :active="route().current('contributions.*')"
+                        >
+                            {{ $page.props.auth.user.role === 'member' ? 'Iuran Saya' : 'Iuran Anggota' }}
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="$page.props.auth.user.role !== 'member'"
+                            :href="route('contribution-types.index')"
+                            :active="route().current('contribution-types.*')"
+                        >
+                            Jenis Iuran
                         </ResponsiveNavLink>
                     </div>
 

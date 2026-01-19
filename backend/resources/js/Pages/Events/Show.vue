@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Modal from '@/Components/Modal.vue';
@@ -15,6 +15,43 @@ const props = defineProps({
 
 const showParticipantModal = ref(false);
 const showDocModal = ref(false);
+const zoomedIndex = ref(null);
+
+const zoomedDoc = computed(() => {
+    if (zoomedIndex.value === null) return null;
+    return props.event.documentations[zoomedIndex.value];
+});
+
+const prevDoc = () => {
+    if (zoomedIndex.value > 0) {
+        zoomedIndex.value--;
+    } else {
+        zoomedIndex.value = props.event.documentations.length - 1;
+    }
+};
+
+const nextDoc = () => {
+    if (zoomedIndex.value < props.event.documentations.length - 1) {
+        zoomedIndex.value++;
+    } else {
+        zoomedIndex.value = 0;
+    }
+};
+
+const handleKeyDown = (e) => {
+    if (zoomedIndex.value === null) return;
+    if (e.key === 'ArrowLeft') prevDoc();
+    if (e.key === 'ArrowRight') nextDoc();
+    if (e.key === 'Escape') zoomedIndex.value = null;
+};
+
+onMounted(() => {
+    window.addEventListener('keydown', handleKeyDown);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('keydown', handleKeyDown);
+});
 
 const participantForm = useForm({
     member_id: '',
@@ -231,17 +268,20 @@ const handleFileSelect = (e) => {
                         </button>
                     </div>
                     <div v-if="event.documentations.length > 0" class="p-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                        <div v-for="doc in event.documentations" :key="doc.id" class="relative group">
+                        <div v-for="(doc, index) in event.documentations" :key="doc.id" class="relative group">
                             <img
                                 :src="doc.url"
                                 :alt="doc.caption"
                                 class="w-full h-32 object-cover rounded shadow"
                             />
-                            <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded">
+                            <div 
+                                class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded cursor-pointer"
+                                @click="zoomedIndex = index"
+                            >
                                 <button
                                     v-if="$page.props.auth.user.role !== 'member'"
-                                    @click="deleteDoc(doc)"
-                                    class="text-white hover:text-red-400"
+                                    @click.stop="deleteDoc(doc)"
+                                    class="text-white hover:text-red-400 p-2"
                                 >
                                     <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                                         <path d="M19 4h-3.5l-1-1h-5l-1 1H5v2h14V4zM6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12z"/>
@@ -445,6 +485,56 @@ const handleFileSelect = (e) => {
                     >
                         Simpan Foto
                     </PrimaryButton>
+                </div>
+            </div>
+        </Modal>
+
+        <!-- Documentation Zoom Modal -->
+        <Modal :show="zoomedIndex !== null" @close="zoomedIndex = null" maxWidth="4xl">
+            <div class="p-4 flex flex-col items-center relative group">
+                <div class="w-full flex justify-end mb-2">
+                    <button @click="zoomedIndex = null" class="text-gray-500 hover:text-gray-700">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <button
+                    v-if="event.documentations.length > 1"
+                    @click="prevDoc"
+                    class="absolute left-6 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition opacity-0 group-hover:opacity-100 focus:opacity-100"
+                >
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+
+                <button
+                    v-if="event.documentations.length > 1"
+                    @click="nextDoc"
+                    class="absolute right-6 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition opacity-0 group-hover:opacity-100 focus:opacity-100"
+                >
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+
+                <img
+                    v-if="zoomedDoc"
+                    :src="zoomedDoc.url"
+                    :alt="zoomedDoc.caption"
+                    class="max-w-full max-h-[85vh] rounded shadow-xl"
+                />
+                
+                <div v-if="zoomedDoc" class="mt-4 text-center">
+                    <p v-if="zoomedDoc.caption" class="text-gray-700 font-medium">
+                        {{ zoomedDoc.caption }}
+                    </p>
+                    <p class="text-xs text-gray-400 mt-1">
+                        {{ zoomedIndex + 1 }} / {{ event.documentations.length }}
+                    </p>
                 </div>
             </div>
         </Modal>
