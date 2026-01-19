@@ -24,9 +24,12 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(`/members/${props.member.id}`, {
+    form.transform((data) => ({
+        ...data,
         _method: 'put',
+    })).post(`/members/${props.member.id}`, {
         preserveScroll: true,
+        forceFormData: true,
     });
 };
 </script>
