@@ -8,6 +8,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
+import axios from 'axios';
 
 const props = defineProps({
     contributions: Object,
@@ -23,11 +24,11 @@ const isAdminOrTreasurer = computed(() => ['admin', 'treasurer'].includes(user.v
 const showCreateModal = ref(false);
 const showVerifyModal = ref(false);
 const selectedContribution = ref(null);
+const filteredMembers = ref([]);
 
 const form = useForm({
     member_id: user.value.role === 'member' ? user.value.member?.id : '',
     contribution_type_id: '',
-    wallet_id: '',
     amount: '',
     payment_date: new Date().toISOString().split('T')[0],
     notes: '',
@@ -57,8 +58,36 @@ const submitCreate = () => {
         onSuccess: () => {
             showCreateModal.value = false;
             form.reset();
+            filteredMembers.value = [];
         },
     });
+};
+
+const onContributionTypeChange = async (e) => {
+    const typeId = e.target.value;
+    const type = props.types.find(t => t.id == typeId);
+    
+    if (type) {
+        form.amount = type.amount;
+    }
+    
+    // Reset member selection
+    form.member_id = '';
+    
+    // Fetch unpaid members for this contribution type
+    if (typeId && isAdminOrTreasurer.value) {
+        try {
+            const response = await axios.get(route('contributions.unpaid-members'), {
+                params: { contribution_type_id: typeId }
+            });
+            filteredMembers.value = response.data;
+        } catch (error) {
+            console.error('Error fetching unpaid members:', error);
+            filteredMembers.value = [];
+        }
+    } else {
+        filteredMembers.value = [];
+    }
 };
 
 const formatCurrency = (amount) => {
@@ -172,81 +201,112 @@ const statusLabels = {
 
         <!-- Modal Bayar Iuran -->
         <Modal :show="showCreateModal" @close="showCreateModal = false">
-            <div class="p-8">
-                <div class="flex items-center justify-between mb-8">
+            <div class="bg-white rounded-2xl overflow-hidden max-w-2xl mx-auto">
+                <div class="bg-gray-50/50 p-6 border-b border-gray-100 flex items-center justify-between">
                     <h2 class="text-xl font-black text-gray-900 uppercase tracking-tight">Bayar Iuran Baru</h2>
-                    <button @click="showCreateModal = false" class="text-gray-400 hover:text-gray-600 transition">
+                    <button @click="showCreateModal = false" class="text-gray-400 hover:text-gray-600 transition p-2 rounded-full hover:bg-white">
                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
 
-                <form @submit.prevent="submitCreate" class="space-y-6">
-                    <div v-if="isAdminOrTreasurer">
-                        <InputLabel value="Pilih Anggota" class="text-[10px] font-bold uppercase text-gray-400 mb-2" />
-                        <select v-model="form.member_id" class="w-full border-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl font-bold text-gray-700 shadow-sm" required>
-                            <option value="">-- Cari Nama/Kode Anggota --</option>
-                            <option v-for="member in members" :key="member.id" :value="member.id">
-                                {{ member.full_name }} ({{ member.member_code }})
-                            </option>
-                        </select>
-                        <InputError class="mt-2" :message="form.errors.member_id" />
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-6">
+                <div class="p-8">
+                    <form @submit.prevent="submitCreate" class="space-y-6">
+                        <!-- Contribution Type Selection (First) -->
                         <div>
-                            <InputLabel value="Jenis Iuran" class="text-[10px] font-bold uppercase text-gray-400 mb-2" />
-                            <select v-model="form.contribution_type_id" class="w-full border-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl font-bold text-gray-700 shadow-sm" required @change="(e) => {
-                                const type = types.find(t => t.id == e.target.value);
-                                if (type) form.amount = type.amount;
-                            }">
-                                <option value="">-- Pilih Jenis --</option>
-                                <option v-for="type in types" :key="type.id" :value="type.id">{{ type.name }} ({{ formatCurrency(type.amount) }})</option>
+                            <InputLabel value="Jenis Iuran" class="text-xs font-bold uppercase text-gray-500 mb-3" />
+                            <div class="grid grid-cols-2 gap-3">
+                                <select v-model="form.contribution_type_id" 
+                                    @change="onContributionTypeChange"
+                                    class="col-span-2 w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" 
+                                    required>
+                                    <option value="">-- Pilih Jenis Iuran --</option>
+                                    <option v-for="type in types" :key="type.id" :value="type.id">
+                                        {{ type.name }} ({{ formatCurrency(type.amount) }})
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Member Selection (Filtered) -->
+                        <div v-if="form.contribution_type_id && isAdminOrTreasurer">
+                            <InputLabel value="Pilih Anggota" class="text-xs font-bold uppercase text-gray-500 mb-3" />
+                            <select v-model="form.member_id" 
+                                class="w-full px-4 py-3 border-2 border-indigo-100 rounded-xl text-sm font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition bg-white" 
+                                required>
+                                <option value="">-- Cari Nama/Kode Anggota --</option>
+                                <option v-for="member in filteredMembers" :key="member.id" :value="member.id">
+                                    {{ member.full_name }} ({{ member.member_code }})
+                                </option>
                             </select>
-                            <InputError class="mt-2" :message="form.errors.contribution_type_id" />
+                            <p v-if="filteredMembers.length === 0" class="mt-2 text-xs text-amber-600 italic">
+                                ⚠️ Semua anggota sudah membayar iuran ini.
+                            </p>
+                            <p v-else class="mt-2 text-xs text-gray-500 italic">
+                                {{ filteredMembers.length }} anggota belum membayar
+                            </p>
+                            <InputError class="mt-2" :message="form.errors.member_id" />
                         </div>
+
+                        <!-- Date and Amount -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <InputLabel value="Tanggal Bayar" class="text-xs font-bold uppercase text-gray-500 mb-3" />
+                                <input type="date" v-model="form.payment_date" required
+                                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
+                            </div>
+                            <div>
+                                <InputLabel value="Nominal (Rp)" class="text-xs font-bold uppercase text-gray-500 mb-3" />
+                                <input type="number" v-model="form.amount" required step="0.01"
+                                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm font-black text-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
+                                <InputError class="mt-2" :message="form.errors.amount" />
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
                         <div>
-                            <InputLabel value="Tanggal Bayar" class="text-[10px] font-bold uppercase text-gray-400 mb-2" />
-                            <TextInput type="date" class="w-full border-gray-100 rounded-xl font-bold" v-model="form.payment_date" required />
+                            <InputLabel value="Catatan Tambahan (Opsional)" class="text-xs font-bold uppercase text-gray-500 mb-3" />
+                            <textarea v-model="form.notes" rows="2" 
+                                placeholder="Misal: Pembayaran lewat transfer BCA..."
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition resize-none"></textarea>
                         </div>
-                    </div>
 
-                    <div class="grid grid-cols-2 gap-6">
+                        <!-- File Upload -->
                         <div>
-                            <InputLabel value="Nominal (Rp)" class="text-[10px] font-bold uppercase text-gray-400 mb-2" />
-                            <TextInput type="number" class="w-full border-gray-100 rounded-xl font-black text-indigo-600" v-model="form.amount" required />
-                            <InputError class="mt-2" :message="form.errors.amount" />
+                            <InputLabel value="Lampirkan Bukti Foto/Struk" class="text-xs font-bold uppercase text-indigo-600 mb-3" />
+                            <div class="relative border-2 border-dashed border-gray-200 hover:border-indigo-400 rounded-xl p-6 text-center transition cursor-pointer group" @click="$refs.receiptInput.click()">
+                                <input ref="receiptInput" type="file" @input="form.receipt = $event.target.files[0]" accept="image/*" class="hidden" />
+                                <div class="space-y-2">
+                                    <svg class="mx-auto h-10 w-10 text-gray-400 group-hover:text-indigo-500 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    <div class="text-sm">
+                                        <span v-if="!form.receipt" class="font-bold text-indigo-600 group-hover:text-indigo-700">BROWSE...</span>
+                                        <span v-else class="font-bold text-green-600">{{ form.receipt.name }}</span>
+                                    </div>
+                                    <p v-if="!form.receipt" class="text-xs text-gray-400">* Maksimal ukuran file 2MB (format gambar).</p>
+                                </div>
+                            </div>
+                            <InputError class="mt-2" :message="form.errors.receipt" />
                         </div>
-                        <div>
-                            <InputLabel value="Pilih Rekening Tujuan" class="text-[10px] font-bold uppercase text-gray-400 mb-2" />
-                            <select v-model="form.wallet_id" class="w-full border-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl font-bold text-gray-700 shadow-sm" required>
-                                <option value="">-- Rekening Kas --</option>
-                                <option v-for="wallet in wallets" :key="wallet.id" :value="wallet.id">{{ wallet.name }}</option>
-                            </select>
-                            <InputError class="mt-2" :message="form.errors.wallet_id" />
+
+                        <!-- Action Buttons -->
+                        <div class="flex items-center gap-4 pt-4 border-t border-gray-100">
+                            <button type="button" @click="showCreateModal = false" 
+                                class="flex-1 py-3.5 rounded-xl text-sm font-black uppercase tracking-widest text-gray-500 hover:bg-gray-100 transition">
+                                Batal
+                            </button>
+                            <button type="submit" 
+                                :disabled="form.processing"
+                                class="flex-[2] py-3.5 rounded-xl text-sm font-black uppercase tracking-widest text-white shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2"
+                                :class="form.processing ? 'bg-indigo-400 cursor-wait' : 'bg-gray-900 hover:bg-gray-800 shadow-gray-300'">
+                                <span v-if="form.processing">Menyimpan...</span>
+                                <span v-else>Konfirmasi & Kirim</span>
+                            </button>
                         </div>
-                    </div>
-
-                    <div>
-                        <InputLabel value="Catatan Tambahan (Opsional)" class="text-[10px] font-bold uppercase text-gray-400 mb-2" />
-                        <textarea v-model="form.notes" rows="2" class="w-full border-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl shadow-sm font-medium" placeholder="Misal: Pembayaran lewat transfer BCA..."></textarea>
-                    </div>
-
-                    <div class="bg-gray-50 p-6 rounded-2xl border-2 border-dashed border-gray-100">
-                        <InputLabel value="Lampirkan Bukti Foto/Struk" class="text-[10px] font-black uppercase text-indigo-400 mb-3" />
-                        <input type="file" @input="form.receipt = $event.target.files[0]" accept="image/*" class="block w-full text-xs text-gray-400 file:mr-4 file:py-2.5 file:px-6 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 transition file:cursor-pointer" />
-                        <p class="mt-2 text-[10px] text-gray-400 italic font-medium">* Maksimal ukuran file 2MB (format gambar).</p>
-                        <InputError class="mt-2" :message="form.errors.receipt" />
-                    </div>
-
-                    <div class="mt-8 flex justify-end gap-3 font-bold">
-                        <SecondaryButton @click="showCreateModal = false" class="px-8 py-3 rounded-xl"> Batal </SecondaryButton>
-                        <PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing" class="px-10 py-3 rounded-xl shadow-xl shadow-indigo-100 uppercase tracking-widest text-xs font-black">
-                            Konfirmasi & Kirim
-                        </PrimaryButton>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </Modal>
 

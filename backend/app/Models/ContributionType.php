@@ -14,6 +14,7 @@ class ContributionType extends Model
 
     protected $fillable = [
         'name',
+        'wallet_id',
         'amount',
         'period',
         'description',
@@ -28,5 +29,10 @@ class ContributionType extends Model
     public function contributions(): HasMany
     {
         return $this->hasMany(Contribution::class);
+    }
+
+    public function wallet()
+    {
+        return $this->belongsTo(Wallet::class);
     }
 }

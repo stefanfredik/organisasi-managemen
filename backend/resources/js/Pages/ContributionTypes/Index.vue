@@ -11,6 +11,7 @@ import InputError from '@/Components/InputError.vue';
 
 const props = defineProps({
     types: Array,
+    wallets: Array,
 });
 
 const showModal = ref(false);
@@ -18,6 +19,7 @@ const editingType = ref(null);
 
 const form = useForm({
     name: '',
+    wallet_id: '',
     amount: '',
     period: 'monthly',
     description: '',
@@ -33,6 +35,7 @@ const openCreateModal = () => {
 const openEditModal = (type) => {
     editingType.value = type;
     form.name = type.name;
+    form.wallet_id = type.wallet_id;
     form.amount = type.amount;
     form.period = type.period;
     form.description = type.description;
@@ -100,6 +103,7 @@ const periods = {
                             <thead class="bg-gray-50 uppercase tracking-widest text-[10px] font-bold text-gray-400">
                                 <tr>
                                     <th class="px-6 py-4 text-left">Nama Iuran</th>
+                                    <th class="px-6 py-4 text-left">Dompet Tujuan</th>
                                     <th class="px-6 py-4 text-left">Besaran</th>
                                     <th class="px-6 py-4 text-left">Periode</th>
                                     <th class="px-6 py-4 text-left">Status</th>
@@ -111,6 +115,12 @@ const periods = {
                                     <td class="px-6 py-4">
                                         <div class="text-sm font-bold text-gray-900">{{ type.name }}</div>
                                         <div class="text-xs text-gray-400">{{ type.description || '-' }}</div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span v-if="type.wallet" class="px-2 py-1 bg-indigo-50 text-indigo-700 rounded text-xs font-bold">
+                                            {{ type.wallet.name }}
+                                        </span>
+                                        <span v-else class="text-xs text-red-500 italic">Belum diatur</span>
                                     </td>
                                     <td class="px-6 py-4 text-sm font-black text-indigo-600">
                                         {{ formatCurrency(type.amount) }}
@@ -135,7 +145,7 @@ const periods = {
                                     </td>
                                 </tr>
                                 <tr v-if="types.length === 0">
-                                    <td colspan="5" class="px-6 py-12 text-center text-gray-500 italic font-medium">Belum ada jenis iuran yang dikonfigurasi.</td>
+                                    <td colspan="6" class="px-6 py-12 text-center text-gray-500 italic font-medium">Belum ada jenis iuran yang dikonfigurasi.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -163,6 +173,18 @@ const periods = {
                         <InputLabel value="Nama Iuran" class="text-[10px] font-bold uppercase text-gray-400 mb-1" />
                         <TextInput type="text" class="w-full border-gray-100 rounded-xl font-bold" v-model="form.name" required placeholder="Contoh: Iuran Bulanan 2026" />
                         <InputError class="mt-2" :message="form.errors.name" />
+                    </div>
+
+                    <div>
+                        <InputLabel value="Dompet Tujuan" class="text-[10px] font-bold uppercase text-gray-400 mb-1" />
+                        <select v-model="form.wallet_id" class="w-full border-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl font-bold text-gray-700 shadow-sm" required>
+                            <option value="" disabled>-- Pilih Dompet --</option>
+                            <option v-for="wallet in wallets" :key="wallet.id" :value="wallet.id">
+                                {{ wallet.name }}
+                            </option>
+                        </select>
+                        <InputError class="mt-2" :message="form.errors.wallet_id" />
+                        <p class="mt-1 text-xs text-gray-500 italic">Iuran yang dibayar akan masuk ke dompet ini secara otomatis.</p>
                     </div>
 
                     <div class="grid grid-cols-2 gap-6">

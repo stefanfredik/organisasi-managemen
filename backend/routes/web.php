@@ -44,6 +44,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('finances', \App\Http\Controllers\FinanceController::class);
     Route::resource('contribution-types', \App\Http\Controllers\ContributionTypeController::class);
     Route::resource('contributions', \App\Http\Controllers\ContributionController::class);
+    Route::get('contributions/unpaid-members', [\App\Http\Controllers\ContributionController::class, 'getUnpaidMembers'])->name('contributions.unpaid-members');
     Route::post('contributions/{contribution}/verify', [\App\Http\Controllers\ContributionController::class, 'verify'])->name('contributions.verify');
 });
 

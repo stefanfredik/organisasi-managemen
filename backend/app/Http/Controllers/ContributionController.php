@@ -28,17 +28,50 @@ class ContributionController extends Controller
         ]);
     }
 
+    public function getUnpaidMembers(Request $request)
+    {
+        $contributionTypeId = $request->query('contribution_type_id');
+
+        if (!$contributionTypeId) {
+            return response()->json([]);
+        }
+
+        // Get all active members
+        $allMembers = Member::active()->get(['id', 'full_name', 'member_code']);
+
+        // Get members who have already paid this contribution type
+        $paidMemberIds = Contribution::where('contribution_type_id', $contributionTypeId)
+            ->where('status', 'paid')
+            ->pluck('member_id')
+            ->toArray();
+
+        // Filter out members who have already paid
+        $unpaidMembers = $allMembers->filter(function ($member) use ($paidMemberIds) {
+            return !in_array($member->id, $paidMemberIds);
+        })->values();
+
+        return response()->json($unpaidMembers);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
             'member_id' => 'required|exists:members,id',
             'contribution_type_id' => 'required|exists:contribution_types,id',
-            'wallet_id' => 'required|exists:wallets,id',
             'amount' => 'required|numeric|min:0',
             'payment_date' => 'required|date',
             'notes' => 'nullable|string',
             'receipt' => 'nullable|image|max:2048',
         ]);
+
+        // Get wallet from contribution type
+        $contributionType = ContributionType::findOrFail($validated['contribution_type_id']);
+
+        if (!$contributionType->wallet_id) {
+            return redirect()->back()->with('error', 'Jenis iuran ini belum memiliki dompet tujuan. Silakan hubungi administrator.');
+        }
+
+        $validated['wallet_id'] = $contributionType->wallet_id;
 
         if ($request->hasFile('receipt')) {
             $validated['receipt_path'] = $request->file('receipt')->store('receipts', 'public');
