@@ -31,6 +31,7 @@ const form = useForm({
     contribution_type_id: '',
     amount: '',
     payment_date: new Date().toISOString().split('T')[0],
+    payment_period: '',
     notes: '',
     receipt: null,
 });
@@ -67,20 +68,96 @@ const onContributionTypeChange = async (e) => {
     const typeId = e.target.value;
     const type = props.types.find(t => t.id == typeId);
     
+    console.log('=== Contribution Type Changed ===');
+    console.log('Selected Type ID:', typeId);
+    console.log('Type Object:', type);
+    
     if (type) {
         form.amount = type.amount;
+        console.log('Setting amount to:', type.amount);
+        
+        // Auto-generate payment period for recurring contributions
+        updatePaymentPeriod(type.period, form.payment_date);
     }
     
     // Reset member selection
     form.member_id = '';
     
+    // Wait for Vue to update the reactive state before fetching
+    await new Promise(resolve => setTimeout(resolve, 0));
+    
+    console.log('About to fetch unpaid members...');
+    console.log('Current payment_period:', form.payment_period);
+    
     // Fetch unpaid members for this contribution type
+    await fetchUnpaidMembers();
+    
+    console.log('Filtered members after fetch:', filteredMembers.value);
+};
+
+const onPaymentDateChange = () => {
+    const type = props.types.find(t => t.id == form.contribution_type_id);
+    if (type) {
+        updatePaymentPeriod(type.period, form.payment_date);
+        // Re-fetch unpaid members when period changes
+        fetchUnpaidMembers();
+    }
+};
+
+const updatePaymentPeriod = (period, date) => {
+    if (!date || period === 'once') {
+        form.payment_period = '';
+        console.log('Payment period cleared (once or no date)');
+        return;
+    }
+    
+    const paymentDate = new Date(date);
+    const year = paymentDate.getFullYear();
+    const month = String(paymentDate.getMonth() + 1).padStart(2, '0');
+    const day = String(paymentDate.getDate()).padStart(2, '0');
+    
+    switch (period) {
+        case 'monthly':
+            form.payment_period = `${year}-${month}`;
+            break;
+        case 'yearly':
+            form.payment_period = `${year}`;
+            break;
+        case 'weekly':
+            // Calculate week number
+            const firstDayOfYear = new Date(year, 0, 1);
+            const pastDaysOfYear = (paymentDate - firstDayOfYear) / 86400000;
+            const weekNumber = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+            form.payment_period = `${year}-W${String(weekNumber).padStart(2, '0')}`;
+            break;
+        case 'daily':
+            form.payment_period = `${year}-${month}-${day}`;
+            break;
+        default:
+            form.payment_period = '';
+    }
+    
+    console.log(`Payment period generated: ${form.payment_period} (period: ${period}, date: ${date})`);
+};
+
+const fetchUnpaidMembers = async () => {
+    const typeId = form.contribution_type_id;
+    
     if (typeId && isAdminOrTreasurer.value) {
         try {
-            const response = await axios.get(route('contributions.unpaid-members'), {
-                params: { contribution_type_id: typeId }
-            });
+            const params = { contribution_type_id: typeId };
+            
+            // Include payment period for recurring contributions
+            if (form.payment_period) {
+                params.payment_period = form.payment_period;
+            }
+            
+            console.log('Fetching unpaid members with params:', params);
+            
+            const response = await axios.get(route('contributions.unpaid-members'), { params });
             filteredMembers.value = response.data;
+            
+            console.log('Unpaid members count:', response.data.length);
         } catch (error) {
             console.error('Error fetching unpaid members:', error);
             filteredMembers.value = [];
@@ -253,7 +330,7 @@ const statusLabels = {
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <InputLabel value="Tanggal Bayar" class="text-xs font-bold uppercase text-gray-500 mb-3" />
-                                <input type="date" v-model="form.payment_date" required
+                                <input type="date" v-model="form.payment_date" @change="onPaymentDateChange" required
                                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
                             </div>
                             <div>
@@ -261,6 +338,19 @@ const statusLabels = {
                                 <input type="number" v-model="form.amount" required step="0.01"
                                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm font-black text-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
                                 <InputError class="mt-2" :message="form.errors.amount" />
+                            </div>
+                        </div>
+
+                        <!-- Payment Period (for recurring contributions) -->
+                        <div v-if="form.payment_period" class="bg-indigo-50 border-2 border-indigo-100 rounded-xl p-4">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <div class="flex-1">
+                                    <p class="text-[10px] uppercase font-black text-indigo-400 mb-1">Periode Pembayaran</p>
+                                    <p class="text-sm font-black text-indigo-900">{{ form.payment_period }}</p>
+                                </div>
                             </div>
                         </div>
 

@@ -18,6 +18,7 @@ class Contribution extends Model
         'wallet_id',
         'amount',
         'payment_date',
+        'payment_period',
         'status',
         'receipt_path',
         'notes',

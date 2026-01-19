@@ -39,13 +39,16 @@ Route::middleware('auth')->group(function () {
     Route::post('events/{event}/documentations', [\App\Http\Controllers\EventController::class, 'uploadDocumentation'])->name('events.documentations.upload');
     Route::delete('events/{event}/documentations/{documentation}', [\App\Http\Controllers\EventController::class, 'deleteDocumentation'])->name('events.documentations.destroy');
 
-    // Financial Management
     Route::resource('wallets', \App\Http\Controllers\WalletController::class);
     Route::resource('finances', \App\Http\Controllers\FinanceController::class);
     Route::resource('contribution-types', \App\Http\Controllers\ContributionTypeController::class);
-    Route::resource('contributions', \App\Http\Controllers\ContributionController::class);
+
+    // Custom contribution routes MUST come BEFORE the resource route
     Route::get('contributions/unpaid-members', [\App\Http\Controllers\ContributionController::class, 'getUnpaidMembers'])->name('contributions.unpaid-members');
     Route::post('contributions/{contribution}/verify', [\App\Http\Controllers\ContributionController::class, 'verify'])->name('contributions.verify');
+
+    // Resource route comes AFTER custom routes
+    Route::resource('contributions', \App\Http\Controllers\ContributionController::class);
 });
 
 require __DIR__ . '/auth.php';

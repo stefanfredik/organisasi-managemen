@@ -31,19 +31,44 @@ class ContributionController extends Controller
     public function getUnpaidMembers(Request $request)
     {
         $contributionTypeId = $request->query('contribution_type_id');
+        $paymentPeriod = $request->query('payment_period');
 
         if (!$contributionTypeId) {
+            return response()->json([]);
+        }
+
+        // Get the contribution type to check if it's recurring
+        $contributionType = ContributionType::find($contributionTypeId);
+
+        if (!$contributionType) {
             return response()->json([]);
         }
 
         // Get all active members
         $allMembers = Member::active()->get(['id', 'full_name', 'member_code']);
 
-        // Get members who have already paid this contribution type
-        $paidMemberIds = Contribution::where('contribution_type_id', $contributionTypeId)
-            ->where('status', 'paid')
-            ->pluck('member_id')
-            ->toArray();
+        // Build query to get members who have already paid
+        $paidQuery = Contribution::where('contribution_type_id', $contributionTypeId)
+            ->where('status', 'paid');
+
+        // For one-time contributions, check all paid records
+        if ($contributionType->period === 'once') {
+            // No additional filter needed - once paid, always paid
+        }
+        // For recurring contributions, only check the specific payment period
+        else {
+            if ($paymentPeriod) {
+                // Only get members who paid for THIS specific period
+                // This ignores old records with NULL payment_period
+                $paidQuery->where('payment_period', $paymentPeriod);
+            } else {
+                // If no payment period provided for recurring, return empty
+                // This prevents showing all members as paid
+                return response()->json($allMembers);
+            }
+        }
+
+        $paidMemberIds = $paidQuery->pluck('member_id')->toArray();
 
         // Filter out members who have already paid
         $unpaidMembers = $allMembers->filter(function ($member) use ($paidMemberIds) {
@@ -60,6 +85,7 @@ class ContributionController extends Controller
             'contribution_type_id' => 'required|exists:contribution_types,id',
             'amount' => 'required|numeric|min:0',
             'payment_date' => 'required|date',
+            'payment_period' => 'nullable|string',
             'notes' => 'nullable|string',
             'receipt' => 'nullable|image|max:2048',
         ]);
