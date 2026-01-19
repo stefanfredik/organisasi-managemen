@@ -15,6 +15,7 @@ const props = defineProps({
     finances: Object,
     wallets: Array,
     filters: Object,
+    stats: Object,
 });
 
 const showModal = ref(false);
@@ -105,6 +106,44 @@ const typeOptions = [
 
         <div class="py-12">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                <!-- Summary Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <!-- Total Pemasukan -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <svg class="w-16 h-16 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a8 8 0 1016 0V6a2 2 0 00-2-2H4zm2 3a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm2 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="relative z-10">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-green-400 mb-1">Total Pemasukan (Global)</p>
+                            <h3 class="text-3xl font-black text-green-700 leading-tight">
+                                {{ formatCurrency(stats.total_income) }}
+                            </h3>
+                            <div class="mt-4 flex items-center text-xs text-green-600 font-bold">
+                                <span>Kumulatif dana masuk organisasi</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Pengeluaran -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <svg class="w-16 h-16 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-7.535 5.035a1 1 0 101.415-1.414 3 3 0 014.242 0 1 1 0 001.415 1.414 5 5 0 00-7.072 0z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="relative z-10">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-red-400 mb-1">Total Pengeluaran (Global)</p>
+                            <h3 class="text-3xl font-black text-red-700 leading-tight">
+                                {{ formatCurrency(stats.total_expense) }}
+                            </h3>
+                            <div class="mt-4 flex items-center text-xs text-red-600 font-bold">
+                                <span>Kumulatif dana keluar organisasi</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <!-- Filters Bar -->
                 <div class="bg-white p-6 rounded-xl shadow-sm mb-6 border border-gray-100">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">

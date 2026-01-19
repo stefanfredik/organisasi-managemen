@@ -42,6 +42,10 @@ class FinanceController extends Controller
             'finances' => $query->latest('transaction_date')->latest('id')->paginate(10)->withQueryString(),
             'wallets' => Wallet::where('is_active', true)->get(),
             'filters' => $request->only(['search', 'wallet_id', 'type', 'date_from', 'date_to']),
+            'stats' => [
+                'total_income' => (float) (Finance::where('type', 'in')->sum('amount') + \App\Models\Contribution::where('status', 'paid')->sum('amount')),
+                'total_expense' => (float) Finance::where('type', 'out')->sum('amount'),
+            ],
         ]);
     }
 
