@@ -39,8 +39,8 @@ class Member extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'date_of_birth' => 'date',
-        'join_date' => 'date',
+        'date_of_birth' => 'date:Y-m-d',
+        'join_date' => 'date:Y-m-d',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',

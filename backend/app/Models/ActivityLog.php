@@ -9,11 +9,11 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 class ActivityLog extends Model
 {
     /**
-     * Indicates if the model should be timestamped.
+     * The name of the "updated at" column.
      *
-     * @var bool
+     * @var string|null
      */
-    public $timestamps = false;
+    const UPDATED_AT = null;
 
     /**
      * The attributes that are mass assignable.
