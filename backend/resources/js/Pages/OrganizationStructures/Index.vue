@@ -4,6 +4,7 @@ import { Head, Link, router } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import SearchBar from "@/Components/SearchBar.vue";
 import FilterDropdown from "@/Components/FilterDropdown.vue";
+import StructureChart from "@/Components/StructureChart.vue";
 
 const props = defineProps({
     structures: Array,
@@ -18,6 +19,8 @@ const statusOptions = [
     { value: "active", label: "Aktif" },
     { value: "inactive", label: "Tidak Aktif" },
 ];
+
+const viewMode = ref("visual");
 
 watch([search, status], ([newSearch, newStatus]) => {
     router.get(
@@ -104,11 +107,37 @@ const visibleRows = () => flattenVisible(tree);
                             </div>
                             <div class="flex items-center space-x-2">
                                 <FilterDropdown v-model="status" :options="statusOptions" label="Status" />
+                                <div class="inline-flex rounded-md shadow-sm" role="group">
+                                    <button
+                                        type="button"
+                                        @click="viewMode = 'visual'"
+                                        :class="[
+                                            'px-3 py-2 text-xs font-semibold bg-white border border-gray-200 rounded-l-md',
+                                            viewMode === 'visual' ? 'text-indigo-600' : 'text-gray-600',
+                                        ]"
+                                    >
+                                        Visual
+                                    </button>
+                                    <button
+                                        type="button"
+                                        @click="viewMode = 'table'"
+                                        :class="[
+                                            'px-3 py-2 text-xs font-semibold bg-white border border-gray-200 rounded-r-md -ml-px',
+                                            viewMode === 'table' ? 'text-indigo-600' : 'text-gray-600',
+                                        ]"
+                                    >
+                                        Tabel
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
+                        <div v-if="viewMode === 'visual'" class="mb-8">
+                            <StructureChart :items="structures" />
+                        </div>
+
                         <!-- Hierarchical List (indented by level) -->
-                        <div class="overflow-x-auto">
+                        <div v-if="viewMode === 'table'" class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
