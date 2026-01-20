@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # PHP Application
@@ -45,7 +45,7 @@ services:
       MYSQL_USER: organisasi_user
       MYSQL_PASSWORD: organisasi_pass
     ports:
-      - "33060:3306"
+      - "33061:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf

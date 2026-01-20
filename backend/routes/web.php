@@ -24,6 +24,10 @@ Route::get('/events/public/{slug}', [\App\Http\Controllers\PublicEventController
 Route::get('/donations/public', [\App\Http\Controllers\PublicDonationController::class, 'index'])->name('public.donations.index');
 Route::get('/donations/public/{slug}', [\App\Http\Controllers\PublicDonationController::class, 'show'])->name('public.donations.show');
 
+// Public Album/Gallery Routes
+Route::get('/gallery', [\App\Http\Controllers\PublicAlbumController::class, 'index'])->name('public.gallery.index');
+Route::get('/gallery/{slug}', [\App\Http\Controllers\PublicAlbumController::class, 'show'])->name('public.gallery.show');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -55,6 +59,27 @@ Route::middleware('auth')->group(function () {
     Route::get('donations/report', [\App\Http\Controllers\DonationController::class, 'report'])->name('donations.report');
     Route::post('donations/{donation}/transactions', [\App\Http\Controllers\DonationController::class, 'recordTransaction'])->name('donations.transactions.store');
     Route::resource('donations', \App\Http\Controllers\DonationController::class);
+
+    // Album Management
+    Route::resource('albums', \App\Http\Controllers\AlbumController::class);
+    Route::post('albums/{album}/photos', [\App\Http\Controllers\AlbumController::class, 'uploadPhotos'])->name('albums.photos.upload');
+    Route::delete('albums/{album}/photos/{photo}', [\App\Http\Controllers\AlbumController::class, 'deletePhoto'])->name('albums.photos.destroy');
+    Route::patch('albums/{album}/photos/order', [\App\Http\Controllers\AlbumController::class, 'updatePhotoOrder'])->name('albums.photos.update-order');
+    Route::patch('albums/{album}/photos/{photo}/description', [\App\Http\Controllers\AlbumController::class, 'updatePhotoDescription'])->name('albums.photos.update-description');
+
+    // Photo Management
+    Route::get('photos/{photo}', [\App\Http\Controllers\PhotoController::class, 'show'])->name('photos.show');
+    Route::get('photos/{photo}/download', [\App\Http\Controllers\PhotoController::class, 'download'])->name('photos.download');
+
+    // Vision & Mission Management
+    Route::resource('vision-missions', \App\Http\Controllers\VisionMissionController::class);
+    Route::patch('vision-missions/{visionMission}/toggle-status', [\App\Http\Controllers\VisionMissionController::class, 'toggleStatus'])->name('vision-missions.toggle-status');
+
+    // Organization Structure Management
+    Route::resource('organization-structures', \App\Http\Controllers\OrganizationStructureController::class);
 });
+
+// Public Vision & Mission API
+Route::get('/api/vision-mission/active', [\App\Http\Controllers\VisionMissionController::class, 'getActive'])->name('api.vision-mission.active');
 
 require __DIR__ . '/auth.php';

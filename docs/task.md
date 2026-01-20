@@ -1,6 +1,7 @@
 # Task Breakdown - Sistem Manajemen Organisasi
 
 ## Phase 1: Foundation & Authentication
+
 - [x] Setup Laravel 12 project with Breeze Vue
 - [x] Configure Docker environment (app, nginx, mysql, redis)
 - [x] Setup database migrations for core tables
@@ -11,6 +12,7 @@
 - [x] Implement activity logging system
 
 ## Phase 2: Member Management Module
+
 - [x] Create Member model, migration, and factory
 - [x] Implement MemberController with CRUD operations
 - [x] Create Member Policy for role-based access
@@ -21,6 +23,7 @@
 - [x] Build member event participation history view
 
 ## Phase 3: Event Management Module
+
 - [x] Create Event and EventParticipant models and migrations
 - [x] Implement EventController with CRUD operations
 - [x] Build Vue components (Index, Create, Edit, Show)
@@ -31,6 +34,7 @@
 - [x] Implement event status management (draft/published/completed)
 
 ## Phase 4: Financial Management Module
+
 - [x] Create Wallet, Finance, ContributionType, Contribution models
 - [x] Implement WalletController and FinanceController
 - [x] Create Finance Policy for role-based access
@@ -43,6 +47,7 @@
 - [x] Create "My Contributions" view for members
 
 ## Phase 5: Donation Management Module
+
 - [x] Create Donation and DonationTransaction models
 - [x] Implement DonationController
 - [x] Create Donation Policy
@@ -53,19 +58,21 @@
 - [x] Implement public donation display
 
 ## Phase 6: Content Management Module
-- [/] Create Album and Photo models and migrations
-- [ ] Implement AlbumController and PhotoController
-- [ ] Build Album CRUD Vue components
-- [ ] Implement multiple photo upload functionality
-- [ ] Create photo gallery display component
-- [ ] Build VisionMission model and controller
-- [ ] Create VisionMission management Vue components
-- [ ] Implement vision/mission history tracking
+
+- [x] Create Album and Photo models and migrations
+- [x] Implement AlbumController and PhotoController
+- [x] Build Album CRUD Vue components
+- [x] Implement multiple photo upload functionality
+- [x] Create photo gallery display component
+- [x] Build VisionMission model and controller
+- [x] Create VisionMission management Vue components
+- [x] Implement vision/mission history tracking
 - [ ] Create OrganizationStructure model and controller
 - [ ] Build structure management Vue components
 - [ ] Implement hierarchical structure display
 
 ## Phase 7: Administration Module
+
 - [ ] Create Announcement model and controller
 - [ ] Build Announcement CRUD Vue components
 - [ ] Implement target audience filtering
@@ -78,6 +85,7 @@
 - [ ] Create document categorization
 
 ## Phase 8: Dashboard & Reporting
+
 - [ ] Build Dashboard controller with statistics
 - [ ] Create StatCard Vue component
 - [ ] Implement ChartWidget Vue component
@@ -91,6 +99,7 @@
 - [ ] Build balance sheet report
 
 ## Phase 9: Public Portal
+
 - [ ] Create PublicController for public pages
 - [ ] Build Home.vue public page
 - [ ] Create About.vue page
@@ -103,6 +112,7 @@
 - [ ] Ensure responsive design for all public pages
 
 ## Phase 10: User Management (Admin)
+
 - [ ] Create UserController for user management
 - [ ] Build User CRUD Vue components
 - [ ] Implement password reset functionality
@@ -113,6 +123,7 @@
 - [ ] Build BackupController
 
 ## Phase 11: Reusable Components
+
 - [ ] Create DataTable.vue component
 - [ ] Build Pagination.vue component
 - [ ] Create SearchBar.vue component
@@ -128,6 +139,7 @@
 - [ ] Create StructureChart.vue component
 
 ## Phase 12: Testing & Quality Assurance
+
 - [ ] Write unit tests for models
 - [ ] Create unit tests for services
 - [ ] Write feature tests for authentication
@@ -142,6 +154,7 @@
 - [ ] Achieve 80%+ test coverage
 
 ## Phase 13: Optimization & Polish
+
 - [ ] Implement database query optimization
 - [ ] Setup Redis caching for frequently accessed data
 - [ ] Optimize image uploads with thumbnails
@@ -154,6 +167,7 @@
 - [ ] Configure Laravel Telescope for development
 
 ## Phase 14: Documentation
+
 - [ ] Create user manual (Bahasa Indonesia)
 - [ ] Write admin guide
 - [ ] Create API documentation (if needed)
@@ -164,6 +178,7 @@
 - [ ] Build training materials
 
 ## Phase 15: Deployment & Production
+
 - [ ] Configure production environment variables
 - [ ] Setup production Docker containers
 - [ ] Configure Nginx with SSL/TLS
