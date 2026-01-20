@@ -85,6 +85,40 @@ const getStatusLabel = (status) => {
                                     </ol>
                                 </dd>
                             </div>
+                            <div class="sm:col-span-2">
+                                <dt class="text-sm font-medium text-gray-500">Riwayat Perubahan</dt>
+                                <dd class="mt-1 text-sm text-gray-900">
+                                    <div v-if="visionMission.histories && visionMission.histories.length > 0" class="bg-gray-50 p-4 rounded-md space-y-3">
+                                        <div v-for="h in visionMission.histories" :key="h.id" class="border-b pb-3 last:border-b-0">
+                                            <div class="flex items-center justify-between">
+                                                <span class="text-xs font-semibold text-gray-600">
+                                                    {{ new Date(h.created_at).toLocaleString('id-ID') }}
+                                                </span>
+                                                <span class="text-xs px-2 py-0.5 rounded-full"
+                                                    :class="h.action === 'deleted' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'">
+                                                    {{ h.action === 'deleted' ? 'Dihapus' : 'Diperbarui' }}
+                                                </span>
+                                            </div>
+                                            <div class="mt-1 text-xs text-gray-500">
+                                                Oleh: {{ h.user?.name || 'Sistem' }}
+                                            </div>
+                                            <div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                <div v-if="h.old_data" class="bg-white border rounded p-2">
+                                                    <div class="text-xs font-bold text-gray-700 mb-1">Sebelum</div>
+                                                    <pre class="text-xs overflow-auto">{{ JSON.stringify(h.old_data, null, 2) }}</pre>
+                                                </div>
+                                                <div v-if="h.new_data" class="bg-white border rounded p-2">
+                                                    <div class="text-xs font-bold text-gray-700 mb-1">Sesudah</div>
+                                                    <pre class="text-xs overflow-auto">{{ JSON.stringify(h.new_data, null, 2) }}</pre>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div v-else class="text-sm text-gray-500">
+                                        Belum ada riwayat perubahan.
+                                    </div>
+                                </dd>
+                            </div>
                         </dl>
 
                         <div class="mt-8 flex justify-end">

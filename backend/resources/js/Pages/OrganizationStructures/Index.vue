@@ -12,6 +12,7 @@ const props = defineProps({
 
 const search = ref(props.filters?.search || "");
 const status = ref(props.filters?.status || "");
+const collapsed = ref({});
 
 const statusOptions = [
     { value: "active", label: "Aktif" },
@@ -33,6 +34,44 @@ const getStatusBadge = (isActive) => {
 const getStatusLabel = (isActive) => {
     return isActive ? "Aktif" : "Tidak Aktif";
 };
+
+const buildTree = (items) => {
+    const byId = new Map();
+    items.forEach((i) => byId.set(i.id, { ...i, children: [] }));
+    const roots = [];
+    byId.forEach((node) => {
+        if (node.parent_id && byId.has(node.parent_id)) {
+            byId.get(node.parent_id).children.push(node);
+        } else {
+            roots.push(node);
+        }
+    });
+    const sortChildren = (n) => {
+        n.children.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+        n.children.forEach(sortChildren);
+    };
+    roots.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    roots.forEach(sortChildren);
+    return roots;
+};
+
+const tree = buildTree(props.structures || []);
+
+const toggle = (id) => {
+    collapsed.value[id] = !collapsed.value[id];
+};
+
+const flattenVisible = (nodes, arr = [], level = 0) => {
+    nodes.forEach((n) => {
+        arr.push({ ...n, _level: level });
+        if (!collapsed.value[n.id] && n.children?.length) {
+            flattenVisible(n.children, arr, level + 1);
+        }
+    });
+    return arr;
+};
+
+const visibleRows = () => flattenVisible(tree);
 </script>
 
 <template>
@@ -84,9 +123,20 @@ const getStatusLabel = (isActive) => {
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    <tr v-for="item in structures" :key="item.id" class="hover:bg-gray-50">
+                                    <tr v-for="item in visibleRows()" :key="item.id" class="hover:bg-gray-50">
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            <div :style="{ paddingLeft: `${(item.level || 0) * 16}px` }" class="flex items-center">
+                                            <div :style="{ paddingLeft: `${(item._level || 0) * 16}px` }" class="flex items-center">
+                                                <button
+                                                    v-if="item.children && item.children.length"
+                                                    @click="toggle(item.id)"
+                                                    class="mr-2 text-gray-500 hover:text-gray-700"
+                                                    :aria-label="collapsed[item.id] ? 'Perluas' : 'Ciutkan'"
+                                                >
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path v-if="collapsed[item.id]" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4l8 8-8 8M4 12h16" />
+                                                        <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m7 7l-7-7 7-7" />
+                                                    </svg>
+                                                </button>
                                                 <span class="inline-block w-2 h-2 rounded-full mr-2" :class="item.parent_id ? 'bg-gray-300' : 'bg-indigo-400'"></span>
                                                 <span class="font-medium">{{ item.position_name }}</span>
                                             </div>
@@ -121,7 +171,7 @@ const getStatusLabel = (isActive) => {
                                             </div>
                                         </td>
                                     </tr>
-                                    <tr v-if="structures.length === 0">
+                                    <tr v-if="(structures?.length || 0) === 0">
                                         <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">Tidak ada data struktur organisasi.</td>
                                     </tr>
                                 </tbody>
@@ -133,4 +183,3 @@ const getStatusLabel = (isActive) => {
         </div>
     </AuthenticatedLayout>
 </template>
-

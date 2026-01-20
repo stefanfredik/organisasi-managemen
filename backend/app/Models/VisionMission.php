@@ -27,6 +27,36 @@ class VisionMission extends Model
         'updated_at' => 'datetime',
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::updating(function (VisionMission $vm) {
+            $changed = $vm->getDirty();
+            if (empty($changed)) {
+                return;
+            }
+            $old = array_intersect_key($vm->getOriginal(), $changed);
+            VisionMissionHistory::create([
+                'vision_mission_id' => $vm->id,
+                'changed_by' => auth()->id(),
+                'action' => 'updated',
+                'old_data' => $old,
+                'new_data' => $changed,
+            ]);
+        });
+
+        static::deleting(function (VisionMission $vm) {
+            VisionMissionHistory::create([
+                'vision_mission_id' => $vm->id,
+                'changed_by' => auth()->id(),
+                'action' => 'deleted',
+                'old_data' => $vm->getOriginal(),
+                'new_data' => null,
+            ]);
+        });
+    }
+
     /**
      * Scope for active vision/mission
      */
@@ -64,6 +94,11 @@ class VisionMission extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function histories()
+    {
+        return $this->hasMany(VisionMissionHistory::class)->latest();
     }
 
     /**

@@ -80,7 +80,12 @@ class VisionMissionController extends Controller
     {
         $this->authorize('view', $visionMission);
 
-        $visionMission->load('creator');
+        $visionMission->load([
+            'creator',
+            'histories' => function ($q) {
+                $q->with('user')->latest()->limit(10);
+            },
+        ]);
 
         return Inertia::render('VisionMissions/Show', [
             'visionMission' => $visionMission,
