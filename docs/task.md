@@ -93,23 +93,23 @@
 - [x] Create UpcomingEvents widget
 - [x] Implement role-based dashboard widgets
 - [x] Create ReportController for financial reports
-- [ ] Implement PDF report generation (DomPDF)
-- [ ] Build Excel export functionality (Laravel Excel)
+- [x] Implement PDF report generation (DomPDF)
+- [x] Build Excel export functionality (Laravel Excel)
 - [x] Create cash flow report
 - [x] Build balance sheet report
 
 ## Phase 9: Public Portal
 
-- [ ] Create PublicController for public pages
-- [ ] Build Home.vue public page
-- [ ] Create About.vue page
-- [ ] Build VisionMission.vue public page
-- [ ] Create Structure.vue public page
-- [ ] Build Events.vue and EventDetail.vue
-- [ ] Create Gallery.vue and AlbumDetail.vue
-- [ ] Build Contact.vue page
-- [ ] Implement Donations.vue public page
-- [ ] Ensure responsive design for all public pages
+- [x] Create PublicController for public pages
+- [x] Build Home.vue public page
+- [x] Create About.vue page
+- [x] Build VisionMission.vue public page
+- [x] Create Structure.vue public page
+- [x] Build Events.vue and EventDetail.vue
+- [x] Create Gallery.vue and AlbumDetail.vue
+- [x] Build Contact.vue page
+- [x] Implement Donations.vue public page
+- [x] Ensure responsive design for all public pages
 
 ## Phase 10: User Management (Admin)
 

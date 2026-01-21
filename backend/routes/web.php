@@ -5,14 +5,11 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
-});
+Route::get('/', [\App\Http\Controllers\PublicController::class, 'home'])->name('home');
+Route::get('/about', [\App\Http\Controllers\PublicController::class, 'about'])->name('public.about');
+Route::get('/vision-mission', [\App\Http\Controllers\PublicController::class, 'visionMission'])->name('public.vision-mission');
+Route::get('/structure', [\App\Http\Controllers\PublicController::class, 'structure'])->name('public.structure');
+Route::get('/contact', [\App\Http\Controllers\PublicController::class, 'contact'])->name('public.contact');
 
 Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
@@ -94,10 +91,19 @@ Route::middleware('auth')->group(function () {
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/', [\App\Http\Controllers\ReportController::class, 'index'])->name('index');
         Route::get('/financial', [\App\Http\Controllers\ReportController::class, 'financial'])->name('financial');
+        Route::get('/financial/pdf', [\App\Http\Controllers\ReportController::class, 'financialPdf'])->name('financial.pdf');
+        Route::get('/financial/excel', [\App\Http\Controllers\ReportController::class, 'financialExcel'])->name('financial.excel');
         Route::get('/cash-flow', [\App\Http\Controllers\ReportController::class, 'cashFlow'])->name('cash-flow');
+        Route::get('/cash-flow/pdf', [\App\Http\Controllers\ReportController::class, 'cashFlowPdf'])->name('cash-flow.pdf');
+        Route::get('/cash-flow/excel', [\App\Http\Controllers\ReportController::class, 'cashFlowExcel'])->name('cash-flow.excel');
         Route::get('/balance-sheet', [\App\Http\Controllers\ReportController::class, 'balanceSheet'])->name('balance-sheet');
+        Route::get('/balance-sheet/pdf', [\App\Http\Controllers\ReportController::class, 'balanceSheetPdf'])->name('balance-sheet.pdf');
         Route::get('/contributions', [\App\Http\Controllers\ReportController::class, 'contributions'])->name('contributions');
+        Route::get('/contributions/pdf', [\App\Http\Controllers\ReportController::class, 'contributionsPdf'])->name('contributions.pdf');
+        Route::get('/contributions/excel', [\App\Http\Controllers\ReportController::class, 'contributionsExcel'])->name('contributions.excel');
         Route::get('/donations', [\App\Http\Controllers\ReportController::class, 'donations'])->name('donations');
+        Route::get('/donations/pdf', [\App\Http\Controllers\ReportController::class, 'donationsPdf'])->name('donations.pdf');
+        Route::get('/donations/excel', [\App\Http\Controllers\ReportController::class, 'donationsExcel'])->name('donations.excel');
     });
 });
 

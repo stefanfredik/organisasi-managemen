@@ -2,12 +2,13 @@
 import { Head, Link } from '@inertiajs/vue3';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
 
-const props = defineProps({
+defineProps({
     events: Array,
 });
 
-const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('id-ID', {
+const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('id-ID', {
         day: 'numeric',
         month: 'long',
         year: 'numeric',
@@ -19,60 +20,61 @@ const formatDate = (date) => {
     <Head title="Kegiatan Organisasi" />
 
     <PublicLayout>
-        <div class="py-12 bg-gray-50">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center">
-                    <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-                        Kegiatan Mendatang
-                    </h2>
-                    <p class="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">
-                        Ikuti berbagai kegiatan seru dan bermanfaat bersama organisasi kami.
+        <div class="bg-white">
+            <div class="mx-auto max-w-7xl px-6 py-16 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">Kegiatan Organisasi</h2>
+                    <p class="mt-4 text-lg text-gray-500 max-w-2xl mx-auto">
+                        Ikuti berbagai agenda kegiatan menarik yang kami selenggarakan untuk pemberdayaan dan pengembangan bersama.
                     </p>
                 </div>
 
-                <div class="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                    <div v-for="event in events" :key="event.id" class="flex flex-col rounded-lg shadow-lg overflow-hidden bg-white">
-                        <div class="flex-1 p-6 flex flex-col justify-between">
+                <div v-if="events.length > 0" class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                    <div v-for="event in events" :key="event.id" class="flex flex-col rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all">
+                        <div class="shrink-0 relative">
+                            <img class="h-56 w-full object-cover" :src="event.banner_url || 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'" alt="">
+                            <div class="absolute top-4 right-4">
+                                <span class="px-3 py-1 bg-white/90 backdrop-blur-sm text-indigo-600 rounded-full text-xs font-bold uppercase shadow-sm">
+                                    {{ event.category }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex-1 bg-white p-6 flex flex-col justify-between">
                             <div class="flex-1">
-                                <p class="text-sm font-medium text-indigo-600">
-                                    {{ formatDate(event.start_date) }}
-                                </p>
-                                <div class="block mt-2">
-                                    <p class="text-xl font-semibold text-gray-900">
-                                        {{ event.name }}
-                                    </p>
-                                    <p class="mt-3 text-base text-gray-500 line-clamp-3">
+                                <Link :href="route('public.events.show', event.slug)" class="block">
+                                    <h3 class="text-xl font-bold text-gray-900 line-clamp-2 hover:text-indigo-600 transition-colors">
+                                        {{ event.title }}
+                                    </h3>
+                                    <p class="mt-3 text-sm text-gray-500 line-clamp-3">
                                         {{ event.description }}
                                     </p>
-                                </div>
-                            </div>
-                            <div class="mt-6 flex items-center">
-                                <div class="flex-shrink-0">
-                                    <span class="sr-only">{{ event.location }}</span>
-                                    <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
-                                    </svg>
-                                </div>
-                                <div class="ml-3">
-                                    <p class="text-sm font-medium text-gray-900">
-                                        {{ event.location || 'Online / Remote' }}
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="mt-6">
-                                <Link
-                                    :href="route('public.events.show', event.slug)"
-                                    class="text-base font-semibold text-indigo-600 hover:text-indigo-500"
-                                >
-                                    Lihat Detail &rarr;
                                 </Link>
+                            </div>
+                            <div class="mt-6 flex items-center justify-between">
+                                <div class="flex items-center text-sm text-gray-500">
+                                    <svg class="h-4 w-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 00-2 2z" />
+                                    </svg>
+                                    {{ formatDate(event.start_date) }}
+                                </div>
+                                <div class="flex items-center text-sm text-gray-500">
+                                    <svg class="h-4 w-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    {{ event.location || 'Online' }}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div v-if="events.length === 0" class="mt-12 text-center text-gray-500">
-                    Belum ada kegiatan yang direncanakan.
+                <div v-else class="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 00-2 2z" />
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">Belum ada kegiatan</h3>
+                    <p class="mt-1 text-sm text-gray-500">Silakan kembali lagi nanti untuk melihat update kegiatan terbaru.</p>
                 </div>
             </div>
         </div>

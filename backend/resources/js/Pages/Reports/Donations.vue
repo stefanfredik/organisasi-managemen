@@ -52,6 +52,27 @@ const getStatusColor = (status) => {
                     </Link>
                     <h2 class="text-xl font-semibold text-gray-800">Laporan Donasi</h2>
                 </div>
+                <div class="flex items-center space-x-2">
+                    <a
+                        :href="route('reports.donations.pdf', { status: status })"
+                        target="_blank"
+                        class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 active:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                    >
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        PDF
+                    </a>
+                    <a
+                        :href="route('reports.donations.excel', { status: status })"
+                        class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                    >
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Excel
+                    </a>
+                </div>
             </div>
         </template>
 
@@ -110,7 +131,7 @@ const getStatusColor = (status) => {
                         <div class="p-6">
                             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                                 <div>
-                                    <h3 class="text-lg font-bold text-gray-900">{{ d.name }}</h3>
+                                    <h3 class="text-lg font-bold text-gray-900">{{ d.program_name }}</h3>
                                     <p class="text-sm text-gray-500">{{ d.description }}</p>
                                 </div>
                                 <span :class="[getStatusColor(d.status), 'px-3 py-1 rounded-full text-xs font-bold uppercase w-fit']">
@@ -120,13 +141,13 @@ const getStatusColor = (status) => {
 
                             <div class="space-y-2 mb-6">
                                 <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">Progress: {{ formatCurrency(d.current_amount) }} / {{ formatCurrency(d.target_amount) }}</span>
-                                    <span class="font-bold text-gray-900">{{ ((d.current_amount / d.target_amount) * 100).toFixed(1) }}%</span>
+                                    <span class="text-gray-600">Progress: {{ formatCurrency(d.collected_amount) }} / {{ formatCurrency(d.target_amount) }}</span>
+                                    <span class="font-bold text-gray-900">{{ ((d.collected_amount / d.target_amount) * 100).toFixed(1) }}%</span>
                                 </div>
                                 <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
                                     <div 
                                         class="bg-indigo-600 h-full rounded-full transition-all duration-500"
-                                        :style="{ width: `${(d.current_amount / d.target_amount) * 100}%` }"
+                                        :style="{ width: `${(d.collected_amount / d.target_amount) * 100}%` }"
                                     ></div>
                                 </div>
                             </div>

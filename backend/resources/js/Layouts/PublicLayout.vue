@@ -6,14 +6,14 @@ import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 const mobileMenuOpen = ref(false);
 
 const navigation = [
-    { name: 'Beranda', href: '/' },
-    { name: 'Tentang', href: '/about' },
-    { name: 'Visi & Misi', href: '/vision-mission' },
-    { name: 'Struktur', href: '/structure' },
+    { name: 'Beranda', href: route('home') },
+    { name: 'Tentang', href: route('public.about') },
+    { name: 'Visi & Misi', href: route('public.vision-mission') },
+    { name: 'Struktur', href: route('public.structure') },
     { name: 'Kegiatan', href: route('public.events.index') },
     { name: 'Donasi', href: route('public.donations.index') },
-    { name: 'Galeri', href: '/gallery' },
-    { name: 'Kontak', href: '/contact' },
+    { name: 'Galeri', href: route('public.gallery.index') },
+    { name: 'Kontak', href: route('public.contact') },
 ];
 </script>
 

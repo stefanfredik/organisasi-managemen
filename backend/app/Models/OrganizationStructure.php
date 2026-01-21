@@ -31,6 +31,16 @@ class OrganizationStructure extends Model
         'is_active' => 'boolean',
     ];
 
+    protected $appends = ['photo_url'];
+
+    public function getPhotoUrlAttribute()
+    {
+        if ($this->photo_path) {
+            return \Illuminate\Support\Facades\Storage::url($this->photo_path);
+        }
+        return null;
+    }
+
     public function member(): BelongsTo
     {
         return $this->belongsTo(Member::class);
