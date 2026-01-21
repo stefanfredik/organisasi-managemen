@@ -162,6 +162,36 @@ class SettingSeeder extends Seeder
                 'type' => 'boolean',
                 'description' => 'Aktifkan fitur galeri foto.',
             ],
+
+            // Access Control (Permissions)
+            [
+                'key' => 'role_permissions_ketua',
+                'value' => json_encode(['view_dashboard', 'manage_members', 'manage_finance', 'manage_events', 'view_reports']),
+                'group' => 'access_control',
+                'type' => 'json',
+                'description' => 'Hak akses untuk role Ketua.',
+            ],
+            [
+                'key' => 'role_permissions_bendahara',
+                'value' => json_encode(['view_dashboard', 'manage_finance', 'view_reports']),
+                'group' => 'access_control',
+                'type' => 'json',
+                'description' => 'Hak akses untuk role Bendahara.',
+            ],
+            [
+                'key' => 'role_permissions_sekretaris',
+                'value' => json_encode(['view_dashboard', 'manage_members', 'manage_events']),
+                'group' => 'access_control',
+                'type' => 'json',
+                'description' => 'Hak akses untuk role Sekretaris.',
+            ],
+            [
+                'key' => 'role_permissions_anggota',
+                'value' => json_encode(['view_dashboard', 'view_events', 'view_donations']),
+                'group' => 'access_control',
+                'type' => 'json',
+                'description' => 'Hak akses untuk role Anggota.',
+            ],
         ];
 
         foreach ($settings as $setting) {

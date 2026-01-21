@@ -32,6 +32,10 @@ class Setting extends Model
             return (int) $setting->value;
         }
 
+        if ($setting->type === 'json') {
+            return json_decode($setting->value, true) ?? [];
+        }
+
         return $setting->value;
     }
 }

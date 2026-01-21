@@ -42,9 +42,9 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
         
-        // Get financial summary (for admin, ketua, bendahara)
+        // Get financial summary (for authorized roles)
         $financialSummary = null;
-        if (in_array($user->role, ['admin', 'ketua', 'bendahara'])) {
+        if ($user->hasPermission('view_finance')) {
             $financialSummary = $this->getFinancialSummary();
         }
         
@@ -76,7 +76,7 @@ class DashboardController extends Controller
             ->count();
         
         // Role-specific stats
-        if (in_array($user->role, ['admin', 'ketua', 'bendahara'])) {
+        if ($user->hasPermission('view_finance')) {
             $wallet = Wallet::first();
             $stats['totalBalance'] = $wallet ? $wallet->balance : 0;
             
@@ -94,7 +94,7 @@ class DashboardController extends Controller
             $stats['activeDonations'] = Donation::where('status', 'active')->count();
         }
         
-        if (in_array($user->role, ['admin', 'ketua', 'sekretaris'])) {
+        if ($user->hasPermission('manage_events') || $user->hasPermission('manage_members')) {
             $stats['totalMeetings'] = MeetingMinute::count();
             $stats['totalAnnouncements'] = Announcement::where('status', 'published')->count();
         }

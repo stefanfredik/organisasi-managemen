@@ -11,8 +11,7 @@ class MemberPolicy extends BasePolicy
      */
     public function viewAny(?User $user): bool
     {
-        // Admin, Ketua, Sekretaris can view member list
-        return $this->hasAnyRole($user, ['admin', 'ketua', 'sekretaris']);
+        return $user->hasPermission('view_members') || $user->hasPermission('manage_members');
     }
 
     /**
@@ -20,8 +19,7 @@ class MemberPolicy extends BasePolicy
      */
     public function view(?User $user, $member): bool
     {
-        // Admin, Ketua, Sekretaris can view any member
-        if ($this->hasAnyRole($user, ['admin', 'ketua', 'sekretaris'])) {
+        if ($user->hasPermission('view_members') || $user->hasPermission('manage_members')) {
             return true;
         }
 
@@ -38,8 +36,7 @@ class MemberPolicy extends BasePolicy
      */
     public function create(?User $user): bool
     {
-        // Admin and Sekretaris can create members
-        return $this->hasAnyRole($user, ['admin', 'sekretaris']);
+        return $user->hasPermission('manage_members');
     }
 
     /**
@@ -47,8 +44,7 @@ class MemberPolicy extends BasePolicy
      */
     public function update(?User $user, $member): bool
     {
-        // Admin and Sekretaris can update any member
-        if ($this->hasAnyRole($user, ['admin', 'sekretaris'])) {
+        if ($user->hasPermission('manage_members')) {
             return true;
         }
 
@@ -65,8 +61,7 @@ class MemberPolicy extends BasePolicy
      */
     public function delete(?User $user, $member): bool
     {
-        // Only Admin can delete members
-        return $this->isAdmin($user);
+        return $user->hasPermission('manage_members');
     }
 
     /**

@@ -11,8 +11,7 @@ class EventPolicy extends BasePolicy
      */
     public function viewAny(?User $user): bool
     {
-        // All authenticated users can view events
-        return $this->isAuthenticated($user);
+        return $user->hasPermission('view_events') || $user->hasPermission('manage_events');
     }
 
     /**
@@ -20,8 +19,7 @@ class EventPolicy extends BasePolicy
      */
     public function view(?User $user, $event): bool
     {
-        // All authenticated users can view event details
-        return $this->isAuthenticated($user);
+        return $user->hasPermission('view_events') || $user->hasPermission('manage_events');
     }
 
     /**
@@ -29,8 +27,7 @@ class EventPolicy extends BasePolicy
      */
     public function create(?User $user): bool
     {
-        // Admin, Ketua, Sekretaris can create events
-        return $this->hasAnyRole($user, ['admin', 'ketua', 'sekretaris']);
+        return $user->hasPermission('manage_events');
     }
 
     /**
@@ -38,8 +35,7 @@ class EventPolicy extends BasePolicy
      */
     public function update(?User $user, $event): bool
     {
-        // Admin, Ketua, Sekretaris can update events
-        return $this->hasAnyRole($user, ['admin', 'ketua', 'sekretaris']);
+        return $user->hasPermission('manage_events');
     }
 
     /**
@@ -47,8 +43,7 @@ class EventPolicy extends BasePolicy
      */
     public function delete(?User $user, $event): bool
     {
-        // Admin and Ketua can delete events
-        return $this->hasAnyRole($user, ['admin', 'ketua']);
+        return $user->hasPermission('manage_events');
     }
 
     /**
@@ -56,8 +51,7 @@ class EventPolicy extends BasePolicy
      */
     public function manageParticipants(?User $user, $event): bool
     {
-        // Admin, Ketua, Sekretaris can manage participants
-        return $this->hasAnyRole($user, ['admin', 'ketua', 'sekretaris']);
+        return $user->hasPermission('manage_events');
     }
 
     /**
@@ -65,7 +59,6 @@ class EventPolicy extends BasePolicy
      */
     public function uploadDocumentation(?User $user, $event): bool
     {
-        // Admin, Ketua, Sekretaris can upload documentation
-        return $this->hasAnyRole($user, ['admin', 'ketua', 'sekretaris']);
+        return $user->hasPermission('manage_events');
     }
 }

@@ -11,7 +11,7 @@ class FinancePolicy extends BasePolicy
      */
     public function viewAny(?User $user): bool
     {
-        return $this->isAuthenticated($user);
+        return $user->hasPermission('view_finance') || $user->hasPermission('manage_finance');
     }
 
     /**
@@ -19,7 +19,7 @@ class FinancePolicy extends BasePolicy
      */
     public function view(?User $user, $finance): bool
     {
-        return $this->isAuthenticated($user);
+        return $user->hasPermission('view_finance') || $user->hasPermission('manage_finance');
     }
 
     /**
@@ -27,8 +27,7 @@ class FinancePolicy extends BasePolicy
      */
     public function create(?User $user): bool
     {
-        // Admin and Bendahara can create finance records
-        return $this->hasAnyRole($user, ['admin', 'bendahara']);
+        return $user->hasPermission('manage_finance');
     }
 
     /**
@@ -36,8 +35,7 @@ class FinancePolicy extends BasePolicy
      */
     public function update(?User $user, $finance): bool
     {
-        // Admin and Bendahara can update finance records
-        return $this->hasAnyRole($user, ['admin', 'bendahara']);
+        return $user->hasPermission('manage_finance');
     }
 
     /**
@@ -45,8 +43,7 @@ class FinancePolicy extends BasePolicy
      */
     public function delete(?User $user, $finance): bool
     {
-        // Admin and Bendahara can delete finance records
-        return $this->hasAnyRole($user, ['admin', 'bendahara']);
+        return $user->hasPermission('manage_finance');
     }
 
     /**
@@ -54,8 +51,7 @@ class FinancePolicy extends BasePolicy
      */
     public function viewReports(?User $user): bool
     {
-        // Admin, Ketua, Bendahara can view reports
-        return $this->hasAnyRole($user, ['admin', 'ketua', 'bendahara']);
+        return $user->hasPermission('view_reports');
     }
 
     /**
@@ -63,8 +59,7 @@ class FinancePolicy extends BasePolicy
      */
     public function manageWallets(?User $user): bool
     {
-        // Admin and Bendahara can manage wallets
-        return $this->hasAnyRole($user, ['admin', 'bendahara']);
+        return $user->hasPermission('manage_finance');
     }
 
     /**
@@ -72,7 +67,6 @@ class FinancePolicy extends BasePolicy
      */
     public function uploadReceipt(?User $user, $finance): bool
     {
-        // Admin and Bendahara can upload receipts
-        return $this->hasAnyRole($user, ['admin', 'bendahara']);
+        return $user->hasPermission('manage_finance');
     }
 }

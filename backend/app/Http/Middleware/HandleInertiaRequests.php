@@ -38,6 +38,7 @@ class HandleInertiaRequests extends Middleware
                     'email' => $request->user()->email,
                     'role' => $request->user()->role,
                     'status' => $request->user()->status,
+                    'permissions' => \App\Models\Setting::getValue("role_permissions_" . $request->user()->role, []),
                 ] : null,
             ],
             'flash' => [

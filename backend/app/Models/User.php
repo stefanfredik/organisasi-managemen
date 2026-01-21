@@ -78,4 +78,13 @@ class User extends Authenticatable
             'last_login_at' => 'datetime',
         ];
     }
+    public function hasPermission(string $permission): bool
+    {
+        if ($this->role === self::ROLE_ADMIN) {
+            return true;
+        }
+
+        $permissions = Setting::getValue("role_permissions_{$this->role}", []);
+        return in_array($permission, $permissions);
+    }
 }
