@@ -205,4 +205,12 @@ Route::middleware('auth')->group(function () {
 // Public Vision & Mission API
 Route::get('/api/vision-mission/active', [\App\Http\Controllers\VisionMissionController::class, 'getActive'])->name('api.vision-mission.active');
 
+// Indonesian Area Proxy API (to avoid browser CORS)
+Route::prefix('api/areas')->group(function () {
+    Route::get('provinces', [\App\Http\Controllers\AreaController::class, 'provinces'])->name('api.areas.provinces');
+    Route::get('regencies/{provinceCode}', [\App\Http\Controllers\AreaController::class, 'regencies'])->name('api.areas.regencies');
+    Route::get('districts/{regencyCode}', [\App\Http\Controllers\AreaController::class, 'districts'])->name('api.areas.districts');
+    Route::get('villages/{districtCode}', [\App\Http\Controllers\AreaController::class, 'villages'])->name('api.areas.villages');
+});
+
 require __DIR__ . '/auth.php';

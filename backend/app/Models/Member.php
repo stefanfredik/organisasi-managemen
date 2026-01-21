@@ -21,6 +21,7 @@ class Member extends Model
      */
     protected $appends = [
         'photo_url',
+        'ktp_photo_url',
     ];
 
     /**
@@ -31,14 +32,31 @@ class Member extends Model
     protected $fillable = [
         'user_id',
         'member_code',
+        'nik',
         'full_name',
+        'nickname',
+        'gender',
+        'religion',
         'email',
         'phone',
         'address',
+        'domicile_address',
+        'living_status',
+        'marital_status',
+        'occupation',
+        'arrival_date_bali',
+        'origin_hamlet',
+        'origin_village',
+        'origin_subdistrict',
+        'origin_regency',
+        'origin_province',
         'date_of_birth',
         'join_date',
         'status',
         'photo',
+        'ktp_photo',
+        'bpjs_health_active',
+        'bpjs_employment_active',
         'notes',
     ];
 
@@ -50,6 +68,9 @@ class Member extends Model
     protected $casts = [
         'date_of_birth' => 'date:Y-m-d',
         'join_date' => 'date:Y-m-d',
+        'arrival_date_bali' => 'date:Y-m-d',
+        'bpjs_health_active' => 'boolean',
+        'bpjs_employment_active' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -160,6 +181,14 @@ class Member extends Model
         }
 
         return Storage::disk('public')->url($this->photo);
+    }
+
+    public function getKtpPhotoUrlAttribute(): ?string
+    {
+        if (empty($this->ktp_photo)) {
+            return null;
+        }
+        return Storage::disk('public')->url($this->ktp_photo);
     }
 
     /**

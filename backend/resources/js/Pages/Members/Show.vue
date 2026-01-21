@@ -73,16 +73,13 @@ const getStatusLabel = (status) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                    Detail Anggota
-                </h2>
-                <Link
-                    href="/members"
-                    class="text-sm text-gray-600 hover:text-gray-900"
-                >
-                    Kembali ke Daftar
+            <div class="flex items-center space-x-3">
+                <Link href="/members" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
                 </Link>
+                <h2 class="text-xl font-semibold text-gray-800">Detail Anggota</h2>
             </div>
         </template>
 
@@ -137,7 +134,7 @@ const getStatusLabel = (status) => {
                                     <div class="flex gap-2">
                                         <Link
                                             :href="`/members/${member.id}/edit`"
-                                            class="inline-flex items-center px-4 py-2 bg-yellow-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-700 focus:bg-yellow-700 active:bg-yellow-900 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                            class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
                                         >
                                             Edit
                                         </Link>
@@ -183,6 +180,24 @@ const getStatusLabel = (status) => {
                         <div v-if="activeTab === 'profile'" class="space-y-6">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
+                                    <h4 class="text-sm font-medium text-gray-500">NIK</h4>
+                                    <p class="mt-1 text-sm text-gray-900">{{ member.nik || '-' }}</p>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-500">Nama Panggilan</h4>
+                                    <p class="mt-1 text-sm text-gray-900">{{ member.nickname || '-' }}</p>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-500">Jenis Kelamin</h4>
+                                    <p class="mt-1 text-sm text-gray-900">
+                                        {{ member.gender === 'male' ? 'Laki-laki' : member.gender === 'female' ? 'Perempuan' : '-' }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-500">Agama</h4>
+                                    <p class="mt-1 text-sm text-gray-900">{{ member.religion || '-' }}</p>
+                                </div>
+                                <div>
                                     <h4 class="text-sm font-medium text-gray-500">Email</h4>
                                     <p class="mt-1 text-sm text-gray-900">{{ member.email || '-' }}</p>
                                 </div>
@@ -208,8 +223,80 @@ const getStatusLabel = (status) => {
                                 </div>
 
                                 <div class="md:col-span-2">
+                                    <h4 class="text-sm font-medium text-gray-500">Alamat Domisili</h4>
+                                    <p class="mt-1 text-sm text-gray-900">{{ member.domicile_address || '-' }}</p>
+                                </div>
+
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-500">Status Tempat Tinggal</h4>
+                                    <p class="mt-1 text-sm text-gray-900">{{ member.living_status || '-' }}</p>
+                                </div>
+
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-500">Status Pernikahan</h4>
+                                    <p class="mt-1 text-sm text-gray-900">{{ member.marital_status || '-' }}</p>
+                                </div>
+
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-500">Pekerjaan</h4>
+                                    <p class="mt-1 text-sm text-gray-900">{{ member.occupation || '-' }}</p>
+                                </div>
+
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-500">Waktu Tiba di Bali</h4>
+                                    <p class="mt-1 text-sm text-gray-900">{{ formatDate(member.arrival_date_bali) }}</p>
+                                </div>
+
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-500">Kampung Asal</h4>
+                                    <p class="mt-1 text-sm text-gray-900">{{ member.origin_hamlet || '-' }}</p>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-500">Desa</h4>
+                                    <p class="mt-1 text-sm text-gray-900">{{ member.origin_village || '-' }}</p>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-500">Kecamatan</h4>
+                                    <p class="mt-1 text-sm text-gray-900">{{ member.origin_subdistrict || '-' }}</p>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-500">Kabupaten</h4>
+                                    <p class="mt-1 text-sm text-gray-900">{{ member.origin_regency || '-' }}</p>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-500">Provinsi</h4>
+                                    <p class="mt-1 text-sm text-gray-900">{{ member.origin_province || '-' }}</p>
+                                </div>
+
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-500">BPJS Kesehatan</h4>
+                                    <p class="mt-1 text-sm text-gray-900">
+                                        {{ member.bpjs_health_active ? 'Aktif' : 'Tidak Aktif' }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-500">BPJS Tenaga Kerja</h4>
+                                    <p class="mt-1 text-sm text-gray-900">
+                                        {{ member.bpjs_employment_active ? 'Aktif' : 'Tidak Aktif' }}
+                                    </p>
+                                </div>
+
+                                <div class="md:col-span-2">
                                     <h4 class="text-sm font-medium text-gray-500">Catatan</h4>
                                     <p class="mt-1 text-sm text-gray-900">{{ member.notes || '-' }}</p>
+                                </div>
+                            </div>
+
+                            <div class="mt-6">
+                                <h4 class="text-sm font-medium text-gray-500">Foto KTP</h4>
+                                <div class="mt-2">
+                                    <img
+                                        v-if="member.ktp_photo_url"
+                                        :src="member.ktp_photo_url"
+                                        alt="Foto KTP"
+                                        class="h-48 w-auto rounded-lg object-cover"
+                                    />
+                                    <p v-else class="text-sm text-gray-900">-</p>
                                 </div>
                             </div>
                         </div>

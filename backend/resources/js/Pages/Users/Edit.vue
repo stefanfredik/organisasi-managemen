@@ -5,16 +5,13 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 const props = defineProps({
     user: Object,
     roles: Object,
-    statuses: Object,
+    memberId: Number,
 });
 
 const form = useForm({
-    name: props.user.name,
-    email: props.user.email,
     password: '',
     password_confirmation: '',
     role: props.user.role,
-    status: props.user.status,
 });
 
 const submit = () => {
@@ -46,30 +43,25 @@ const submit = () => {
             <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
                     <form @submit.prevent="submit" class="p-8 lg:p-12 space-y-8">
-                        <!-- Information Section -->
+                        <!-- Info Section (read-only) -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="col-span-2">
-                                <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-2 block ml-1">Nama Lengkap</label>
-                                <input
-                                    v-model="form.name"
-                                    type="text"
-                                    class="w-full bg-slate-50 border-slate-200 rounded-2xl py-4 px-6 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-medium"
-                                    placeholder="Masukkan nama lengkap..."
-                                    required
-                                >
-                                <div v-if="form.errors.name" class="text-rose-500 text-xs mt-2 ml-1 font-bold">{{ form.errors.name }}</div>
-                            </div>
-
-                            <div class="col-span-2">
-                                <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-2 block ml-1">Alamat Email</label>
-                                <input
-                                    v-model="form.email"
-                                    type="email"
-                                    class="w-full bg-slate-50 border-slate-200 rounded-2xl py-4 px-6 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-medium"
-                                    placeholder="nama@email.com"
-                                    required
-                                >
-                                <div v-if="form.errors.email" class="text-rose-500 text-xs mt-2 ml-1 font-bold">{{ form.errors.email }}</div>
+                                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <div class="text-[11px] font-black uppercase tracking-widest text-slate-400">Nama Lengkap</div>
+                                            <div class="text-slate-900 font-bold">{{ user.name }}</div>
+                                        </div>
+                                        <div>
+                                            <div class="text-[11px] font-black uppercase tracking-widest text-slate-400">Email</div>
+                                            <div class="text-slate-900 font-bold">{{ user.email }}</div>
+                                        </div>
+                                    </div>
+                                    <p class="mt-3 text-[11px] text-slate-500">
+                                        Nama dan email dikelola dari menu Anggota. 
+                                        <Link v-if="memberId" :href="`/members/${memberId}/edit`" class="text-indigo-600 font-bold">Edit Anggota</Link>
+                                    </p>
+                                </div>
                             </div>
 
                             <div>
@@ -84,16 +76,13 @@ const submit = () => {
                                 <div v-if="form.errors.role" class="text-rose-500 text-xs mt-2 ml-1 font-bold">{{ form.errors.role }}</div>
                             </div>
 
+                            <!-- Status displayed read-only -->
                             <div>
                                 <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-2 block ml-1">Status Akun</label>
-                                <select
-                                    v-model="form.status"
-                                    class="w-full bg-slate-50 border-slate-200 rounded-2xl py-4 px-6 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-bold"
-                                    required
-                                >
-                                    <option v-for="(label, value) in statuses" :key="value" :value="value">{{ label }}</option>
-                                </select>
-                                <div v-if="form.errors.status" class="text-rose-500 text-xs mt-2 ml-1 font-bold">{{ form.errors.status }}</div>
+                                <div class="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 px-6 font-bold">
+                                    {{ user.status }}
+                                </div>
+                                <p class="mt-2 text-[11px] text-slate-500">Status akun mengikuti status Anggota.</p>
                             </div>
 
                             <div class="col-span-2 pt-6">

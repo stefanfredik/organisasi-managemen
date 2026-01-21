@@ -97,10 +97,12 @@ class UserController extends Controller
     {
         $this->authorize('update', $user);
 
+        $memberId = \App\Models\Member::where('user_id', $user->id)->value('id');
+
         return Inertia::render('Users/Edit', [
             'user' => $user,
             'roles' => User::getRoles(),
-            'statuses' => User::getStatuses(),
+            'memberId' => $memberId,
         ]);
     }
 
@@ -112,18 +114,12 @@ class UserController extends Controller
         $this->authorize('update', $user);
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8|confirmed',
             'role' => ['required', Rule::in(array_keys(User::getRoles()))],
-            'status' => ['required', Rule::in(array_keys(User::getStatuses()))],
         ]);
 
         $userData = [
-            'name' => $validated['name'],
-            'email' => $validated['email'],
             'role' => $validated['role'],
-            'status' => $validated['status'],
         ];
 
         if ($request->filled('password')) {

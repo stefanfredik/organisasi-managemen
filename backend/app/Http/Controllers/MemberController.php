@@ -91,6 +91,12 @@ class MemberController extends Controller
 
             // Create Member linked to User
             $data['user_id'] = $user->id;
+            if (request()->hasFile('photo')) {
+                $data['photo'] = request()->file('photo')->store('members/photos', 'public');
+            }
+            if (request()->hasFile('ktp_photo')) {
+                $data['ktp_photo'] = request()->file('ktp_photo')->store('members/ktp', 'public');
+            }
             $member = Member::create($data);
 
             // Log activity
@@ -181,9 +187,25 @@ class MemberController extends Controller
             }
             $data['photo'] = $request->file('photo')->store('members/photos', 'public');
         }
+        if ($request->hasFile('ktp_photo')) {
+            if ($member->ktp_photo) {
+                Storage::disk('public')->delete($member->ktp_photo);
+            }
+            $data['ktp_photo'] = $request->file('ktp_photo')->store('members/ktp', 'public');
+        }
 
         $oldData = $member->toArray();
         $member->update($data);
+
+        // Sync linked user basic info (name, email, status)
+        if ($member->user) {
+            $member->user->name = $member->full_name;
+            if (!empty($member->email)) {
+                $member->user->email = $member->email;
+            }
+            $member->user->status = $member->status === 'active' ? \App\Models\User::STATUS_ACTIVE : \App\Models\User::STATUS_INACTIVE;
+            $member->user->save();
+        }
 
         // Log activity
         $this->activityLogger->logUpdate(
