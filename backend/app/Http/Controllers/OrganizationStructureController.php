@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Gate;
 
 class OrganizationStructureController extends Controller
 {
@@ -38,6 +39,8 @@ class OrganizationStructureController extends Controller
         return Inertia::render('OrganizationStructures/Index', [
             'structures' => $structures,
             'filters' => $request->only(['search', 'status']),
+            'members' => Member::select('id', 'full_name')->orderBy('full_name')->get(),
+            'canManage' => Gate::allows('create', OrganizationStructure::class),
         ]);
     }
 

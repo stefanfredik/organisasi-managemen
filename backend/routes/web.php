@@ -14,9 +14,9 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 // Public Event Routes
 Route::get('/events/public', [\App\Http\Controllers\PublicEventController::class, 'index'])->name('public.events.index');
@@ -77,6 +77,28 @@ Route::middleware('auth')->group(function () {
 
     // Organization Structure Management
     Route::resource('organization-structures', \App\Http\Controllers\OrganizationStructureController::class);
+
+    // Administration - Announcements
+    Route::resource('announcements', \App\Http\Controllers\AnnouncementController::class);
+
+    // Administration - Meeting Minutes
+    Route::resource('meeting-minutes', \App\Http\Controllers\MeetingMinuteController::class);
+    Route::post('meeting-minutes/{minute}/attachments', [\App\Http\Controllers\MeetingMinuteController::class, 'uploadAttachment'])->name('meeting-minutes.attachments');
+    Route::get('meeting-minutes/attachments/{attachment}/download', [\App\Http\Controllers\MeetingMinuteController::class, 'downloadAttachment'])->name('meeting-minutes.attachments.download');
+
+    // Administration - Documents
+    Route::resource('documents', \App\Http\Controllers\DocumentController::class);
+    Route::get('documents/{document}/download', [\App\Http\Controllers\DocumentController::class, 'download'])->name('documents.download');
+    
+    // Reports
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\ReportController::class, 'index'])->name('index');
+        Route::get('/financial', [\App\Http\Controllers\ReportController::class, 'financial'])->name('financial');
+        Route::get('/cash-flow', [\App\Http\Controllers\ReportController::class, 'cashFlow'])->name('cash-flow');
+        Route::get('/balance-sheet', [\App\Http\Controllers\ReportController::class, 'balanceSheet'])->name('balance-sheet');
+        Route::get('/contributions', [\App\Http\Controllers\ReportController::class, 'contributions'])->name('contributions');
+        Route::get('/donations', [\App\Http\Controllers\ReportController::class, 'donations'])->name('donations');
+    });
 });
 
 // Public Vision & Mission API

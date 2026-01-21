@@ -1,13 +1,16 @@
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import ApplicationLogo from "@/Components/ApplicationLogo.vue";
 import Dropdown from "@/Components/Dropdown.vue";
 import DropdownLink from "@/Components/DropdownLink.vue";
 import NavLink from "@/Components/NavLink.vue";
 import ResponsiveNavLink from "@/Components/ResponsiveNavLink.vue";
-import { Link } from "@inertiajs/vue3";
+import { Link, usePage } from "@inertiajs/vue3";
 import FlashMessage from "@/Components/FlashMessage.vue";
+import NotificationPanel from "@/Components/NotificationPanel.vue";
 
+const page = usePage();
+const notifications = computed(() => page.props.notifications || []);
 const showingNavigationDropdown = ref(false);
 const isSidebarOpen = ref(true);
 
@@ -340,6 +343,102 @@ const toggleSidebar = () => {
                             </Link>
                         </div>
                     </div>
+                        <!-- Kelompok Administrasi -->
+                        <div>
+                        <div
+                            v-show="isSidebarOpen"
+                            class="px-3 mb-2 text-[10px] font-black uppercase tracking-widest text-gray-400"
+                        >
+                            Administrasi
+                        </div>
+                        <div class="space-y-1">
+                            <Link
+                                :href="route('announcements.index')"
+                                :class="[
+                                    'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-bold text-sm',
+                                    route().current('announcements.*')
+                                        ? 'bg-indigo-50 text-indigo-700 shadow-sm'
+                                        : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900',
+                                ]"
+                            >
+                                <svg
+                                    class="w-5 h-5 shrink-0"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                                    />
+                                </svg>
+                                <span v-show="isSidebarOpen">Pengumuman</span>
+                            </Link>
+                            <Link
+                                :href="route('meeting-minutes.index')"
+                                :class="[
+                                    'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-bold text-sm',
+                                    route().current('meeting-minutes.*')
+                                        ? 'bg-indigo-50 text-indigo-700 shadow-sm'
+                                        : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900',
+                                ]"
+                            >
+                                <svg
+                                    class="w-5 h-5 shrink-0"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                    />
+                                </svg>
+                                <span v-show="isSidebarOpen">Notulensi Rapat</span>
+                            </Link>
+                        </div>
+                    </div>
+
+                    <!-- Kelompok Laporan -->
+                    <div>
+                        <div
+                            v-show="isSidebarOpen"
+                            class="px-3 mb-2 text-[10px] font-black uppercase tracking-widest text-gray-400"
+                        >
+                            Laporan
+                        </div>
+                        <div class="space-y-1">
+                            <Link
+                                v-if="$page.props.auth.user.role !== 'anggota'"
+                                :href="route('reports.index')"
+                                :class="[
+                                    'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-bold text-sm',
+                                    route().current('reports.*')
+                                        ? 'bg-indigo-50 text-indigo-700 shadow-sm'
+                                        : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900',
+                                ]"
+                            >
+                                <svg
+                                    class="w-5 h-5 shrink-0"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                    />
+                                </svg>
+                                <span v-show="isSidebarOpen">Laporan</span>
+                            </Link>
+                        </div>
+                    </div>
                 </nav>
 
                 <!-- Sidebar Footer (Toggle) -->
@@ -410,6 +509,9 @@ const toggleSidebar = () => {
                 </div>
 
                 <div class="flex items-center gap-4">
+                    <!-- Notifications -->
+                    <NotificationPanel :notifications="notifications" />
+
                     <!-- User Menu -->
                     <Dropdown align="right" width="48">
                         <template #trigger>

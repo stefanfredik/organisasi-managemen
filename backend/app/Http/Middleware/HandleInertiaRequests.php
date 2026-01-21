@@ -51,6 +51,18 @@ class HandleInertiaRequests extends Middleware
                 'locale' => app()->getLocale(),
                 'timezone' => config('app.timezone'),
             ],
+            'notifications' => $request->user() ? \App\Models\Announcement::published()
+                ->latest()
+                ->limit(5)
+                ->get()
+                ->map(fn($a) => [
+                    'id' => $a->id,
+                    'title' => 'Pengumuman Baru',
+                    'message' => $a->title,
+                    'type' => 'announcement',
+                    'created_at' => $a->created_at,
+                    'link' => route('announcements.show', $a->id),
+                ]) : [],
         ];
     }
 }

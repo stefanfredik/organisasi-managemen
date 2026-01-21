@@ -9,6 +9,8 @@ import StructureChart from "@/Components/StructureChart.vue";
 const props = defineProps({
     structures: Array,
     filters: Object,
+    members: Array,
+    canManage: Boolean,
 });
 
 const search = ref(props.filters?.search || "");
@@ -133,7 +135,7 @@ const visibleRows = () => flattenVisible(tree);
                         </div>
 
                         <div v-if="viewMode === 'visual'" class="mb-8">
-                            <StructureChart :items="structures" />
+                            <StructureChart :items="structures" :members="members" :can-manage="canManage" />
                         </div>
 
                         <!-- Hierarchical List (indented by level) -->
@@ -187,16 +189,18 @@ const visibleRows = () => flattenVisible(tree);
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div class="flex justify-end space-x-2">
                                                 <Link :href="route('organization-structures.edit', item.id)" class="text-indigo-600 hover:text-indigo-900">Edit</Link>
-                                                <Link
-                                                    :href="route('organization-structures.destroy', item.id)"
-                                                    method="delete"
-                                                    as="button"
+                                                <button
+                                                    @click="() => {
+                                                        if (confirm('Hapus posisi ini?')) {
+                                                            router.delete(route('organization-structures.destroy', item.id), {
+                                                                preserveScroll: true
+                                                            });
+                                                        }
+                                                    }"
                                                     class="text-red-600 hover:text-red-900"
-                                                    preserve-scroll
-                                                    :confirm="'Hapus posisi ini?'"
                                                 >
                                                     Hapus
-                                                </Link>
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>

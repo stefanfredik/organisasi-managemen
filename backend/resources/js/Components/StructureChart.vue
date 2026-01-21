@@ -4,6 +4,8 @@ import StructureNode from "./StructureNode.vue";
 
 const props = defineProps({
     items: { type: Array, default: () => [] },
+    members: { type: Array, default: () => [] },
+    canManage: { type: Boolean, default: false },
 });
 
 const buildTree = (items) => {
@@ -44,13 +46,16 @@ const toggle = (id) => {
                     :node="r"
                     :collapsed="collapsed"
                     :toggle="toggle"
+                    :members="members"
+                    :can-manage="canManage"
                 />
             </div>
         </div>
     </div>
-    <style>
-    .structure-node .connector {
-        position: relative;
-    }
-    </style>
 </template>
+
+<style scoped>
+.structure-node .connector {
+    position: relative;
+}
+</style>
