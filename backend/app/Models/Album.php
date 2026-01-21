@@ -24,10 +24,20 @@ class Album extends Model
         'created_by',
     ];
 
+    protected $appends = ['cover_image_url', 'photos_count'];
+
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    public function getCoverImageUrlAttribute()
+    {
+        if ($this->cover_image) {
+            return \Illuminate\Support\Facades\Storage::url($this->cover_image);
+        }
+        return null;
+    }
 
     /**
      * Scope for public albums

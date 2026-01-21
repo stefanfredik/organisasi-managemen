@@ -34,9 +34,11 @@ const formatDate = (dateString) => {
                             <!-- Image Container -->
                             <div class="aspect-[4/5] relative overflow-hidden">
                                 <img 
-                                    :src="album.cover_image || 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80'" 
+                                    :src="album.cover_image_url || 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80'" 
                                     :alt="album.name"
                                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                    loading="lazy"
+                                    decoding="async"
                                 >
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
                                 

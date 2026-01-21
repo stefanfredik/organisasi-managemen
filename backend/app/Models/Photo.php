@@ -21,6 +21,8 @@ class Photo extends Model
         'uploaded_by',
     ];
 
+    protected $appends = ['url'];
+
     protected $casts = [
         'file_size' => 'integer',
         'order' => 'integer',
@@ -49,7 +51,7 @@ class Photo extends Model
      */
     public function getUrlAttribute()
     {
-        return asset('storage/' . $this->file_path);
+        return \Illuminate\Support\Facades\Storage::url($this->file_path);
     }
 
     /**

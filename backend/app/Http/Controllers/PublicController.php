@@ -7,6 +7,8 @@ use App\Models\Donation;
 use App\Models\Announcement;
 use App\Models\VisionMission;
 use App\Models\OrganizationStructure;
+use App\Models\Album;
+use App\Models\Photo;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 
@@ -15,27 +17,31 @@ class PublicController extends Controller
     public function home()
     {
         $upcomingEvents = Event::published()
-            ->where('is_public', true)
             ->where('start_date', '>=', now())
             ->orderBy('start_date', 'asc')
-            ->limit(3)
+            ->take(3)
             ->get();
 
         $latestAnnouncements = Announcement::published()
-            ->where('target_audience', 'all')
             ->latest()
-            ->limit(3)
+            ->take(3)
             ->get();
 
         $activeDonations = Donation::where('status', 'active')
+            ->where('is_public', true)
             ->latest()
-            ->limit(3)
+            ->take(3)
             ->get();
+
+        $latestPhotos = Photo::with('album')->latest()->take(5)->get();
+        $featuredAlbums = Album::public()->withCount('photos')->latest()->take(3)->get();
 
         return Inertia::render('Public/Home', [
             'upcomingEvents' => $upcomingEvents,
             'latestAnnouncements' => $latestAnnouncements,
             'activeDonations' => $activeDonations,
+            'latestPhotos' => $latestPhotos,
+            'featuredAlbums' => $featuredAlbums,
         ]);
     }
 
