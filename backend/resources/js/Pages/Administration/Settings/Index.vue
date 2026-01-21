@@ -73,6 +73,14 @@ const parsePermissions = () => {
         { key: 'manage_contribution_types', label: 'Kelola Jenis Iuran' },
         { key: 'view_contribution_types', label: 'Lihat Jenis Iuran' },
         { key: 'view_donations', label: 'Lihat Data Donasi' },
+        { key: 'manage_announcements', label: 'Kelola Pengumuman' },
+        { key: 'view_announcements', label: 'Lihat Pengumuman' },
+        { key: 'manage_meeting_minutes', label: 'Kelola Notulensi' },
+        { key: 'view_meeting_minutes', label: 'Lihat Notulensi' },
+        { key: 'manage_organization_structures', label: 'Kelola Struktur Org' },
+        { key: 'view_organization_structures', label: 'Lihat Struktur Org' },
+        { key: 'manage_albums', label: 'Kelola Album Foto' },
+        { key: 'view_albums', label: 'Lihat Album Foto' },
         { key: 'manage_settings', label: 'Kelola Pengaturan' },
     ];
 };

@@ -166,28 +166,28 @@ class SettingSeeder extends Seeder
             // Access Control (Permissions)
             [
                 'key' => 'role_permissions_ketua',
-                'value' => json_encode(['view_dashboard', 'manage_members', 'manage_finance', 'manage_events', 'view_reports', 'manage_contributions', 'manage_contribution_types']),
+                'value' => json_encode(['view_dashboard', 'manage_members', 'manage_finance', 'manage_events', 'view_reports', 'manage_contributions', 'manage_contribution_types', 'manage_announcements', 'view_announcements', 'view_meeting_minutes', 'manage_organization_structures', 'manage_albums']),
                 'group' => 'access_control',
                 'type' => 'json',
                 'description' => 'Hak akses untuk role Ketua.',
             ],
             [
                 'key' => 'role_permissions_bendahara',
-                'value' => json_encode(['view_dashboard', 'manage_finance', 'view_reports', 'manage_contributions', 'manage_contribution_types']),
+                'value' => json_encode(['view_dashboard', 'manage_finance', 'view_reports', 'manage_contributions', 'manage_contribution_types', 'view_announcements', 'view_meeting_minutes', 'view_albums']),
                 'group' => 'access_control',
                 'type' => 'json',
                 'description' => 'Hak akses untuk role Bendahara.',
             ],
             [
                 'key' => 'role_permissions_sekretaris',
-                'value' => json_encode(['view_dashboard', 'manage_members', 'manage_events', 'view_contributions', 'view_contribution_types']),
+                'value' => json_encode(['view_dashboard', 'manage_members', 'manage_events', 'view_contributions', 'view_contribution_types', 'manage_announcements', 'view_announcements', 'manage_meeting_minutes', 'manage_organization_structures', 'manage_albums']),
                 'group' => 'access_control',
                 'type' => 'json',
                 'description' => 'Hak akses untuk role Sekretaris.',
             ],
             [
                 'key' => 'role_permissions_anggota',
-                'value' => json_encode(['view_dashboard', 'view_events', 'view_donations', 'view_contributions']),
+                'value' => json_encode(['view_dashboard', 'view_events', 'view_donations', 'view_contributions', 'view_announcements', 'view_meeting_minutes', 'view_albums']),
                 'group' => 'access_control',
                 'type' => 'json',
                 'description' => 'Hak akses untuk role Anggota.',

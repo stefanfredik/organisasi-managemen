@@ -37,6 +37,7 @@ watch([search, status, audience], ([s, st, aud]) => {
             <div class="flex justify-between items-center">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">Pengumuman</h2>
                 <Link
+                    v-if="hasPermission('manage_announcements')"
                     :href="route('announcements.create')"
                     class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
                 >
@@ -100,8 +101,9 @@ watch([search, status, audience], ([s, st, aud]) => {
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div class="flex justify-end space-x-2">
                                                 <Link :href="route('announcements.show', a.id)" class="text-gray-600 hover:text-gray-900">Lihat</Link>
-                                                <Link :href="route('announcements.edit', a.id)" class="text-indigo-600 hover:text-indigo-900">Edit</Link>
+                                                <Link v-if="hasPermission('manage_announcements')" :href="route('announcements.edit', a.id)" class="text-indigo-600 hover:text-indigo-900">Edit</Link>
                                                 <Link
+                                                    v-if="hasPermission('manage_announcements')"
                                                     :href="route('announcements.destroy', a.id)"
                                                     method="delete"
                                                     as="button"

@@ -74,6 +74,7 @@ const getStatusBadgeClass = (memberStatus) => {
                                 />
                             </div>
                             <Link
+                                v-if="hasPermission('manage_members')"
                                 href="/members/create"
                                 class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
                             >
@@ -170,12 +171,14 @@ const getStatusBadgeClass = (memberStatus) => {
                                             Lihat
                                         </Link>
                                         <Link
+                                            v-if="hasPermission('manage_members')"
                                             :href="`/members/${member.id}/edit`"
                                             class="text-yellow-600 hover:text-yellow-900 mr-3"
                                         >
                                             Edit
                                         </Link>
                                         <button
+                                            v-if="hasPermission('manage_members')"
                                             type="button"
                                             class="text-red-600 hover:text-red-900"
                                             @click="deleteMember(member)"

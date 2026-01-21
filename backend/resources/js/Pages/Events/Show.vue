@@ -142,14 +142,14 @@ const handleFileSelect = (e) => {
                 </h2>
                 <div class="flex gap-2">
                     <Link
-                        v-if="$page.props.auth.user.role !== 'anggota'"
+                        v-if="hasPermission('manage_events')"
                         :href="route('events.edit', event)"
                         class="inline-flex items-center px-4 py-2 bg-orange-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-orange-700 active:bg-orange-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition ease-in-out duration-150"
                     >
                         Edit
                     </Link>
                     <button
-                        v-if="$page.props.auth.user.role === 'admin' || $page.props.auth.user.role === 'ketua'"
+                        v-if="hasPermission('manage_events')"
                         @click="deleteEvent"
                         class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150"
                     >
@@ -260,7 +260,7 @@ const handleFileSelect = (e) => {
                             Dokumentasi ({{ event.documentations.length }})
                         </h3>
                         <button
-                            v-if="$page.props.auth.user.role !== 'anggota'"
+                            v-if="hasPermission('manage_events')"
                             @click="showDocModal = true"
                             class="inline-flex items-center px-3 py-1 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 transition"
                         >
@@ -279,7 +279,7 @@ const handleFileSelect = (e) => {
                                 @click="zoomedIndex = index"
                             >
                                 <button
-                                    v-if="$page.props.auth.user.role !== 'anggota'"
+                                    v-if="hasPermission('manage_events')"
                                     @click.stop="deleteDoc(doc)"
                                     class="text-white hover:text-red-400 p-2"
                                 >
@@ -303,7 +303,7 @@ const handleFileSelect = (e) => {
                             Daftar Peserta ({{ event.participants.length }} / {{ event.max_participants || '∞' }})
                         </h3>
                         <button
-                            v-if="$page.props.auth.user.role !== 'anggota'"
+                            v-if="hasPermission('manage_events')"
                             @click="showParticipantModal = true"
                             class="inline-flex items-center px-3 py-1 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 transition"
                         >
@@ -323,7 +323,7 @@ const handleFileSelect = (e) => {
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Status Kehadiran
                                     </th>
-                                    <th v-if="$page.props.auth.user.role !== 'anggota'" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th v-if="hasPermission('manage_events')" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Aksi
                                     </th>
                                 </tr>
@@ -356,7 +356,7 @@ const handleFileSelect = (e) => {
                                             </span>
                                             
                                             <select
-                                                v-if="$page.props.auth.user.role !== 'anggota'"
+                                                v-if="hasPermission('manage_events')"
                                                 :value="participant.pivot.attendance_status"
                                                 @change="updateAttendance(participant, $event.target.value)"
                                                 class="text-xs rounded border-gray-300 py-0"
@@ -367,7 +367,7 @@ const handleFileSelect = (e) => {
                                             </select>
                                         </div>
                                     </td>
-                                    <td v-if="$page.props.auth.user.role !== 'anggota'" class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <td v-if="hasPermission('manage_events')" class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <button
                                             @click="removeParticipant(participant)"
                                             class="text-red-600 hover:text-red-900"

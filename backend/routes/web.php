@@ -111,11 +111,19 @@ Route::middleware('auth')->group(function () {
     });
 
     // Album Management
-    Route::resource('albums', \App\Http\Controllers\AlbumController::class);
-    Route::post('albums/{album}/photos', [\App\Http\Controllers\AlbumController::class, 'uploadPhotos'])->name('albums.photos.upload');
-    Route::delete('albums/{album}/photos/{photo}', [\App\Http\Controllers\AlbumController::class, 'deletePhoto'])->name('albums.photos.destroy');
-    Route::patch('albums/{album}/photos/order', [\App\Http\Controllers\AlbumController::class, 'updatePhotoOrder'])->name('albums.photos.update-order');
-    Route::patch('albums/{album}/photos/{photo}/description', [\App\Http\Controllers\AlbumController::class, 'updatePhotoDescription'])->name('albums.photos.update-description');
+    // Album Management
+    Route::middleware('permission:view_albums')->group(function () {
+        Route::get('albums', [\App\Http\Controllers\AlbumController::class, 'index'])->name('albums.index');
+        Route::get('albums/{album}', [\App\Http\Controllers\AlbumController::class, 'show'])->name('albums.show');
+    });
+
+    Route::middleware('permission:manage_albums')->group(function () {
+        Route::resource('albums', \App\Http\Controllers\AlbumController::class)->except(['index', 'show']);
+        Route::post('albums/{album}/photos', [\App\Http\Controllers\AlbumController::class, 'uploadPhotos'])->name('albums.photos.upload');
+        Route::delete('albums/{album}/photos/{photo}', [\App\Http\Controllers\AlbumController::class, 'deletePhoto'])->name('albums.photos.destroy');
+        Route::patch('albums/{album}/photos/order', [\App\Http\Controllers\AlbumController::class, 'updatePhotoOrder'])->name('albums.photos.update-order');
+        Route::patch('albums/{album}/photos/{photo}/description', [\App\Http\Controllers\AlbumController::class, 'updatePhotoDescription'])->name('albums.photos.update-description');
+    });
 
     // Photo Management
     Route::get('photos/{photo}', [\App\Http\Controllers\PhotoController::class, 'show'])->name('photos.show');
@@ -126,15 +134,36 @@ Route::middleware('auth')->group(function () {
     Route::patch('vision-missions/{visionMission}/toggle-status', [\App\Http\Controllers\VisionMissionController::class, 'toggleStatus'])->name('vision-missions.toggle-status');
 
     // Organization Structure Management
-    Route::resource('organization-structures', \App\Http\Controllers\OrganizationStructureController::class);
+    // Organization Structure Management
+    Route::middleware('permission:view_organization_structures')->group(function () {
+        Route::get('organization-structures', [\App\Http\Controllers\OrganizationStructureController::class, 'index'])->name('organization-structures.index');
+    });
+    
+    Route::middleware('permission:manage_organization_structures')->group(function () {
+        Route::resource('organization-structures', \App\Http\Controllers\OrganizationStructureController::class)->except(['index', 'show']);
+    });
 
     // Administration - Announcements
-    Route::resource('announcements', \App\Http\Controllers\AnnouncementController::class);
+    Route::middleware('permission:view_announcements')->group(function () {
+        Route::get('announcements', [\App\Http\Controllers\AnnouncementController::class, 'index'])->name('announcements.index');
+        Route::get('announcements/{announcement}', [\App\Http\Controllers\AnnouncementController::class, 'show'])->name('announcements.show');
+    });
+
+    Route::middleware('permission:manage_announcements')->group(function () {
+        Route::resource('announcements', \App\Http\Controllers\AnnouncementController::class)->except(['index', 'show']);
+    });
 
     // Administration - Meeting Minutes
-    Route::resource('meeting-minutes', \App\Http\Controllers\MeetingMinuteController::class);
-    Route::post('meeting-minutes/{minute}/attachments', [\App\Http\Controllers\MeetingMinuteController::class, 'uploadAttachment'])->name('meeting-minutes.attachments');
-    Route::get('meeting-minutes/attachments/{attachment}/download', [\App\Http\Controllers\MeetingMinuteController::class, 'downloadAttachment'])->name('meeting-minutes.attachments.download');
+    Route::middleware('permission:view_meeting_minutes')->group(function () {
+        Route::get('meeting-minutes', [\App\Http\Controllers\MeetingMinuteController::class, 'index'])->name('meeting-minutes.index');
+        Route::get('meeting-minutes/{minute}', [\App\Http\Controllers\MeetingMinuteController::class, 'show'])->name('meeting-minutes.show');
+        Route::get('meeting-minutes/attachments/{attachment}/download', [\App\Http\Controllers\MeetingMinuteController::class, 'downloadAttachment'])->name('meeting-minutes.attachments.download');
+    });
+
+    Route::middleware('permission:manage_meeting_minutes')->group(function () {
+        Route::resource('meeting-minutes', \App\Http\Controllers\MeetingMinuteController::class)->except(['index', 'show']);
+        Route::post('meeting-minutes/{minute}/attachments', [\App\Http\Controllers\MeetingMinuteController::class, 'uploadAttachment'])->name('meeting-minutes.attachments');
+    });
 
     // Administration - Activity Logs
     Route::get('activity-logs', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-logs.index');

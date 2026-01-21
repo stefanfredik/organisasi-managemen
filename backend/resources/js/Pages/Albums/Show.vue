@@ -144,12 +144,14 @@ const getCategoryLabel = (category) => {
                 </div>
                 <div class="flex gap-2">
                     <Link
+                        v-if="hasPermission('manage_albums')"
                         :href="route('albums.edit', album)"
                         class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700"
                     >
                         Edit Album
                     </Link>
                     <button
+                        v-if="hasPermission('manage_albums')"
                         @click="confirmDelete"
                         class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700"
                     >
@@ -245,6 +247,7 @@ const getCategoryLabel = (category) => {
                             Foto Album
                         </h3>
                         <button
+                            v-if="hasPermission('manage_albums')"
                             @click="openUploadModal"
                             class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700"
                         >
@@ -307,6 +310,7 @@ const getCategoryLabel = (category) => {
                                         </svg>
                                     </button>
                                     <button
+                                        v-if="hasPermission('manage_albums')"
                                         @click.stop="deletePhoto(photo)"
                                         class="p-2 bg-red-500 rounded-full hover:bg-red-600"
                                         title="Hapus"

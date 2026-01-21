@@ -19,6 +19,16 @@ createInertiaApp({
         return createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(ZiggyVue)
+            .mixin({
+                methods: {
+                    hasPermission(permission) {
+                        const user = this.$page.props.auth?.user;
+                        if (!user) return false;
+                        if (user.role === 'admin') return true;
+                        return user.permissions?.includes(permission);
+                    }
+                }
+            })
             .mount(el);
     },
     progress: {

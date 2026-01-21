@@ -90,6 +90,7 @@ const getCoverImage = (album) => {
                     Manajemen Album
                 </h2>
                 <Link
+                    v-if="hasPermission('manage_albums')"
                     :href="route('albums.create')"
                     class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
                 >
@@ -252,6 +253,7 @@ const getCoverImage = (album) => {
                                         Detail
                                     </Link>
                                     <Link
+                                        v-if="hasPermission('manage_albums')"
                                         :href="route('albums.edit', album)"
                                         class="text-sm text-orange-600 hover:text-orange-900 font-medium"
                                     >
@@ -284,6 +286,7 @@ const getCoverImage = (album) => {
                             </p>
                             <div class="mt-6">
                                 <Link
+                                    v-if="hasPermission('manage_albums')"
                                     :href="route('albums.create')"
                                     class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700"
                                 >

@@ -250,7 +250,7 @@ const statusLabels = {
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                 </svg>
                                             </a>
-                                            <button v-if="isAdminOrTreasurer && contribution.status === 'pending'" @click="openVerifyModal(contribution)" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md shadow-indigo-100 hover:bg-indigo-700 transition">
+                                            <button v-if="isAdminOrTreasurer && contribution.status === 'pending' && hasPermission('manage_contributions')" @click="openVerifyModal(contribution)" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md shadow-indigo-100 hover:bg-indigo-700 transition">
                                                 Verifikasi
                                             </button>
                                         </div>
