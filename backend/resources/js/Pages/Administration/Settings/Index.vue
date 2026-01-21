@@ -68,6 +68,10 @@ const parsePermissions = () => {
         { key: 'manage_events', label: 'Kelola Kegiatan' },
         { key: 'view_events', label: 'Lihat Daftar Kegiatan' },
         { key: 'view_reports', label: 'Lihat Laporan' },
+        { key: 'manage_contributions', label: 'Kelola Iuran' },
+        { key: 'view_contributions', label: 'Lihat Data Iuran' },
+        { key: 'manage_contribution_types', label: 'Kelola Jenis Iuran' },
+        { key: 'view_contribution_types', label: 'Lihat Jenis Iuran' },
         { key: 'view_donations', label: 'Lihat Data Donasi' },
         { key: 'manage_settings', label: 'Kelola Pengaturan' },
     ];

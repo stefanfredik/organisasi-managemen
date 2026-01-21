@@ -85,6 +85,20 @@ class User extends Authenticatable
         }
 
         $permissions = Setting::getValue("role_permissions_{$this->role}", []);
-        return in_array($permission, $permissions);
+        
+        // Direct check
+        if (in_array($permission, $permissions)) {
+            return true;
+        }
+
+        // Inheritance check: manage_X implies view_X
+        if (str_starts_with($permission, 'view_')) {
+            $managePermission = str_replace('view_', 'manage_', $permission);
+            if (in_array($managePermission, $permissions)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

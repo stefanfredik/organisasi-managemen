@@ -264,6 +264,7 @@ const hasPermission = (permission) => {
                                 <span v-show="isSidebarOpen">Transaksi</span>
                             </Link>
                             <Link
+                                v-if="hasPermission('view_contributions')"
                                 :href="route('contributions.index')"
                                 :class="[
                                     'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-bold text-sm',
@@ -292,7 +293,7 @@ const hasPermission = (permission) => {
                                 }}</span>
                             </Link>
                             <Link
-                                v-if="hasPermission('view_finance')"
+                                v-if="hasPermission('view_contribution_types')"
                                 :href="route('contribution-types.index')"
                                 :class="[
                                     'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-bold text-sm',
@@ -706,6 +707,7 @@ const hasPermission = (permission) => {
                                 >Transaksi</ResponsiveNavLink
                             >
                             <ResponsiveNavLink
+                                v-if="hasPermission('view_contributions')"
                                 :href="route('contributions.index')"
                                 :active="route().current('contributions.*')"
                                 >{{
@@ -715,7 +717,7 @@ const hasPermission = (permission) => {
                                 }}</ResponsiveNavLink
                             >
                             <ResponsiveNavLink
-                                v-if="hasPermission('view_finance')"
+                                v-if="hasPermission('view_contribution_types')"
                                 :href="route('contribution-types.index')"
                                 :active="
                                     route().current('contribution-types.*')
