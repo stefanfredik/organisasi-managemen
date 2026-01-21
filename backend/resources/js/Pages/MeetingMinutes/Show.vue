@@ -31,10 +31,6 @@ const formatFileSize = (bytes) => {
     <Head :title="`Notulensi: ${props.record.agenda}`" />
 
     <AuthenticatedLayout>
-        <div v-if="$page.props.auth?.user?.role === 'admin'" class="bg-gray-100 border border-gray-200 rounded-md p-3 mx-4 my-4 text-xs text-gray-700">
-            <div class="font-semibold mb-1">Debug (Admin):</div>
-            <pre class="overflow-auto max-h-48">{{ JSON.stringify(props, null, 2) }}</pre>
-        </div>
         <template #header>
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
@@ -71,7 +67,6 @@ const formatFileSize = (bytes) => {
                                 {{ formatDate(props.record.meeting_date) }}
                             </div>
                         </div>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Selesai</span>
                     </div>
                     <div class="flex items-center pt-4 border-t border-gray-200">
                         <svg class="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -80,6 +75,7 @@ const formatFileSize = (bytes) => {
                         <div>
                             <p class="text-xs text-gray-500">Dibuat Oleh</p>
                             <p class="text-sm font-medium text-gray-900">{{ props.record.creator?.name || "-" }}</p>
+                            <p class="text-xs text-gray-500">Pada {{ formatDate(props.record.created_at) }}</p>
                         </div>
                     </div>
                 </div>
@@ -128,10 +124,10 @@ const formatFileSize = (bytes) => {
                         <h2 class="text-lg font-semibold text-gray-900">Peserta Rapat</h2>
                         <span class="text-sm font-medium text-indigo-600">{{ props.participant_names?.length || 0 }} Orang</span>
                     </div>
-                    <div v-if="props.participant_names?.length > 0">
-                        <p class="text-sm text-gray-700">{{ props.participant_names.join(", ") }}</p>
+                    <div v-if="props.participant_names?.length > 0" class="flex flex-wrap gap-2">
+                        <span v-for="(n, i) in props.participant_names" :key="i" class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700">{{ n }}</span>
                     </div>
-                    <p v-else class="text-sm text-gray-500 italic text-center py-4">Tidak ada pesertaaaaa</p>
+                    <p v-else class="text-sm text-gray-500 italic text-center py-4">Tidak ada peserta</p>
                 </div>
             </div>
         </div>

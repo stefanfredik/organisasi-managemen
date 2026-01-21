@@ -85,16 +85,16 @@ class MeetingMinuteController extends Controller
         return redirect()->route('meeting-minutes.index')->with('success', 'Notulensi rapat berhasil dibuat.');
     }
 
-    public function show(MeetingMinute $meetingMinute)
+    public function show(MeetingMinute $minute)
     {
-        $this->authorize('view', $meetingMinute);
+        $this->authorize('view', $minute);
 
         $participantNames = [];
         $participantIds = [];
-        if (is_array($meetingMinute->participants)) {
-            $participantIds = $meetingMinute->participants;
-        } elseif (is_string($meetingMinute->participants) && strlen($meetingMinute->participants) > 0) {
-            $decoded = json_decode($meetingMinute->participants, true);
+        if (is_array($minute->participants)) {
+            $participantIds = $minute->participants;
+        } elseif (is_string($minute->participants) && strlen($minute->participants) > 0) {
+            $decoded = json_decode($minute->participants, true);
             if (is_array($decoded)) {
                 $participantIds = $decoded;
             }
@@ -107,7 +107,7 @@ class MeetingMinuteController extends Controller
         }
 
         return Inertia::render('MeetingMinutes/Show', [
-            'record' => $meetingMinute->load(['creator', 'attachments'])->toArray(),
+            'record' => $minute->load(['creator', 'attachments'])->toArray(),
             'participant_names' => $participantNames,
         ]);
     }

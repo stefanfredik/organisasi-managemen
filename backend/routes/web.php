@@ -160,8 +160,8 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('permission:view_meeting_minutes')->group(function () {
         Route::get('meeting-minutes', [\App\Http\Controllers\MeetingMinuteController::class, 'index'])->name('meeting-minutes.index');
-        Route::get('meeting-minutes/{minute}', [\App\Http\Controllers\MeetingMinuteController::class, 'show'])->name('meeting-minutes.show');
         Route::get('meeting-minutes/attachments/{attachment}/download', [\App\Http\Controllers\MeetingMinuteController::class, 'downloadAttachment'])->name('meeting-minutes.attachments.download');
+        Route::get('meeting-minutes/{minute}', [\App\Http\Controllers\MeetingMinuteController::class, 'show'])->name('meeting-minutes.show');
     });
 
     // Administration - Activity Logs
