@@ -77,6 +77,8 @@ const parsePermissions = () => {
         { key: 'view_announcements', label: 'Lihat Pengumuman' },
         { key: 'manage_meeting_minutes', label: 'Kelola Notulensi' },
         { key: 'view_meeting_minutes', label: 'Lihat Notulensi' },
+        { key: 'manage_vision_missions', label: 'Kelola Visi & Misi' },
+        { key: 'view_vision_missions', label: 'Lihat Visi & Misi' },
         { key: 'manage_organization_structures', label: 'Kelola Struktur Org' },
         { key: 'view_organization_structures', label: 'Lihat Struktur Org' },
         { key: 'manage_albums', label: 'Kelola Album Foto' },

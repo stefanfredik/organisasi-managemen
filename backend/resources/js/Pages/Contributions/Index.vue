@@ -225,8 +225,8 @@ const statusLabels = {
                             <tbody class="divide-y divide-gray-100 italic">
                                 <tr v-for="contribution in contributions.data" :key="contribution.id" class="hover:bg-gray-50/50 transition font-medium">
                                     <td v-if="isAdminOrTreasurer" class="px-6 py-4">
-                                        <div class="text-sm font-bold text-gray-900">{{ contribution.member.full_name }}</div>
-                                        <div class="text-[10px] text-gray-400">{{ contribution.member.member_code }}</div>
+                                        <div class="text-sm font-bold text-gray-900">{{ contribution.member?.full_name || 'Anggota Terhapus' }}</div>
+                                        <div class="text-[10px] text-gray-400">{{ contribution.member?.member_code || '-' }}</div>
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="text-sm font-bold text-gray-700">{{ contribution.type.name }}</div>
@@ -416,7 +416,7 @@ const statusLabels = {
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <p class="text-[10px] uppercase font-black text-indigo-300 mb-1">Penyetor</p>
-                            <p class="text-sm font-black text-indigo-900">{{ selectedContribution.member.full_name }}</p>
+                            <p class="text-sm font-black text-indigo-900">{{ selectedContribution.member?.full_name || 'Anggota Terhapus' }}</p>
                         </div>
                         <div>
                             <p class="text-[10px] uppercase font-black text-indigo-300 mb-1">Nominal</p>

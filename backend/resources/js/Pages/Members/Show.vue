@@ -6,6 +6,8 @@ import Modal from '@/Components/Modal.vue';
 
 const props = defineProps({
     member: Object,
+    contributions: Array,
+    events: Array,
 });
 
 const activeTab = ref('profile');
@@ -30,6 +32,39 @@ const formatDate = (date) => {
         month: 'long',
         day: 'numeric',
     });
+};
+
+const formatCurrency = (amount) => {
+    if (!amount) return 'Rp 0';
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+    }).format(amount);
+};
+
+const getStatusBadgeClass = (status) => {
+    const classes = {
+        'paid': 'bg-green-100 text-green-800',
+        'pending': 'bg-yellow-100 text-yellow-800',
+        'cancelled': 'bg-red-100 text-red-800',
+        'present': 'bg-green-100 text-green-800',
+        'absent': 'bg-red-100 text-red-800',
+        'excused': 'bg-yellow-100 text-yellow-800',
+    };
+    return classes[status] || 'bg-gray-100 text-gray-800';
+};
+
+const getStatusLabel = (status) => {
+    const labels = {
+        'paid': 'Lunas',
+        'pending': 'Menunggu',
+        'cancelled': 'Dibatalkan',
+        'present': 'Hadir',
+        'absent': 'Tidak Hadir',
+        'excused': 'Izin',
+    };
+    return labels[status] || status;
 };
 </script>
 
@@ -181,26 +216,120 @@ const formatDate = (date) => {
 
                         <!-- Contributions Tab -->
                         <div v-if="activeTab === 'contributions'">
-                            <div class="text-center py-12">
+                            <div v-if="contributions && contributions.length > 0" class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Jenis Iuran
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Jumlah
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Tanggal Bayar
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Metode
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Status
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <tr v-for="contribution in contributions" :key="contribution.id">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {{ contribution.type_name }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                {{ formatCurrency(contribution.amount) }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {{ formatDate(contribution.payment_date) }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
+                                                {{ contribution.payment_method || '-' }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span
+                                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                                                    :class="getStatusBadgeClass(contribution.status)"
+                                                >
+                                                    {{ getStatusLabel(contribution.status) }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div v-else class="text-center py-12">
                                 <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
                                 <h3 class="mt-2 text-sm font-medium text-gray-900">Belum ada riwayat iuran</h3>
                                 <p class="mt-1 text-sm text-gray-500">
-                                    Fitur manajemen iuran akan tersedia di Phase 4
+                                    Anggota ini belum memiliki catatan pembayaran iuran
                                 </p>
                             </div>
                         </div>
 
                         <!-- Events Tab -->
                         <div v-if="activeTab === 'events'">
-                            <div class="text-center py-12">
+                            <div v-if="events && events.length > 0" class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Nama Kegiatan
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Tanggal Kegiatan
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Lokasi
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Tanggal Daftar
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Status Kehadiran
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <tr v-for="event in events" :key="event.id">
+                                            <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                                                {{ event.title }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {{ formatDate(event.event_date) }}
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-gray-500">
+                                                {{ event.location || '-' }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {{ formatDate(event.registration_date) }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span
+                                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                                                    :class="getStatusBadgeClass(event.attendance_status)"
+                                                >
+                                                    {{ getStatusLabel(event.attendance_status) }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div v-else class="text-center py-12">
                                 <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
                                 <h3 class="mt-2 text-sm font-medium text-gray-900">Belum ada riwayat kegiatan</h3>
                                 <p class="mt-1 text-sm text-gray-500">
-                                    Fitur manajemen kegiatan akan tersedia di Phase 3
+                                    Anggota ini belum terdaftar dalam kegiatan apapun
                                 </p>
                             </div>
                         </div>

@@ -144,20 +144,20 @@ const handleFileSelect = (e) => {
                     <Link
                         v-if="hasPermission('manage_events')"
                         :href="route('events.edit', event)"
-                        class="inline-flex items-center px-4 py-2 bg-orange-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-orange-700 active:bg-orange-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                        class="inline-flex items-center justify-center rounded-xl border border-transparent bg-orange-600 px-4 py-3 text-xs font-bold uppercase tracking-widest text-white transition duration-200 ease-in-out hover:bg-orange-700 active:bg-orange-800 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 shadow-md shadow-orange-100"
                     >
                         Edit
                     </Link>
                     <button
                         v-if="hasPermission('manage_events')"
                         @click="deleteEvent"
-                        class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                        class="inline-flex items-center justify-center rounded-xl border border-transparent bg-red-600 px-4 py-3 text-xs font-bold uppercase tracking-widest text-white transition duration-200 ease-in-out hover:bg-red-700 active:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 shadow-md shadow-red-100"
                     >
                         Hapus
                     </button>
                     <Link
                         :href="route('events.index')"
-                        class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                        class="inline-flex items-center justify-center rounded-xl border border-transparent bg-gray-600 px-4 py-3 text-xs font-bold uppercase tracking-widest text-white transition duration-200 ease-in-out hover:bg-gray-700 active:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 shadow-md shadow-gray-100"
                     >
                         Kembali
                     </Link>
@@ -262,7 +262,7 @@ const handleFileSelect = (e) => {
                         <button
                             v-if="hasPermission('manage_events')"
                             @click="showDocModal = true"
-                            class="inline-flex items-center px-3 py-1 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 transition"
+                            class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white hover:bg-indigo-700 transition shadow-sm"
                         >
                             Upload Foto
                         </button>
@@ -305,7 +305,7 @@ const handleFileSelect = (e) => {
                         <button
                             v-if="hasPermission('manage_events')"
                             @click="showParticipantModal = true"
-                            class="inline-flex items-center px-3 py-1 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 transition"
+                            class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white hover:bg-indigo-700 transition shadow-sm"
                         >
                             Tambah Peserta
                         </button>

@@ -14,7 +14,9 @@ class ContributionController extends Controller
 {
     public function index()
     {
-        $query = Contribution::with(['member', 'type', 'wallet', 'verifier']);
+        $query = Contribution::with(['member' => function ($query) {
+            $query->withTrashed();
+        }, 'type', 'wallet', 'verifier']);
 
         if (auth()->user()->role === 'member') {
             $query->where('member_id', auth()->user()->member->id);

@@ -90,15 +90,24 @@ class MeetingMinuteController extends Controller
         $this->authorize('view', $meetingMinute);
 
         $participantNames = [];
-        if (is_array($meetingMinute->participants) && count($meetingMinute->participants) > 0) {
+        $participantIds = [];
+        if (is_array($meetingMinute->participants)) {
+            $participantIds = $meetingMinute->participants;
+        } elseif (is_string($meetingMinute->participants) && strlen($meetingMinute->participants) > 0) {
+            $decoded = json_decode($meetingMinute->participants, true);
+            if (is_array($decoded)) {
+                $participantIds = $decoded;
+            }
+        }
+        if (!empty($participantIds)) {
             $participantNames = \App\Models\Member::query()
-                ->whereIn('id', $meetingMinute->participants)
+                ->whereIn('id', $participantIds)
                 ->pluck('full_name')
                 ->all();
         }
 
         return Inertia::render('MeetingMinutes/Show', [
-            'minute' => $meetingMinute->load(['creator', 'attachments']),
+            'record' => $meetingMinute->load(['creator', 'attachments'])->toArray(),
             'participant_names' => $participantNames,
         ]);
     }

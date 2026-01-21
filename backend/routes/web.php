@@ -36,24 +36,16 @@ Route::middleware('auth')->group(function () {
     Route::resource('users', \App\Http\Controllers\UserController::class);
 
     // Member Management
+    Route::middleware('permission:manage_members')->group(function () {
+        Route::resource('members', \App\Http\Controllers\MemberController::class)->except(['index', 'show']);
+    });
     Route::middleware('permission:view_members')->group(function () {
         Route::get('members', [\App\Http\Controllers\MemberController::class, 'index'])->name('members.index');
         Route::get('members/{member}', [\App\Http\Controllers\MemberController::class, 'show'])->name('members.show');
     });
-    Route::middleware('permission:manage_members')->group(function () {
-        Route::resource('members', \App\Http\Controllers\MemberController::class)->except(['index', 'show']);
-    });
 
     // Event Management
     Route::get('events/calendar', [\App\Http\Controllers\EventController::class, 'calendar'])->name('events.calendar')->middleware('permission:view_events');
-    
-    Route::middleware('permission:view_events')->group(function () {
-        Route::get('events', [\App\Http\Controllers\EventController::class, 'index'])->name('events.index');
-        Route::get('events/{event}', [\App\Http\Controllers\EventController::class, 'show'])->name('events.show');
-        // Allow members to join/leave events
-        Route::post('events/{event}/participants', [\App\Http\Controllers\EventController::class, 'addParticipant'])->name('events.participants.add');
-        Route::delete('events/{event}/participants/{member}', [\App\Http\Controllers\EventController::class, 'removeParticipant'])->name('events.participants.remove');
-    });
 
     Route::middleware('permission:manage_events')->group(function () {
         Route::resource('events', \App\Http\Controllers\EventController::class)->except(['index', 'show']);
@@ -62,32 +54,34 @@ Route::middleware('auth')->group(function () {
         Route::delete('events/{event}/documentations/{documentation}', [\App\Http\Controllers\EventController::class, 'deleteDocumentation'])->name('events.documentations.destroy');
     });
 
-    Route::middleware('permission:view_finance')->group(function () {
-        Route::get('wallets', [\App\Http\Controllers\WalletController::class, 'index'])->name('wallets.index');
-        Route::get('finances', [\App\Http\Controllers\FinanceController::class, 'index'])->name('finances.index');
+    Route::middleware('permission:view_events')->group(function () {
+        Route::get('events', [\App\Http\Controllers\EventController::class, 'index'])->name('events.index');
+        Route::get('events/{event}', [\App\Http\Controllers\EventController::class, 'show'])->name('events.show');
+        // Allow members to join/leave events
+        Route::post('events/{event}/participants', [\App\Http\Controllers\EventController::class, 'addParticipant'])->name('events.participants.add');
+        Route::delete('events/{event}/participants/{member}', [\App\Http\Controllers\EventController::class, 'removeParticipant'])->name('events.participants.remove');
     });
 
     Route::middleware('permission:manage_finance')->group(function () {
         Route::resource('wallets', \App\Http\Controllers\WalletController::class)->except(['index']);
         Route::resource('finances', \App\Http\Controllers\FinanceController::class)->except(['index']);
     });
+
+    Route::middleware('permission:view_finance')->group(function () {
+        Route::get('wallets', [\App\Http\Controllers\WalletController::class, 'index'])->name('wallets.index');
+        Route::get('finances', [\App\Http\Controllers\FinanceController::class, 'index'])->name('finances.index');
+    });
     
     // Contribbution Types Management
-    Route::middleware('permission:view_contribution_types')->group(function () {
-        Route::get('contribution-types', [\App\Http\Controllers\ContributionTypeController::class, 'index'])->name('contribution-types.index');
-    });
-
     Route::middleware('permission:manage_contribution_types')->group(function () {
         Route::resource('contribution-types', \App\Http\Controllers\ContributionTypeController::class)->except(['index']);
     });
 
-    // Contribution Management
-    Route::middleware('permission:view_contributions')->group(function () {
-        Route::get('contributions', [\App\Http\Controllers\ContributionController::class, 'index'])->name('contributions.index');
-        Route::get('contributions/{contribution}', [\App\Http\Controllers\ContributionController::class, 'show'])->name('contributions.show');
-        Route::post('contributions', [\App\Http\Controllers\ContributionController::class, 'store'])->name('contributions.store');
+    Route::middleware('permission:view_contribution_types')->group(function () {
+        Route::get('contribution-types', [\App\Http\Controllers\ContributionTypeController::class, 'index'])->name('contribution-types.index');
     });
 
+    // Contribution Management
     Route::middleware('permission:manage_contributions')->group(function () {
         Route::get('contributions/unpaid-members', [\App\Http\Controllers\ContributionController::class, 'getUnpaidMembers'])->name('contributions.unpaid-members');
         Route::post('contributions/{contribution}/verify', [\App\Http\Controllers\ContributionController::class, 'verify'])->name('contributions.verify');
@@ -98,31 +92,37 @@ Route::middleware('auth')->group(function () {
         Route::patch('contributions/{contribution}', [\App\Http\Controllers\ContributionController::class, 'update'])->name('contributions.update'); // Support PATCH too
         Route::delete('contributions/{contribution}', [\App\Http\Controllers\ContributionController::class, 'destroy'])->name('contributions.destroy');
     });
+
+    Route::middleware('permission:view_contributions')->group(function () {
+        Route::get('contributions', [\App\Http\Controllers\ContributionController::class, 'index'])->name('contributions.index');
+        Route::get('contributions/{contribution}', [\App\Http\Controllers\ContributionController::class, 'show'])->name('contributions.show');
+        Route::post('contributions', [\App\Http\Controllers\ContributionController::class, 'store'])->name('contributions.store');
+    });
+
     // Donation Management
+    Route::middleware('permission:manage_finance')->group(function () {
+        Route::resource('donations', \App\Http\Controllers\DonationController::class)->except(['index', 'show']);
+        Route::post('donations/{donation}/transactions', [\App\Http\Controllers\DonationController::class, 'recordTransaction'])->name('donations.transactions.store');
+    });
+
     Route::middleware('permission:view_donations')->group(function () {
         Route::get('donations', [\App\Http\Controllers\DonationController::class, 'index'])->name('donations.index');
         Route::get('donations/{donation}', [\App\Http\Controllers\DonationController::class, 'show'])->name('donations.show');
         Route::get('donations/report', [\App\Http\Controllers\DonationController::class, 'report'])->name('donations.report');
     });
 
-    Route::middleware('permission:manage_finance')->group(function () {
-        Route::resource('donations', \App\Http\Controllers\DonationController::class)->except(['index', 'show']);
-        Route::post('donations/{donation}/transactions', [\App\Http\Controllers\DonationController::class, 'recordTransaction'])->name('donations.transactions.store');
-    });
-
     // Album Management
-    // Album Management
-    Route::middleware('permission:view_albums')->group(function () {
-        Route::get('albums', [\App\Http\Controllers\AlbumController::class, 'index'])->name('albums.index');
-        Route::get('albums/{album}', [\App\Http\Controllers\AlbumController::class, 'show'])->name('albums.show');
-    });
-
     Route::middleware('permission:manage_albums')->group(function () {
         Route::resource('albums', \App\Http\Controllers\AlbumController::class)->except(['index', 'show']);
         Route::post('albums/{album}/photos', [\App\Http\Controllers\AlbumController::class, 'uploadPhotos'])->name('albums.photos.upload');
         Route::delete('albums/{album}/photos/{photo}', [\App\Http\Controllers\AlbumController::class, 'deletePhoto'])->name('albums.photos.destroy');
         Route::patch('albums/{album}/photos/order', [\App\Http\Controllers\AlbumController::class, 'updatePhotoOrder'])->name('albums.photos.update-order');
         Route::patch('albums/{album}/photos/{photo}/description', [\App\Http\Controllers\AlbumController::class, 'updatePhotoDescription'])->name('albums.photos.update-description');
+    });
+
+    Route::middleware('permission:view_albums')->group(function () {
+        Route::get('albums', [\App\Http\Controllers\AlbumController::class, 'index'])->name('albums.index');
+        Route::get('albums/{album}', [\App\Http\Controllers\AlbumController::class, 'show'])->name('albums.show');
     });
 
     // Photo Management
@@ -134,35 +134,34 @@ Route::middleware('auth')->group(function () {
     Route::patch('vision-missions/{visionMission}/toggle-status', [\App\Http\Controllers\VisionMissionController::class, 'toggleStatus'])->name('vision-missions.toggle-status');
 
     // Organization Structure Management
-    // Organization Structure Management
-    Route::middleware('permission:view_organization_structures')->group(function () {
-        Route::get('organization-structures', [\App\Http\Controllers\OrganizationStructureController::class, 'index'])->name('organization-structures.index');
-    });
-    
     Route::middleware('permission:manage_organization_structures')->group(function () {
         Route::resource('organization-structures', \App\Http\Controllers\OrganizationStructureController::class)->except(['index', 'show']);
     });
 
+    Route::middleware('permission:view_organization_structures')->group(function () {
+        Route::get('organization-structures', [\App\Http\Controllers\OrganizationStructureController::class, 'index'])->name('organization-structures.index');
+    });
+
     // Administration - Announcements
+    Route::middleware('permission:manage_announcements')->group(function () {
+        Route::resource('announcements', \App\Http\Controllers\AnnouncementController::class)->except(['index', 'show']);
+    });
+
     Route::middleware('permission:view_announcements')->group(function () {
         Route::get('announcements', [\App\Http\Controllers\AnnouncementController::class, 'index'])->name('announcements.index');
         Route::get('announcements/{announcement}', [\App\Http\Controllers\AnnouncementController::class, 'show'])->name('announcements.show');
     });
 
-    Route::middleware('permission:manage_announcements')->group(function () {
-        Route::resource('announcements', \App\Http\Controllers\AnnouncementController::class)->except(['index', 'show']);
+    // Administration - Meeting Minutes
+    Route::middleware('permission:manage_meeting_minutes')->group(function () {
+        Route::resource('meeting-minutes', \App\Http\Controllers\MeetingMinuteController::class)->except(['index', 'show']);
+        Route::post('meeting-minutes/{minute}/attachments', [\App\Http\Controllers\MeetingMinuteController::class, 'uploadAttachment'])->name('meeting-minutes.attachments');
     });
 
-    // Administration - Meeting Minutes
     Route::middleware('permission:view_meeting_minutes')->group(function () {
         Route::get('meeting-minutes', [\App\Http\Controllers\MeetingMinuteController::class, 'index'])->name('meeting-minutes.index');
         Route::get('meeting-minutes/{minute}', [\App\Http\Controllers\MeetingMinuteController::class, 'show'])->name('meeting-minutes.show');
         Route::get('meeting-minutes/attachments/{attachment}/download', [\App\Http\Controllers\MeetingMinuteController::class, 'downloadAttachment'])->name('meeting-minutes.attachments.download');
-    });
-
-    Route::middleware('permission:manage_meeting_minutes')->group(function () {
-        Route::resource('meeting-minutes', \App\Http\Controllers\MeetingMinuteController::class)->except(['index', 'show']);
-        Route::post('meeting-minutes/{minute}/attachments', [\App\Http\Controllers\MeetingMinuteController::class, 'uploadAttachment'])->name('meeting-minutes.attachments');
     });
 
     // Administration - Activity Logs
@@ -201,6 +200,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/donations/excel', [\App\Http\Controllers\ReportController::class, 'donationsExcel'])->name('donations.excel');
     });
 });
+
 
 // Public Vision & Mission API
 Route::get('/api/vision-mission/active', [\App\Http\Controllers\VisionMissionController::class, 'getActive'])->name('api.vision-mission.active');

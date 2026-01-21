@@ -53,8 +53,9 @@ const getStatusLabel = (status) => {
                     Manajemen Visi & Misi
                 </h2>
                 <Link
+                    v-if="hasPermission('manage_vision_missions')"
                     :href="route('vision-missions.create')"
-                    class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                    class="inline-flex items-center justify-center rounded-xl border border-transparent bg-indigo-600 px-4 py-3 text-xs font-bold uppercase tracking-widest text-white transition duration-200 ease-in-out hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 shadow-md shadow-indigo-100"
                 >
                     <svg
                         class="w-4 h-4 mr-1"
@@ -182,6 +183,7 @@ const getStatusLabel = (status) => {
                                                     Detail
                                                 </Link>
                                                 <Link
+                                                    v-if="hasPermission('manage_vision_missions')"
                                                     :href="route('vision-missions.edit', item.id)"
                                                     class="text-indigo-600 hover:text-indigo-900"
                                                 >

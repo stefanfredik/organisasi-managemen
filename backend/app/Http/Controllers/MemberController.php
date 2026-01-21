@@ -113,16 +113,44 @@ class MemberController extends Controller
 
         $member->load(['user']);
 
-        // Load contribution history (will be empty until Phase 4)
-        // $contributions = $member->contributions()->latest()->get();
+        // Load contribution history with type information
+        $contributions = $member->contributions()
+            ->with('contributionType')
+            ->latest()
+            ->get()
+            ->map(function ($contribution) {
+                return [
+                    'id' => $contribution->id,
+                    'type_name' => $contribution->contributionType->name ?? '-',
+                    'amount' => $contribution->amount,
+                    'payment_date' => $contribution->payment_date,
+                    'payment_method' => $contribution->payment_method,
+                    'status' => $contribution->status,
+                    'notes' => $contribution->notes,
+                ];
+            });
 
-        // Load event participation (will be empty until Phase 3)
-        // $events = $member->events()->latest()->get();
+        // Load event participation with event details
+        $events = $member->events()
+            ->withPivot('registration_date', 'attendance_status', 'notes')
+            ->latest('events.start_date')
+            ->get()
+            ->map(function ($event) {
+                return [
+                    'id' => $event->id,
+                    'title' => $event->name,
+                    'event_date' => $event->start_date,
+                    'location' => $event->location,
+                    'registration_date' => $event->pivot->registration_date,
+                    'attendance_status' => $event->pivot->attendance_status,
+                    'notes' => $event->pivot->notes,
+                ];
+            });
 
         return Inertia::render('Members/Show', [
             'member' => $member,
-            // 'contributions' => $contributions ?? [],
-            // 'events' => $events ?? [],
+            'contributions' => $contributions,
+            'events' => $events,
         ]);
     }
 
