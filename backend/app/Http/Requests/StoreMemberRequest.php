@@ -23,7 +23,7 @@ class StoreMemberRequest extends FormRequest
     {
         return [
             'full_name' => ['required', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255', 'unique:members,email'],
+            'email' => ['required', 'email', 'max:255', 'unique:members,email', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:20'],
             'address' => ['nullable', 'string'],
             'date_of_birth' => ['nullable', 'date', 'before:today'],

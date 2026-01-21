@@ -9,6 +9,9 @@ use App\Services\ActivityLogger;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 use Inertia\Inertia;
 
 class MemberController extends Controller
@@ -75,16 +78,30 @@ class MemberController extends Controller
             $data['photo'] = $request->file('photo')->store('members/photos', 'public');
         }
 
-        $member = Member::create($data);
+        DB::transaction(function () use ($data, &$member) {
+            // Create User first
+            $user = User::create([
+                'name' => $data['full_name'],
+                'email' => $data['email'],
+                'password' => Hash::make('password'), // Access default, user should change it
+                'role' => User::ROLE_ANGGOTA,
+                'status' => User::STATUS_ACTIVE,
+                'email_verified_at' => now(),
+            ]);
 
-        // Log activity
-        $this->activityLogger->logCreate(
-            $member,
-            "Created new member: {$member->full_name} ({$member->member_code})"
-        );
+            // Create Member linked to User
+            $data['user_id'] = $user->id;
+            $member = Member::create($data);
+
+            // Log activity
+            $this->activityLogger->logCreate(
+                $member,
+                "Created new member and user account: {$member->full_name} ({$member->member_code})"
+            );
+        });
 
         return redirect()->route('members.index')
-            ->with('success', 'Anggota berhasil ditambahkan.');
+            ->with('success', 'Anggota dan akun user berhasil ditambahkan. Password default: "password"');
     }
 
     /**
