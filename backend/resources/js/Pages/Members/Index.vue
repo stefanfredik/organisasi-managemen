@@ -4,6 +4,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import SearchBar from '@/Components/SearchBar.vue';
 import FilterDropdown from '@/Components/FilterDropdown.vue';
+import Pagination from '@/Components/Pagination.vue';
 
 const props = defineProps({
     members: Object,
@@ -89,30 +90,30 @@ const getStatusBadgeClass = (memberStatus) => {
                     <!-- Members Table -->
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                            <thead class="bg-gray-50/50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">
                                         Foto
                                     </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">
                                         Kode
                                     </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">
                                         Nama
                                     </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider hidden md:table-cell">
                                         Email
                                     </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider hidden md:table-cell">
                                         Telepon
                                     </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">
                                         Tanggal Bergabung
                                     </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">
                                         Status
                                     </th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-6 py-3 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">
                                         Aksi
                                     </th>
                                 </tr>
@@ -146,45 +147,48 @@ const getStatusBadgeClass = (memberStatus) => {
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {{ member.full_name }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
                                         {{ member.email || '-' }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
                                         {{ member.phone || '-' }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {{ new Date(member.join_date).toLocaleDateString('id-ID') }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span
-                                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                                            :class="getStatusBadgeClass(member.status)"
-                                        >
+                                        <span class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full"
+                                            :class="getStatusBadgeClass(member.status)">
                                             {{ member.status === 'active' ? 'Aktif' : 'Tidak Aktif' }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <Link
-                                            :href="`/members/${member.id}`"
-                                            class="text-indigo-600 hover:text-indigo-900 mr-3"
-                                        >
-                                            Lihat
-                                        </Link>
-                                        <Link
-                                            v-if="hasPermission('manage_members')"
-                                            :href="`/members/${member.id}/edit`"
-                                            class="text-yellow-600 hover:text-yellow-900 mr-3"
-                                        >
-                                            Edit
-                                        </Link>
-                                        <button
-                                            v-if="hasPermission('manage_members')"
-                                            type="button"
-                                            class="text-red-600 hover:text-red-900"
-                                            @click="deleteMember(member)"
-                                        >
-                                            Hapus
-                                        </button>
+                                        <div class="flex justify-end gap-2">
+                                            <Link
+                                                :href="`/members/${member.id}`"
+                                                class="text-indigo-600 hover:text-indigo-900 p-1 rounded-full hover:bg-indigo-50"
+                                                title="Lihat"
+                                            >
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                            </Link>
+                                            <Link
+                                                v-if="hasPermission('manage_members')"
+                                                :href="`/members/${member.id}/edit`"
+                                                class="text-yellow-600 hover:text-yellow-900 p-1 rounded-full hover:bg-yellow-50"
+                                                title="Edit"
+                                            >
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                            </Link>
+                                            <button
+                                                v-if="hasPermission('manage_members')"
+                                                type="button"
+                                                class="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-50"
+                                                title="Hapus"
+                                                @click="deleteMember(member)"
+                                            >
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             </tbody>
@@ -192,23 +196,8 @@ const getStatusBadgeClass = (memberStatus) => {
                     </div>
 
                     <!-- Pagination -->
-                    <div v-if="members.links.length > 3" class="px-6 py-4 border-t border-gray-200">
-                        <div class="flex flex-wrap gap-1">
-                            <Link
-                                v-for="(link, index) in members.links"
-                                :key="index"
-                                :href="link.url"
-                                :class="[
-                                    'px-3 py-2 text-sm rounded',
-                                    link.active
-                                        ? 'bg-indigo-600 text-white'
-                                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300',
-                                    !link.url ? 'opacity-50 cursor-not-allowed' : '',
-                                ]"
-                                :disabled="!link.url"
-                                v-html="link.label"
-                            />
-                        </div>
+                    <div class="px-6 py-4 border-t border-gray-200">
+                        <Pagination :links="members.links" />
                     </div>
                 </div>
             </div>
