@@ -22,7 +22,7 @@ const filteredLinks = computed(() => {
         };
     });
 });
-</script>
+</script>   
 
 <template>
     <div v-if="links.length > 3" class="flex flex-wrap justify-center gap-2">

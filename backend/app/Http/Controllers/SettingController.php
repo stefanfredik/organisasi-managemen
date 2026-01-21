@@ -8,6 +8,15 @@ use Inertia\Inertia;
 
 class SettingController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            if ($request->user()->role !== 'admin') {
+                abort(403, 'Unauthorized action.');
+            }
+            return $next($request);
+        });
+    }
     /**
      * Display a listing of the resource.
      */

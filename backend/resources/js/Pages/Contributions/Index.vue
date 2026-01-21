@@ -19,7 +19,7 @@ const props = defineProps({
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
-const isAdminOrTreasurer = computed(() => ['admin', 'treasurer'].includes(user.value.role));
+const isAdminOrTreasurer = computed(() => ['admin', 'bendahara'].includes(user.value.role));
 
 const showCreateModal = ref(false);
 const showVerifyModal = ref(false);
@@ -27,7 +27,7 @@ const selectedContribution = ref(null);
 const filteredMembers = ref([]);
 
 const form = useForm({
-    member_id: user.value.role === 'member' ? user.value.member?.id : '',
+    member_id: user.value.role === 'anggota' ? user.value.member?.id : '',
     contribution_type_id: '',
     amount: '',
     payment_date: new Date().toISOString().split('T')[0],

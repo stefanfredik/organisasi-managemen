@@ -17,6 +17,11 @@ const isSidebarOpen = ref(true);
 const toggleSidebar = () => {
     isSidebarOpen.value = !isSidebarOpen.value;
 };
+
+const hasPermission = (permission) => {
+    if (page.props.auth.user.role === 'admin') return true;
+    return page.props.auth.user.permissions?.includes(permission);
+};
 </script>
 
 <template>
@@ -87,6 +92,7 @@ const toggleSidebar = () => {
                                 <span v-show="isSidebarOpen">Dashboard</span>
                             </Link>
                             <Link
+                                v-if="hasPermission('view_members')"
                                 :href="route('members.index')"
                                 :class="[
                                     'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-bold text-sm',
@@ -111,6 +117,7 @@ const toggleSidebar = () => {
                                 <span v-show="isSidebarOpen">Anggota</span>
                             </Link>
                             <Link
+                                v-if="hasPermission('view_events')"
                                 :href="route('events.index')"
                                 :class="[
                                     'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-bold text-sm',
@@ -207,7 +214,7 @@ const toggleSidebar = () => {
                         </div>
                         <div class="space-y-1">
                             <Link
-                                v-if="$page.props.auth.user.role !== 'member'"
+                                v-if="hasPermission('view_finance')"
                                 :href="route('wallets.index')"
                                 :class="[
                                     'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-bold text-sm',
@@ -232,7 +239,7 @@ const toggleSidebar = () => {
                                 <span v-show="isSidebarOpen">Kas (Dompet)</span>
                             </Link>
                             <Link
-                                v-if="$page.props.auth.user.role !== 'member'"
+                                v-if="hasPermission('view_finance')"
                                 :href="route('finances.index')"
                                 :class="[
                                     'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-bold text-sm',
@@ -279,13 +286,13 @@ const toggleSidebar = () => {
                                     />
                                 </svg>
                                 <span v-show="isSidebarOpen">{{
-                                    $page.props.auth.user.role === "member"
+                                    $page.props.auth.user.role === "anggota"
                                         ? "Iuran Saya"
                                         : "Iuran Anggota"
                                 }}</span>
                             </Link>
                             <Link
-                                v-if="$page.props.auth.user.role !== 'member'"
+                                v-if="hasPermission('view_finance')"
                                 :href="route('contribution-types.index')"
                                 :class="[
                                     'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-bold text-sm',
@@ -316,7 +323,7 @@ const toggleSidebar = () => {
                                 <span v-show="isSidebarOpen">Jenis Iuran</span>
                             </Link>
                             <Link
-                                v-if="route().has('donations.index')"
+                                v-if="route().has('donations.index') && hasPermission('view_donations')"
                                 :href="route('donations.index')"
                                 :class="[
                                     'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-bold text-sm',
@@ -440,7 +447,7 @@ const toggleSidebar = () => {
                         </div>
                         <div class="space-y-1">
                             <Link
-                                v-if="$page.props.auth.user.role !== 'anggota'"
+                                v-if="hasPermission('view_reports')"
                                 :href="route('reports.index')"
                                 :class="[
                                     'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-bold text-sm',
@@ -651,11 +658,13 @@ const toggleSidebar = () => {
                                 >Dashboard</ResponsiveNavLink
                             >
                             <ResponsiveNavLink
+                                v-if="hasPermission('view_members')"
                                 :href="route('members.index')"
                                 :active="route().current('members.*')"
                                 >Anggota</ResponsiveNavLink
                             >
                             <ResponsiveNavLink
+                                v-if="hasPermission('view_events')"
                                 :href="route('events.index')"
                                 :active="route().current('events.*')"
                                 >Kegiatan</ResponsiveNavLink
@@ -685,13 +694,13 @@ const toggleSidebar = () => {
                                 Keuangan
                             </div>
                             <ResponsiveNavLink
-                                v-if="$page.props.auth.user.role !== 'member'"
+                                v-if="hasPermission('view_finance')"
                                 :href="route('wallets.index')"
                                 :active="route().current('wallets.*')"
                                 >Kas (Dompet)</ResponsiveNavLink
                             >
                             <ResponsiveNavLink
-                                v-if="$page.props.auth.user.role !== 'member'"
+                                v-if="hasPermission('view_finance')"
                                 :href="route('finances.index')"
                                 :active="route().current('finances.*')"
                                 >Transaksi</ResponsiveNavLink
@@ -700,13 +709,13 @@ const toggleSidebar = () => {
                                 :href="route('contributions.index')"
                                 :active="route().current('contributions.*')"
                                 >{{
-                                    $page.props.auth.user.role === "member"
+                                    $page.props.auth.user.role === "anggota"
                                         ? "Iuran Saya"
                                         : "Iuran Anggota"
                                 }}</ResponsiveNavLink
                             >
                             <ResponsiveNavLink
-                                v-if="$page.props.auth.user.role !== 'member'"
+                                v-if="hasPermission('view_finance')"
                                 :href="route('contribution-types.index')"
                                 :active="
                                     route().current('contribution-types.*')
@@ -714,11 +723,72 @@ const toggleSidebar = () => {
                                 >Jenis Iuran</ResponsiveNavLink
                             >
                             <ResponsiveNavLink
-                                v-if="route().has('donations.index')"
+                                v-if="route().has('donations.index') && hasPermission('view_donations')"
                                 :href="route('donations.index')"
                                 :active="route().current('donations.*')"
                                 >Donasi</ResponsiveNavLink
                             >
+                        </div>
+                        
+                        <!-- Kelompok Administrasi Mobile -->
+                        <div>
+                            <div class="px-3 mb-2 text-[10px] font-black uppercase text-gray-400 tracking-widest">
+                                Administrasi
+                            </div>
+                            <ResponsiveNavLink
+                                :href="route('announcements.index')"
+                                :active="route().current('announcements.*')"
+                            >
+                                Pengumuman
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                                :href="route('meeting-minutes.index')"
+                                :active="route().current('meeting-minutes.*')"
+                            >
+                                Notulensi Rapat
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                                v-if="$page.props.auth.user.role === 'admin'"
+                                :href="route('users.index')"
+                                :active="route().current('users.*')"
+                            >
+                                Manajemen User
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                                v-if="$page.props.auth.user.role === 'admin'"
+                                :href="route('activity-logs.index')"
+                                :active="route().current('activity-logs.*')"
+                            >
+                                Log Aktivitas
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                                v-if="$page.props.auth.user.role === 'admin'"
+                                :href="route('backups.index')"
+                                :active="route().current('backups.*')"
+                            >
+                                Backup Data
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                                v-if="$page.props.auth.user.role === 'admin'"
+                                :href="route('settings.index')"
+                                :active="route().current('settings.*')"
+                            >
+                                Pengaturan
+                            </ResponsiveNavLink>
+                        </div>
+
+                        <!-- Kelompok Laporan Mobile -->
+                        <div>
+                            <div class="px-3 mb-2 text-[10px] font-black uppercase text-gray-400 tracking-widest">
+                                Laporan
+                            </div>
+                            <ResponsiveNavLink
+                                v-if="hasPermission('view_reports')"
+                                :href="route('reports.index')"
+                                :active="route().current('reports.*')"
+                            >
+                                Laporan
+                            </ResponsiveNavLink>
                         </div>
                     </div>
                 </div>
