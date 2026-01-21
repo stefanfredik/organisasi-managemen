@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
 import { ref, onMounted, onUnmounted } from 'vue';
 
@@ -44,12 +44,15 @@ const formatDate = (dateString) => {
     });
 };
 
+const page = usePage();
+
 const formatCurrency = (value) => {
+    const currency = page.props.appSettings?.financial?.currency || 'Rp';
     return new Intl.NumberFormat('id-ID', {
         style: 'currency',
         currency: 'IDR',
         minimumFractionDigits: 0,
-    }).format(value);
+    }).format(value).replace('Rp', currency);
 };
 </script>
 
@@ -101,8 +104,7 @@ const formatCurrency = (value) => {
                         enter-to-class="opacity-100 translate-y-0"
                     >
                         <h1 class="text-5xl lg:text-7xl font-black tracking-tighter uppercase leading-tight">
-                            Manajemen <span class="text-indigo-400">Organisasi</span> <br> 
-                            Masa Depan.
+                            {{ $page.props.appSettings.name.split(' ')[0] }} <span class="text-indigo-400">{{ $page.props.appSettings.name.split(' ').slice(1).join(' ') }}</span>
                         </h1>
                     </Transition>
                     
@@ -113,7 +115,7 @@ const formatCurrency = (value) => {
                         enter-to-class="opacity-100 translate-y-0"
                     >
                         <p class="mt-6 text-xl text-gray-200 leading-relaxed font-medium">
-                            Solusi digital terintegrasi untuk pengelolaan iuran, dokumentasi kegiatan, dan transparansi laporan keuangan organisasi Anda.
+                            {{ $page.props.appSettings.welcome_text }}
                         </p>
                     </Transition>
 
@@ -186,7 +188,7 @@ const formatCurrency = (value) => {
         </div>
 
         <!-- Featured Albums Slider Section -->
-        <div class="bg-white py-24 overflow-hidden">
+        <div v-if="$page.props.appSettings.features.gallery" class="bg-white py-24 overflow-hidden">
             <div class="max-w-7xl mx-auto px-6 lg:px-8">
                 <h2 class="text-2xl font-black text-slate-900 uppercase tracking-widest mb-12 text-center">Momen Berharga Kami</h2>
                 
@@ -218,7 +220,11 @@ const formatCurrency = (value) => {
                 <h2 class="text-4xl lg:text-6xl font-black text-white uppercase tracking-tighter mb-8 italic">Bangun Bersama Kami.</h2>
                 <p class="text-xl text-indigo-100 mb-12 leading-relaxed">Dukungan Anda dalam bentuk iuran dan donasi adalah energi utama pergerakan organisasi kami.</p>
                 <div class="flex flex-wrap justify-center gap-6">
-                    <Link :href="route('public.donations.index')" class="px-10 py-5 bg-white text-indigo-900 rounded-3xl font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-50 transition-all active:scale-95">
+                    <Link 
+                        v-if="$page.props.appSettings.features.donations"
+                        :href="route('public.donations.index')" 
+                        class="px-10 py-5 bg-white text-indigo-900 rounded-3xl font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-50 transition-all active:scale-95"
+                    >
                         Donasi Program
                     </Link>
                     <Link :href="route('login')" class="px-10 py-5 bg-indigo-700/50 backdrop-blur-md border border-white/20 text-white rounded-3xl font-black uppercase tracking-[0.2em] hover:bg-indigo-700 transition-all active:scale-95">

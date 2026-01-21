@@ -25,7 +25,7 @@ const formatTime = (dateString) => {
 </script>
 
 <template>
-    <Head :title="event.title" />
+    <Head :title="event.name" />
 
     <PublicLayout>
         <div class="bg-gray-50 min-h-screen pb-16">
@@ -39,11 +39,11 @@ const formatTime = (dateString) => {
                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
                 <div class="absolute bottom-0 left-0 right-0 p-6 sm:p-12">
                     <div class="max-w-7xl mx-auto">
-                        <span class="inline-block px-3 py-1 bg-indigo-600 text-white rounded-full text-xs font-bold uppercase mb-4">
-                            {{ event.category }}
+                        <span class="inline-block px-3 py-1 bg-indigo-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest mb-4">
+                            {{ event.category || 'Kegiatan' }}
                         </span>
-                        <h1 class="text-3xl sm:text-5xl font-extrabold text-white mb-6">
-                            {{ event.title }}
+                        <h1 class="text-4xl sm:text-6xl font-black text-white mb-6 uppercase tracking-tight">
+                            {{ event.name }}
                         </h1>
                         <div class="flex flex-wrap gap-6 text-white text-sm sm:text-base">
                             <div class="flex items-center">
@@ -84,7 +84,7 @@ const formatTime = (dateString) => {
                             <h2 class="text-2xl font-bold text-gray-900 mb-6">Dokumentasi</h2>
                             <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                 <div v-for="doc in event.documentations" :key="doc.id" class="aspect-square rounded-xl overflow-hidden group cursor-pointer">
-                                    <img :src="doc.file_url" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="">
+                                    <img :src="doc.url" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="">
                                 </div>
                             </div>
                         </div>

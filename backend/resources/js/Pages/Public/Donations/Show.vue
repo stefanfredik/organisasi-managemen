@@ -1,17 +1,20 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
 
 const props = defineProps({
     donation: Object,
 });
 
+const page = usePage();
+
 const formatCurrency = (value) => {
+    const currency = page.props.appSettings?.financial?.currency || 'Rp';
     return new Intl.NumberFormat('id-ID', {
         style: 'currency',
         currency: 'IDR',
         minimumFractionDigits: 0,
-    }).format(value);
+    }).format(value).replace('Rp', currency);
 };
 
 const getProgress = () => {
@@ -46,17 +49,20 @@ const formatDate = (dateString) => {
                 </div>
             </div>
 
-            <div class="max-w-7xl mx-auto px-6 mt-8">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <div class="max-w-7xl mx-auto px-6 mt-12 mb-20">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-16">
                     <!-- Left: Program Info -->
-                    <div class="lg:col-span-2 space-y-8">
-                        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-                            <img :src="donation.banner_url || 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'" alt="" class="w-full h-96 object-cover">
-                            <div class="p-8 lg:p-12">
-                                <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-6 leading-tight">
+                    <div class="lg:col-span-2 space-y-12">
+                        <div class="bg-white rounded-[3rem] shadow-sm border border-slate-100 overflow-hidden">
+                            <div class="relative aspect-[21/9]">
+                                <img :src="donation.banner_url || 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'" alt="" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent"></div>
+                            </div>
+                            <div class="p-10 lg:p-16">
+                                <h1 class="text-4xl lg:text-5xl font-black text-slate-900 mb-8 leading-tight tracking-tight uppercase">
                                     {{ donation.program_name }}
                                 </h1>
-                                <div class="prose prose-indigo max-w-none text-gray-700 text-lg leading-relaxed" v-html="donation.description"></div>
+                                <div class="prose prose-slate max-w-none text-slate-600 text-lg leading-relaxed" v-html="donation.description"></div>
                             </div>
                         </div>
 
@@ -125,6 +131,25 @@ const formatDate = (dateString) => {
                                 <p class="text-[10px] text-gray-400 text-center mt-4">
                                     Dengan berdonasi, Anda menyetujui syarat dan ketentuan yang berlaku dalam organisasi kami.
                                 </p>
+                            </div>
+
+                            <!-- Bank Info Card (Dynamic) -->
+                            <div v-if="$page.props.appSettings.financial.bank_account" class="mt-8 p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                                <h4 class="text-xs font-black uppercase tracking-widest text-slate-400 mb-4 text-center">Informasi Rekening</h4>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-50">
+                                        <span class="text-xs text-slate-500">Bank</span>
+                                        <span class="text-sm font-bold text-slate-900">{{ $page.props.appSettings.financial.bank_name }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-50">
+                                        <span class="text-xs text-slate-500">Nomor Rekening</span>
+                                        <span class="text-sm font-bold text-indigo-600">{{ $page.props.appSettings.financial.bank_account }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-50">
+                                        <span class="text-xs text-slate-500">Atas Nama</span>
+                                        <span class="text-sm font-bold text-slate-900">{{ $page.props.appSettings.financial.bank_owner }}</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         

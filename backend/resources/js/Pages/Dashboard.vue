@@ -8,7 +8,7 @@ import UpcomingEvents from '@/Components/UpcomingEvents.vue';
 
 const props = defineProps({
     stats: Object,
-    recentActivities: Array,
+    recentActivities: Object,
     upcomingEvents: Array,
     recentAnnouncements: Array,
     financialSummary: Object,

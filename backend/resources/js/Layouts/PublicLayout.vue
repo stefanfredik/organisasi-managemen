@@ -1,20 +1,32 @@
 <script setup>
-import { ref } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 
+const page = usePage();
 const mobileMenuOpen = ref(false);
 
-const navigation = [
-    { name: 'Beranda', href: route('home') },
-    { name: 'Tentang', href: route('public.about') },
-    { name: 'Visi & Misi', href: route('public.vision-mission') },
-    { name: 'Struktur', href: route('public.structure') },
-    { name: 'Kegiatan', href: route('public.events.index') },
-    { name: 'Donasi', href: route('public.donations.index') },
-    { name: 'Galeri', href: route('public.gallery.index') },
-    { name: 'Kontak', href: route('public.contact') },
-];
+const navigation = computed(() => {
+    const items = [
+        { name: 'Beranda', href: route('home') },
+        { name: 'Tentang', href: route('public.about') },
+        { name: 'Visi & Misi', href: route('public.vision-mission') },
+        { name: 'Struktur', href: route('public.structure') },
+        { name: 'Kegiatan', href: route('public.events.index') },
+    ];
+
+    if (page.props.appSettings.features.donations) {
+        items.push({ name: 'Donasi', href: route('public.donations.index') });
+    }
+
+    if (page.props.appSettings.features.gallery) {
+        items.push({ name: 'Galeri', href: route('public.gallery.index') });
+    }
+
+    items.push({ name: 'Kontak', href: route('public.contact') });
+
+    return items;
+});
 </script>
 
 <template>
@@ -26,12 +38,12 @@ const navigation = [
                     <!-- Logo -->
                     <div class="flex items-center">
                         <Link href="/">
-                            <span class="sr-only">Sistem Manajemen Organisasi</span>
+                            <span class="sr-only">{{ $page.props.appSettings.name }}</span>
                             <ApplicationLogo class="h-10 w-auto text-indigo-600" />
                         </Link>
                         <div class="ml-4 hidden lg:block">
                             <h1 class="text-xl font-bold text-gray-900">
-                                Sistem Manajemen Organisasi
+                                {{ $page.props.appSettings.name }}
                             </h1>
                         </div>
                     </div>
@@ -135,7 +147,7 @@ const navigation = [
                             Tentang Kami
                         </h3>
                         <p class="mt-4 text-base text-gray-300">
-                            Sistem Manajemen Organisasi berbasis web untuk mengelola organisasi secara terpusat, terstruktur, dan transparan.
+                            {{ $page.props.appSettings.name }} berbasis web untuk mengelola organisasi secara terpusat, terstruktur, dan transparan.
                         </p>
                     </div>
 
@@ -162,9 +174,9 @@ const navigation = [
                             Kontak
                         </h3>
                         <ul class="mt-4 space-y-2 text-base text-gray-300">
-                            <li>Email: info@organisasi.com</li>
-                            <li>Telepon: (021) 1234-5678</li>
-                            <li>Alamat: Jakarta, Indonesia</li>
+                            <li v-if="$page.props.appSettings.email">Email: {{ $page.props.appSettings.email }}</li>
+                            <li v-if="$page.props.appSettings.phone">Telepon: {{ $page.props.appSettings.phone }}</li>
+                            <li v-if="$page.props.appSettings.address">Alamat: {{ $page.props.appSettings.address }}</li>
                         </ul>
                     </div>
                 </div>
@@ -172,7 +184,7 @@ const navigation = [
                 <!-- Copyright -->
                 <div class="mt-8 border-t border-gray-800 pt-8">
                     <p class="text-center text-base text-gray-400">
-                        &copy; {{ new Date().getFullYear() }} Sistem Manajemen Organisasi. All rights reserved.
+                        &copy; {{ new Date().getFullYear() }} {{ $page.props.appSettings.name }}. All rights reserved.
                     </p>
                 </div>
             </div>

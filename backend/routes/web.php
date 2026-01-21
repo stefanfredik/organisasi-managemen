@@ -30,6 +30,11 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // User Management
+    Route::patch('users/{user}/toggle-status', [\App\Http\Controllers\UserController::class, 'toggleStatus'])->name('users.toggle-status');
+    Route::post('users/{user}/reset-password', [\App\Http\Controllers\UserController::class, 'resetPassword'])->name('users.reset-password');
+    Route::resource('users', \App\Http\Controllers\UserController::class);
+
     // Member Management
     Route::resource('members', \App\Http\Controllers\MemberController::class);
 
@@ -82,6 +87,19 @@ Route::middleware('auth')->group(function () {
     Route::resource('meeting-minutes', \App\Http\Controllers\MeetingMinuteController::class);
     Route::post('meeting-minutes/{minute}/attachments', [\App\Http\Controllers\MeetingMinuteController::class, 'uploadAttachment'])->name('meeting-minutes.attachments');
     Route::get('meeting-minutes/attachments/{attachment}/download', [\App\Http\Controllers\MeetingMinuteController::class, 'downloadAttachment'])->name('meeting-minutes.attachments.download');
+
+    // Administration - Activity Logs
+    Route::get('activity-logs', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-logs.index');
+
+    // Administration - Settings
+    Route::get('settings', [\App\Http\Controllers\SettingController::class, 'index'])->name('settings.index');
+    Route::post('settings', [\App\Http\Controllers\SettingController::class, 'update'])->name('settings.update');
+
+    // Administration - Backups
+    Route::get('backups', [\App\Http\Controllers\BackupController::class, 'index'])->name('backups.index');
+    Route::post('backups', [\App\Http\Controllers\BackupController::class, 'create'])->name('backups.create');
+    Route::get('backups/{fileName}/download', [\App\Http\Controllers\BackupController::class, 'download'])->name('backups.download');
+    Route::delete('backups/{fileName}', [\App\Http\Controllers\BackupController::class, 'destroy'])->name('backups.destroy');
 
     // Administration - Documents
     Route::resource('documents', \App\Http\Controllers\DocumentController::class);

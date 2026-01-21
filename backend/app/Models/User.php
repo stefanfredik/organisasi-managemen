@@ -12,6 +12,34 @@ class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasRole;
+    
+    const ROLE_ADMIN = 'admin';
+    const ROLE_KETUA = 'ketua';
+    const ROLE_BENDAHARA = 'bendahara';
+    const ROLE_SEKRETARIS = 'sekretaris';
+    const ROLE_ANGGOTA = 'anggota';
+
+    const STATUS_ACTIVE = 'active';
+    const STATUS_INACTIVE = 'inactive';
+
+    public static function getRoles()
+    {
+        return [
+            self::ROLE_ADMIN => 'Admin',
+            self::ROLE_KETUA => 'Ketua',
+            self::ROLE_BENDAHARA => 'Bendahara',
+            self::ROLE_SEKRETARIS => 'Sekretaris',
+            self::ROLE_ANGGOTA => 'Anggota',
+        ];
+    }
+
+    public static function getStatuses()
+    {
+        return [
+            self::STATUS_ACTIVE => 'Aktif',
+            self::STATUS_INACTIVE => 'Non-Aktif',
+        ];
+    }
 
     /**
      * The attributes that are mass assignable.
