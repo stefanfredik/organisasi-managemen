@@ -31,7 +31,7 @@ const handleSelect = (value) => {
 </script>
 
 <template>
-    <div class="relative inline-block text-left">
+    <div class="relative w-full text-left">
         <div>
             <select
                 :value="modelValue"

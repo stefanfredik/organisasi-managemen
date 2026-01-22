@@ -46,13 +46,102 @@ class MemberController extends Controller
             }
         }
 
-        $members = $query->latest()
+        // Filter by gender
+        if ($request->filled('gender')) {
+            $query->where('gender', $request->gender);
+        }
+
+        // Filter by email availability
+        if ($request->filled('has_email')) {
+            if ($request->has_email === 'yes') {
+                $query->whereNotNull('email')->where('email', '!=', '');
+            } elseif ($request->has_email === 'no') {
+                $query->where(function ($q) {
+                    $q->whereNull('email')->orWhere('email', '');
+                });
+            }
+        }
+
+        // Filter by phone availability
+        if ($request->filled('has_phone')) {
+            if ($request->has_phone === 'yes') {
+                $query->whereNotNull('phone')->where('phone', '!=', '');
+            } elseif ($request->has_phone === 'no') {
+                $query->where(function ($q) {
+                    $q->whereNull('phone')->orWhere('phone', '');
+                });
+            }
+        }
+
+        // Filter by BPJS status
+        if ($request->filled('bpjs_health')) {
+            if ($request->bpjs_health === 'yes') {
+                $query->where('bpjs_health_active', true);
+            } elseif ($request->bpjs_health === 'no') {
+                $query->where('bpjs_health_active', false);
+            }
+        }
+        if ($request->filled('bpjs_employment')) {
+            if ($request->bpjs_employment === 'yes') {
+                $query->where('bpjs_employment_active', true);
+            } elseif ($request->bpjs_employment === 'no') {
+                $query->where('bpjs_employment_active', false);
+            }
+        }
+
+        // Filter by join date range
+        if ($request->filled('join_start')) {
+            $query->whereDate('join_date', '>=', $request->join_start);
+        }
+        if ($request->filled('join_end')) {
+            $query->whereDate('join_date', '<=', $request->join_end);
+        }
+
+        // Filter by linked user account availability
+        if ($request->filled('has_user')) {
+            if ($request->has_user === 'yes') {
+                $query->whereNotNull('user_id');
+            } elseif ($request->has_user === 'no') {
+                $query->whereNull('user_id');
+            }
+        }
+
+        // Optional filter by occupation
+        if ($request->filled('occupation')) {
+            $query->where('occupation', $request->occupation);
+        }
+
+        // Sorting
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortDir = strtolower($request->input('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
+        $allowedSort = ['full_name', 'member_code', 'join_date', 'created_at', 'status'];
+        if (in_array($sortBy, $allowedSort, true)) {
+            $query->orderBy($sortBy, $sortDir);
+        } else {
+            $query->latest();
+        }
+
+        $members = $query
             ->paginate(15)
             ->withQueryString();
 
         return Inertia::render('Members/Index', [
             'members' => $members,
-            'filters' => $request->only(['search', 'status']),
+            'filters' => $request->only([
+                'search',
+                'status',
+                'gender',
+                'has_email',
+                'has_phone',
+                'bpjs_health',
+                'bpjs_employment',
+                'join_start',
+                'join_end',
+                'has_user',
+                'occupation',
+                'sort_by',
+                'sort_dir',
+            ]),
         ]);
     }
 
