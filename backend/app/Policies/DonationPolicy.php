@@ -52,11 +52,27 @@ class DonationPolicy extends BasePolicy
     }
 
     /**
-     * Determine whether the user can record donation transactions.
+     * Determine whether the user can record donation transactions (Manual Entry).
      */
     public function recordTransaction(?User $user, $donation): bool
     {
         // Admin and Bendahara can record donation transactions
+        return $this->hasAnyRole($user, ['admin', 'bendahara']);
+    }
+
+    /**
+     * Determine whether the user can make a donation payment (Member).
+     */
+    public function makePayment(?User $user, $donation): bool
+    {
+        return $this->isAuthenticated($user);
+    }
+
+    /**
+     * Determine whether the user can verify donation transactions.
+     */
+    public function verifyTransaction(?User $user, $donation): bool
+    {
         return $this->hasAnyRole($user, ['admin', 'bendahara']);
     }
 

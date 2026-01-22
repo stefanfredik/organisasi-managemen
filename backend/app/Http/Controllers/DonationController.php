@@ -6,8 +6,10 @@ use Illuminate\Http\Request;
 
 use App\Models\Donation;
 use App\Models\DonationTransaction;
+use App\Models\Member;
 use App\Services\ActivityLogger;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
@@ -93,12 +95,15 @@ class DonationController extends Controller
         $donation->load([
             'creator',
             'transactions' => function ($query) {
-                $query->latest();
+                $query->with('member')->latest();
             }
         ]);
 
+        $members = Member::active()->select('id', 'full_name', 'member_code', 'email', 'phone')->get();
+
         return Inertia::render('Donations/Show', [
             'donation' => $donation,
+            'members' => $members,
         ]);
     }
 
@@ -157,13 +162,14 @@ class DonationController extends Controller
     }
 
     /**
-     * Record a donation transaction.
+     * Record a donation transaction (Admin Manual Entry).
      */
     public function recordTransaction(Request $request, Donation $donation)
     {
         $this->authorize('recordTransaction', $donation);
 
         $validated = $request->validate([
+            'member_id' => 'nullable|exists:members,id',
             'donor_name' => 'nullable|string|max:255',
             'donor_email' => 'nullable|email|max:255',
             'donor_phone' => 'nullable|string|max:255',
@@ -173,16 +179,103 @@ class DonationController extends Controller
             'notes' => 'nullable|string',
         ]);
 
+        $validated['status'] = 'paid';
+        $validated['verified_by'] = $request->user()->id;
+        $validated['verified_at'] = now();
+
         $transaction = $donation->transactions()->create($validated);
 
         // Update collected_amount
         $donation->increment('collected_amount', $validated['amount']);
 
-        $name = $validated['is_anonymous'] ? 'Hamba Allah' : ($validated['donor_name'] ?? 'Anonim');
-        $this->activityLogger->logUpdate($donation, "Mencatat donasi sebesar " . number_format($validated['amount']) . " dari {$name} untuk program {$donation->program_name}");
+        $isAnonymous = $validated['is_anonymous'] ?? false;
+        $name = $isAnonymous ? 'Hamba Allah' : ($validated['donor_name'] ?? 'Anonim');
+        $this->activityLogger->logUpdate($donation, "Mencatat donasi manual sebesar " . number_format($validated['amount']) . " dari {$name}");
 
         return back()->with('success', 'Donasi berhasil dicatat.');
     }
+
+    /**
+     * Store member payment with proof.
+     */
+    public function storeMemberPayment(Request $request, Donation $donation)
+    {
+        $this->authorize('makePayment', $donation);
+
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:1',
+            'donation_date' => 'required|date',
+            'receipt' => 'required|file|image|max:2048',
+            'is_anonymous' => 'boolean',
+            'notes' => 'nullable|string',
+            'donor_name' => 'nullable|string|max:255',
+        ]);
+
+        $path = $request->file('receipt')->store('donation-receipts', 'public');
+
+        $data = [
+            'amount' => $validated['amount'],
+            'donation_date' => $validated['donation_date'],
+            'receipt_path' => $path,
+            'is_anonymous' => $validated['is_anonymous'] ?? false,
+            'notes' => $validated['notes'] ?? null,
+            'status' => 'pending',
+            'donor_name' => $validated['donor_name'] ?? $request->user()->name,
+            'donor_email' => $request->user()->email,
+        ];
+
+        // If user is a member
+        if ($request->user()->role === 'anggota') {
+             $member = Member::where('user_id', $request->user()->id)->first();
+             if ($member) {
+                 $data['member_id'] = $member->id;
+             }
+        }
+
+        $donation->transactions()->create($data);
+
+        return back()->with('success', 'Pembayaran donasi berhasil dikirim. Menunggu verifikasi admin.');
+    }
+
+    /**
+     * Verify a donation transaction.
+     */
+    public function verifyTransaction(Request $request, DonationTransaction $transaction)
+    {
+        $donation = $transaction->donation;
+        $this->authorize('verifyTransaction', $donation);
+
+        $validated = $request->validate([
+            'action' => 'required|in:approve,reject',
+            'notes' => 'nullable|string',
+        ]);
+
+        if ($validated['action'] === 'approve') {
+            $transaction->update([
+                'status' => 'paid',
+                'verified_by' => $request->user()->id,
+                'verified_at' => now(),
+                'notes' => $validated['notes'] ? ($transaction->notes . "\n[Admin]: " . $validated['notes']) : $transaction->notes,
+            ]);
+
+            // Increment collected amount
+            $donation->increment('collected_amount', $transaction->amount);
+            
+            $this->activityLogger->logUpdate($donation, "Memverifikasi donasi sebesar " . number_format($transaction->amount));
+            
+            return back()->with('success', 'Donasi berhasil diverifikasi.');
+        } else {
+             $transaction->update([
+                'status' => 'rejected',
+                'verified_by' => $request->user()->id,
+                'verified_at' => now(),
+                'notes' => $validated['notes'] ? ($transaction->notes . "\n[Admin Reject]: " . $validated['notes']) : $transaction->notes,
+            ]);
+            
+            return back()->with('success', 'Donasi ditolak.');
+        }
+    }
+
     /**
      * Display a summary report of all donations.
      */

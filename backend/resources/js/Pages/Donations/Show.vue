@@ -1,6 +1,6 @@
 <script setup>
-import { ref } from 'vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ref, watch, computed } from 'vue';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Modal from '@/Components/Modal.vue';
 import InputLabel from '@/Components/InputLabel.vue';
@@ -8,20 +8,66 @@ import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
+import DangerButton from '@/Components/DangerButton.vue';
 
 const props = defineProps({
     donation: Object,
+    members: Array,
 });
 
+const page = usePage();
 const showingModal = ref(false);
+const showingPaymentModal = ref(false);
+const showingVerifyModal = ref(false);
+const selectedTransaction = ref(null);
+const searchQuery = ref('');
+
+const filteredTransactions = computed(() => {
+    if (!searchQuery.value) {
+        return props.donation.transactions;
+    }
+    const query = searchQuery.value.toLowerCase();
+    return props.donation.transactions.filter(tx => {
+        const name = tx.donor_name ? tx.donor_name.toLowerCase() : '';
+        const email = tx.donor_email ? tx.donor_email.toLowerCase() : '';
+        const notes = tx.notes ? tx.notes.toLowerCase() : '';
+        return name.includes(query) || email.includes(query) || notes.includes(query);
+    });
+});
 
 const form = useForm({
+    member_id: '',
     donor_name: '',
     donor_email: '',
     donor_phone: '',
     amount: '',
     donation_date: new Date().toISOString().substr(0, 10),
     is_anonymous: false,
+    notes: '',
+});
+
+watch(() => form.member_id, (newId) => {
+    if (newId) {
+        const member = props.members.find(m => m.id === newId);
+        if (member) {
+            form.donor_name = member.full_name;
+            form.donor_email = member.email || '';
+            form.donor_phone = member.phone || '';
+        }
+    }
+});
+
+const paymentForm = useForm({
+    amount: '',
+    donation_date: new Date().toISOString().substr(0, 10),
+    receipt: null,
+    is_anonymous: false,
+    notes: '',
+    donor_name: page.props.auth.user.name,
+});
+
+const verifyForm = useForm({
+    action: '',
     notes: '',
 });
 
@@ -55,6 +101,27 @@ const closeModal = () => {
     showingModal.value = false;
 };
 
+const openPaymentModal = () => {
+    paymentForm.reset();
+    paymentForm.donor_name = page.props.auth.user.name;
+    showingPaymentModal.value = true;
+};
+
+const closePaymentModal = () => {
+    showingPaymentModal.value = false;
+};
+
+const openVerifyModal = (transaction) => {
+    selectedTransaction.value = transaction;
+    verifyForm.reset();
+    showingVerifyModal.value = true;
+};
+
+const closeVerifyModal = () => {
+    showingVerifyModal.value = false;
+    selectedTransaction.value = null;
+};
+
 const submitTransaction = () => {
     form.post(route('donations.transactions.store', props.donation.id), {
         onSuccess: () => {
@@ -64,11 +131,39 @@ const submitTransaction = () => {
     });
 };
 
+const submitPayment = () => {
+    paymentForm.post(route('donations.pay', props.donation.id), {
+        onSuccess: () => {
+            closePaymentModal();
+            paymentForm.reset();
+        },
+    });
+};
+
+const submitVerification = (action) => {
+    verifyForm.action = action;
+    verifyForm.post(route('donations.transactions.verify', selectedTransaction.value.id), {
+        onSuccess: () => {
+            closeVerifyModal();
+            verifyForm.reset();
+        },
+    });
+};
+
 const getStatusBadge = (status) => {
     const badges = {
         active: 'bg-green-100 text-green-800',
         completed: 'bg-blue-100 text-blue-800',
         cancelled: 'bg-red-100 text-red-800',
+    };
+    return badges[status] || 'bg-gray-100 text-gray-800';
+};
+
+const getTransactionStatusBadge = (status) => {
+    const badges = {
+        pending: 'bg-yellow-100 text-yellow-800',
+        paid: 'bg-green-100 text-green-800',
+        rejected: 'bg-red-100 text-red-800',
     };
     return badges[status] || 'bg-gray-100 text-gray-800';
 };
@@ -108,7 +203,7 @@ const getStatusBadge = (status) => {
                         @click="openModal"
                         class="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-semibold hover:bg-indigo-700 transition"
                     >
-                        Catat Donasi
+                        Catat Donasi Manual
                     </button>
                 </div>
             </div>
@@ -169,8 +264,16 @@ const getStatusBadge = (status) => {
 
                         <!-- Transactions Table -->
                         <div class="bg-white shadow sm:rounded-lg overflow-hidden">
-                            <div class="p-6 border-b">
+                            <div class="p-6 border-b flex flex-col sm:flex-row justify-between items-center gap-4">
                                 <h3 class="text-lg font-bold text-gray-900">Daftar Donatur</h3>
+                                <div class="w-full sm:w-64">
+                                    <input 
+                                        type="text" 
+                                        v-model="searchQuery" 
+                                        placeholder="Cari donatur..." 
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                                    >
+                                </div>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="min-w-full divide-y divide-gray-200">
@@ -179,11 +282,14 @@ const getStatusBadge = (status) => {
                                             <th class="px-6 py-3 text-left">Tanggal</th>
                                             <th class="px-6 py-3 text-left">Nama Donatur</th>
                                             <th class="px-6 py-3 text-right">Jumlah</th>
+                                            <th class="px-6 py-3 text-center">Status</th>
+                                            <th class="px-6 py-3 text-center">Bukti</th>
                                             <th class="px-6 py-3 text-left">Catatan</th>
+                                            <th v-if="$page.props.auth.user.role === 'admin' || $page.props.auth.user.role === 'bendahara'" class="px-6 py-3 text-center">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-200 bg-white">
-                                        <tr v-for="tx in donation.transactions" :key="tx.id" class="text-sm text-gray-700">
+                                        <tr v-for="tx in filteredTransactions" :key="tx.id" class="text-sm text-gray-700">
                                             <td class="px-6 py-4 whitespace-nowrap">{{ formatDate(tx.donation_date) }}</td>
                                             <td class="px-6 py-4">
                                                 <div class="font-medium text-gray-900">
@@ -192,10 +298,30 @@ const getStatusBadge = (status) => {
                                                 <div v-if="!tx.is_anonymous && tx.donor_email" class="text-xs text-gray-500">{{ tx.donor_email }}</div>
                                             </td>
                                             <td class="px-6 py-4 text-right font-bold text-green-600">{{ formatCurrency(tx.amount) }}</td>
+                                            <td class="px-6 py-4 text-center">
+                                                 <span :class="getTransactionStatusBadge(tx.status)" class="px-2 py-1 rounded-full text-xs font-bold capitalize">
+                                                    {{ tx.status }}
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 text-center">
+                                                <a v-if="tx.receipt_path" :href="'/storage/' + tx.receipt_path" target="_blank" class="text-indigo-600 hover:text-indigo-900 underline text-xs">
+                                                    Lihat
+                                                </a>
+                                                <span v-else class="text-gray-400 text-xs">-</span>
+                                            </td>
                                             <td class="px-6 py-4 italic text-gray-500 max-w-xs truncate">{{ tx.notes || '-' }}</td>
+                                            <td v-if="$page.props.auth.user.role === 'admin' || $page.props.auth.user.role === 'bendahara'" class="px-6 py-4 text-center">
+                                                <button
+                                                    v-if="tx.status === 'pending'"
+                                                    @click="openVerifyModal(tx)"
+                                                    class="text-indigo-600 hover:text-indigo-900 font-medium text-xs border border-indigo-600 px-2 py-1 rounded hover:bg-indigo-50"
+                                                >
+                                                    Verifikasi
+                                                </button>
+                                            </td>
                                         </tr>
                                         <tr v-if="donation.transactions.length === 0">
-                                            <td colspan="4" class="px-6 py-12 text-center text-gray-500">Belum ada transaksi donasi.</td>
+                                            <td colspan="7" class="px-6 py-12 text-center text-gray-500">Belum ada transaksi donasi.</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -205,6 +331,18 @@ const getStatusBadge = (status) => {
 
                     <!-- Right Column: Sidebar / Stats -->
                     <div class="space-y-6">
+                        <!-- CTA Donate Button for Member -->
+                        <div v-if="$page.props.auth.user.role === 'anggota'" class="bg-indigo-600 rounded-lg shadow-lg p-6 text-center">
+                            <h3 class="text-white text-lg font-bold mb-2">Ingin Berdonasi?</h3>
+                            <p class="text-indigo-100 text-sm mb-4">Mari sisihkan sebagian rezeki untuk membantu sesama.</p>
+                            <button
+                                @click="openPaymentModal"
+                                class="w-full px-6 py-3 bg-white text-indigo-600 rounded-lg font-bold text-lg hover:bg-indigo-50 transition transform hover:scale-105"
+                            >
+                                Sumbang Sekarang
+                            </button>
+                        </div>
+
                         <div class="bg-white p-6 shadow sm:rounded-lg">
                             <h3 class="text-sm font-bold text-gray-900 uppercase tracking-widest mb-4">Informasi Tambahan</h3>
                             <div class="space-y-4">
@@ -247,6 +385,21 @@ const getStatusBadge = (status) => {
             <div class="p-6">
                 <h3 class="text-lg font-bold text-gray-900 mb-4">Catat Transaksi Donasi</h3>
                 <form @submit.prevent="submitTransaction" class="space-y-4">
+                    <div v-if="$page.props.auth.user.role === 'admin' || $page.props.auth.user.role === 'bendahara'" class="mb-4">
+                        <InputLabel for="member_id" value="Pilih Anggota (Opsional)" />
+                        <select
+                            id="member_id"
+                            v-model="form.member_id"
+                            class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                        >
+                            <option value="">-- Manual Input / Bukan Anggota --</option>
+                            <option v-for="member in members" :key="member.id" :value="member.id">
+                                {{ member.full_name }} - {{ member.member_code }}
+                            </option>
+                        </select>
+                        <InputError class="mt-2" :message="form.errors.member_id" />
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <InputLabel for="donor_name" value="Nama Donatur (Opsional)" />
@@ -296,6 +449,112 @@ const getStatusBadge = (status) => {
                     <div class="flex justify-end gap-3 mt-6">
                         <SecondaryButton @click="closeModal" type="button">Batal</SecondaryButton>
                         <PrimaryButton :disabled="form.processing">Simpan Transaksi</PrimaryButton>
+                    </div>
+                </form>
+            </div>
+        </Modal>
+        <!-- Member Payment Modal -->
+        <Modal :show="showingPaymentModal" @close="closePaymentModal">
+            <div class="p-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Sumbang Donasi</h3>
+                <form @submit.prevent="submitPayment" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <InputLabel for="pay_donor_name" value="Nama Donatur (Opsional)" />
+                            <TextInput id="pay_donor_name" type="text" v-model="paymentForm.donor_name" class="mt-1 block w-full" :disabled="paymentForm.is_anonymous" />
+                            <InputError class="mt-2" :message="paymentForm.errors.donor_name" />
+                        </div>
+                        <div class="flex items-center pt-8">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" v-model="paymentForm.is_anonymous" class="rounded border-gray-300 text-indigo-600 shadow-sm transition" />
+                                <span class="ml-2 text-sm text-gray-600">Sembunyikan Nama</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <InputLabel for="pay_amount" value="Jumlah Donasi (Rp)" />
+                            <TextInput id="pay_amount" type="number" v-model="paymentForm.amount" class="mt-1 block w-full font-bold text-green-600" required min="1" />
+                            <InputError class="mt-2" :message="paymentForm.errors.amount" />
+                        </div>
+                        <div>
+                            <InputLabel for="pay_donation_date" value="Tanggal Transfer" />
+                            <TextInput id="pay_donation_date" type="date" v-model="paymentForm.donation_date" class="mt-1 block w-full" required />
+                            <InputError class="mt-2" :message="paymentForm.errors.donation_date" />
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <InputLabel for="receipt" value="Bukti Transfer (Gambar)" />
+                        <input 
+                            type="file" 
+                            id="receipt" 
+                            @input="paymentForm.receipt = $event.target.files[0]"
+                            class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                            accept="image/*"
+                            required
+                        />
+                        <InputError class="mt-2" :message="paymentForm.errors.receipt" />
+                        <p class="mt-1 text-xs text-gray-500">Format: JPG, PNG, JPEG. Max: 2MB.</p>
+                    </div>
+
+                    <div>
+                        <InputLabel for="pay_notes" value="Catatan / Doa" />
+                        <textarea id="pay_notes" v-model="paymentForm.notes" class="mt-1 block w-full border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" rows="2"></textarea>
+                        <InputError class="mt-2" :message="paymentForm.errors.notes" />
+                    </div>
+
+                    <div class="flex justify-end gap-3 mt-6">
+                        <SecondaryButton @click="closePaymentModal" type="button">Batal</SecondaryButton>
+                        <PrimaryButton :disabled="paymentForm.processing">Kirim Donasi</PrimaryButton>
+                    </div>
+                </form>
+            </div>
+        </Modal>
+
+        <!-- Verification Modal -->
+        <Modal :show="showingVerifyModal" @close="closeVerifyModal">
+            <div class="p-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Verifikasi Donasi</h3>
+                
+                <div v-if="selectedTransaction" class="mb-6 bg-gray-50 p-4 rounded-lg">
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <p class="text-gray-500">Donatur</p>
+                            <p class="font-medium">{{ selectedTransaction.donor_name || 'Anonim' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Jumlah</p>
+                            <p class="font-medium text-green-600">{{ formatCurrency(selectedTransaction.amount) }}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Tanggal</p>
+                            <p class="font-medium">{{ formatDate(selectedTransaction.donation_date) }}</p>
+                        </div>
+                         <div>
+                            <p class="text-gray-500">Bukti</p>
+                            <a v-if="selectedTransaction.receipt_path" :href="'/storage/' + selectedTransaction.receipt_path" target="_blank" class="text-indigo-600 underline">Lihat Bukti</a>
+                            <span v-else class="text-gray-400">Tidak ada</span>
+                        </div>
+                    </div>
+                </div>
+
+                <form class="space-y-4">
+                    <div>
+                        <InputLabel for="verify_notes" value="Catatan Verifikasi (Opsional)" />
+                        <textarea id="verify_notes" v-model="verifyForm.notes" class="mt-1 block w-full border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" rows="2" placeholder="Alasan terima/tolak..."></textarea>
+                        <InputError class="mt-2" :message="verifyForm.errors.notes" />
+                    </div>
+
+                    <div class="flex justify-end gap-3 mt-6">
+                        <SecondaryButton @click="closeVerifyModal" type="button">Batal</SecondaryButton>
+                        <DangerButton @click="submitVerification('reject')" :disabled="verifyForm.processing" type="button">
+                            Tolak
+                        </DangerButton>
+                        <PrimaryButton @click="submitVerification('approve')" :disabled="verifyForm.processing" type="button" class="bg-green-600 hover:bg-green-700 focus:bg-green-700 active:bg-green-800">
+                            Terima & Verifikasi
+                        </PrimaryButton>
                     </div>
                 </form>
             </div>

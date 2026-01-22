@@ -119,8 +119,13 @@ const formatDate = (date) => {
 
                     <!-- Grid Layout for Donations -->
                     <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div v-for="donation in donations.data" :key="donation.id" class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 bg-white">
-                            <div class="p-5">
+                        <Link 
+                            v-for="donation in donations.data" 
+                            :key="donation.id" 
+                            :href="route('donations.show', donation)"
+                            class="block border rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 bg-white group cursor-pointer h-full flex flex-col"
+                        >
+                            <div class="p-5 flex-1 flex flex-col">
                                 <div class="flex justify-between items-start mb-3">
                                     <span :class="getStatusBadge(donation.status)" class="px-2.5 py-0.5 rounded-full text-xs font-medium">
                                         {{ donation.status.charAt(0).toUpperCase() + donation.status.slice(1) }}
@@ -131,57 +136,48 @@ const formatDate = (date) => {
                                     </span>
                                 </div>
                                 
-                                <h3 class="text-lg font-bold text-gray-900 mb-2 truncate" :title="donation.program_name">
+                                <h3 class="text-lg font-bold text-gray-900 mb-2 truncate group-hover:text-indigo-600 transition-colors" :title="donation.program_name">
                                     {{ donation.program_name }}
                                 </h3>
                                 
-                                <p class="text-sm text-gray-600 mb-4 line-clamp-2 h-10">
+                                <p class="text-sm text-gray-600 mb-4 line-clamp-3 flex-1">
                                     {{ donation.description || 'Tidak ada deskripsi.' }}
                                 </p>
                                 
-                                <div class="mb-4">
-                                    <div class="flex justify-between text-xs font-medium mb-1">
-                                        <span class="text-indigo-600">{{ formatCurrency(donation.collected_amount) }}</span>
-                                        <span class="text-gray-500">Target: {{ formatCurrency(donation.target_amount) }}</span>
+                                <div class="mb-4 bg-gray-50 p-3 rounded-md border border-gray-100">
+                                    <div class="flex justify-between text-xs font-medium mb-2">
+                                        <div class="flex flex-col">
+                                            <span class="text-gray-500 text-[10px] uppercase">Terkumpul</span>
+                                            <span class="text-indigo-600 font-bold text-sm">{{ formatCurrency(donation.collected_amount) }}</span>
+                                        </div>
+                                        <div class="flex flex-col text-right">
+                                             <span class="text-gray-500 text-[10px] uppercase">Target</span>
+                                            <span class="text-gray-700 font-semibold text-sm">{{ formatCurrency(donation.target_amount) }}</span>
+                                        </div>
                                     </div>
-                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="w-full bg-gray-200 rounded-full h-2.5 mb-1">
                                         <div 
-                                            class="bg-indigo-600 h-2 rounded-full transition-all duration-500" 
+                                            class="bg-indigo-600 h-2.5 rounded-full transition-all duration-500" 
                                             :style="{ width: calculateProgress(donation.collected_amount, donation.target_amount) + '%' }"
                                         ></div>
                                     </div>
-                                    <div class="text-right mt-1">
-                                        <span class="text-[10px] font-bold text-gray-700">
-                                            {{ calculateProgress(donation.collected_amount, donation.target_amount) }}%
+                                    <div class="text-right">
+                                        <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
+                                            {{ calculateProgress(donation.collected_amount, donation.target_amount) }}% Tercapai
                                         </span>
                                     </div>
                                 </div>
                                 
-                                <div class="flex items-center text-xs text-gray-500 mb-4">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                    {{ formatDate(donation.start_date) }} 
-                                    <span v-if="donation.end_date" class="mx-1">-</span>
-                                    {{ donation.end_date ? formatDate(donation.end_date) : '' }}
-                                </div>
-                                
-                                <div class="flex justify-between items-center mt-auto border-t pt-4">
-                                    <Link 
-                                        :href="route('donations.show', donation)"
-                                        class="text-sm font-semibold text-indigo-600 hover:text-indigo-800"
-                                        title="Lihat"
-                                    >
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 5.943 7.523 3 12 3c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                    </Link>
-                                    <Link 
-                                        v-if="$page.props.auth.user.role !== 'anggota'"
-                                        :href="route('donations.edit', donation)"
-                                        class="text-sm font-semibold text-orange-600 hover:text-orange-800"
-                                    >
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                                    </Link>
+                                <div class="flex items-center justify-between text-xs text-gray-500 mt-auto pt-3 border-t border-gray-100">
+                                    <div class="flex items-center" title="Periode Donasi">
+                                        <svg class="w-4 h-4 mr-1.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                        <span>{{ formatDate(donation.start_date) }}</span>
+                                        <span v-if="donation.end_date" class="mx-1">-</span>
+                                        <span v-if="donation.end_date">{{ formatDate(donation.end_date) }}</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </Link>
 
                         <div v-if="donations.data.length === 0" class="col-span-1 md:col-span-2 lg:col-span-3 py-12 text-center bg-gray-50 rounded-lg border-2 border-dashed">
                             <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -8,6 +8,7 @@ const props = defineProps({
     member: Object,
     contributions: Array,
     events: Array,
+    donationTransactions: Array,
 });
 
 const activeTab = ref('profile');
@@ -16,6 +17,7 @@ const isPhotoZoomed = ref(false);
 const tabs = [
     { id: 'profile', name: 'Profil' },
     { id: 'contributions', name: 'Riwayat Iuran' },
+    { id: 'donations', name: 'Riwayat Donasi' },
     { id: 'events', name: 'Riwayat Kegiatan' },
 ];
 
@@ -48,6 +50,7 @@ const getStatusBadgeClass = (status) => {
         'paid': 'bg-green-100 text-green-800',
         'pending': 'bg-yellow-100 text-yellow-800',
         'cancelled': 'bg-red-100 text-red-800',
+        'rejected': 'bg-red-100 text-red-800',
         'present': 'bg-green-100 text-green-800',
         'absent': 'bg-red-100 text-red-800',
         'excused': 'bg-yellow-100 text-yellow-800',
@@ -60,6 +63,7 @@ const getStatusLabel = (status) => {
         'paid': 'Lunas',
         'pending': 'Menunggu',
         'cancelled': 'Dibatalkan',
+        'rejected': 'Ditolak',
         'present': 'Hadir',
         'absent': 'Tidak Hadir',
         'excused': 'Izin',
@@ -363,6 +367,66 @@ const getStatusLabel = (status) => {
                                 <h3 class="mt-2 text-sm font-medium text-gray-900">Belum ada riwayat iuran</h3>
                                 <p class="mt-1 text-sm text-gray-500">
                                     Anggota ini belum memiliki catatan pembayaran iuran
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Donations Tab -->
+                        <div v-if="activeTab === 'donations'">
+                            <div v-if="donationTransactions && donationTransactions.length > 0" class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Program Donasi
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Jumlah
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Tanggal Donasi
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Status
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Catatan
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <tr v-for="tx in donationTransactions" :key="tx.id">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {{ tx.program_name }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
+                                                {{ formatCurrency(tx.amount) }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {{ formatDate(tx.donation_date) }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span
+                                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                                                    :class="getStatusBadgeClass(tx.status)"
+                                                >
+                                                    {{ getStatusLabel(tx.status) }}
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 italic">
+                                                {{ tx.notes || '-' }}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div v-else class="text-center py-12">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <h3 class="mt-2 text-sm font-medium text-gray-900">Belum ada riwayat donasi</h3>
+                                <p class="mt-1 text-sm text-gray-500">
+                                    Anggota ini belum melakukan donasi apapun
                                 </p>
                             </div>
                         </div>

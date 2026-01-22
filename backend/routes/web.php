@@ -125,11 +125,13 @@ Route::middleware('auth')->group(function () {
     Route::middleware('permission:manage_finance')->group(function () {
         Route::resource('donations', \App\Http\Controllers\DonationController::class)->except(['index', 'show']);
         Route::post('donations/{donation}/transactions', [\App\Http\Controllers\DonationController::class, 'recordTransaction'])->name('donations.transactions.store');
+        Route::post('donations/transactions/{transaction}/verify', [\App\Http\Controllers\DonationController::class, 'verifyTransaction'])->name('donations.transactions.verify');
     });
 
     Route::middleware('permission:view_donations')->group(function () {
         Route::get('donations', [\App\Http\Controllers\DonationController::class, 'index'])->name('donations.index');
         Route::get('donations/{donation}', [\App\Http\Controllers\DonationController::class, 'show'])->name('donations.show');
+        Route::post('donations/{donation}/pay', [\App\Http\Controllers\DonationController::class, 'storeMemberPayment'])->name('donations.pay');
         Route::get('donations/report', [\App\Http\Controllers\DonationController::class, 'report'])->name('donations.report');
     });
 

@@ -10,7 +10,6 @@ import SecondaryButton from "@/Components/SecondaryButton.vue";
 import InputLabel from "@/Components/InputLabel.vue";
 import TextInput from "@/Components/TextInput.vue";
 import InputError from "@/Components/InputError.vue";
-import ContributionTabs from "@/Pages/Contributions/Partials/ContributionTabs.vue";
 import SearchBar from "@/Components/SearchBar.vue";
 import FilterDropdown from "@/Components/FilterDropdown.vue";
 import SearchableSelect from "@/Components/SearchableSelect.vue";
@@ -517,7 +516,7 @@ const startPayment = (type) => {
         <div class="py-12">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
                 <!-- Navigation -->
-                <ContributionTabs active="history" v-if="$page.props.auth.user.role !== 'anggota'" />
+
 
                 <!-- Active Contribution Types Cards -->
                 <div class="mb-8" v-if="types && types.length > 0">
@@ -572,7 +571,11 @@ const startPayment = (type) => {
                                 </p>
 
                                 <div class="mt-4 pt-3 border-t border-gray-50">
+                                    <div v-if="type.user_progress?.percentage >= 100" class="w-full text-center py-2 bg-green-50 text-green-700 border border-green-100 rounded-xl font-bold text-xs uppercase tracking-wider">
+                                        Sudah Terbayar
+                                    </div>
                                     <button 
+                                        v-else
                                         @click.stop="startPayment(type)"
                                         class="w-full inline-flex items-center justify-center px-4 py-2 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-indigo-600 hover:text-white hover:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-300 group-hover:shadow-md"
                                     >

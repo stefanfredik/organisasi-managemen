@@ -129,6 +129,14 @@ class Member extends Model
     }
 
     /**
+     * Get the donation transactions for the member.
+     */
+    public function donationTransactions(): HasMany
+    {
+        return $this->hasMany(DonationTransaction::class);
+    }
+
+    /**
      * Get the events the member participates in.
      */
     public function events(): BelongsToMany
@@ -197,13 +205,5 @@ class Member extends Model
     public function isActive(): bool
     {
         return $this->status === 'active';
-    }
-
-    /**
-     * Check if member is inactive.
-     */
-    public function isInactive(): bool
-    {
-        return $this->status === 'inactive';
     }
 }

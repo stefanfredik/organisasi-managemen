@@ -243,10 +243,27 @@ class MemberController extends Controller
                 ];
             });
 
+        // Load donation transactions
+        $donationTransactions = $member->donationTransactions()
+            ->with('donation')
+            ->latest('donation_date')
+            ->get()
+            ->map(function ($tx) {
+                return [
+                    'id' => $tx->id,
+                    'program_name' => $tx->donation->program_name,
+                    'amount' => $tx->amount,
+                    'donation_date' => $tx->donation_date,
+                    'status' => $tx->status,
+                    'notes' => $tx->notes,
+                ];
+            });
+
         return Inertia::render('Members/Show', [
             'member' => $member,
             'contributions' => $contributions,
             'events' => $events,
+            'donationTransactions' => $donationTransactions,
         ]);
     }
 
