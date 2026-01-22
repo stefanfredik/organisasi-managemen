@@ -289,7 +289,7 @@ const hasPermission = (permission) => {
                             </Link>
                             <!-- Monitoring Iuran (Admin Only) -->
                             <Link
-                                v-if="hasPermission('view_contributions') && $page.props.auth.user.role !== 'anggota'"
+                                v-if="hasPermission('view_contribution_monitoring')"
                                 :href="route('contributions.monitoring.index')"
                                 :class="[
                                     'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-bold text-sm',

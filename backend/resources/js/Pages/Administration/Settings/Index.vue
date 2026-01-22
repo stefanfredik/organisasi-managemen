@@ -70,6 +70,7 @@ const parsePermissions = () => {
         { key: 'view_reports', label: 'Lihat Laporan' },
         { key: 'manage_contributions', label: 'Kelola Iuran' },
         { key: 'view_contributions', label: 'Lihat Data Iuran' },
+        { key: 'view_contribution_monitoring', label: 'Lihat Monitoring Iuran' },
         { key: 'manage_contribution_types', label: 'Kelola Jenis Iuran' },
         { key: 'view_contribution_types', label: 'Lihat Jenis Iuran' },
         { key: 'view_donations', label: 'Lihat Data Donasi' },

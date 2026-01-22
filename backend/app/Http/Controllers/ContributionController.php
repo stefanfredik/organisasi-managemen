@@ -413,6 +413,15 @@ class ContributionController extends Controller
     public function storeBulk(Request $request)
     {
         $userRole = auth()->user()->role;
+        
+        // Auto-fill member_ids for member/anggota role
+        if (in_array($userRole, ['member', 'anggota']) && !$request->has('member_ids')) {
+            $member = Member::where('user_id', auth()->id())->first();
+            if ($member) {
+                $request->merge(['member_ids' => [$member->id]]);
+            }
+        }
+
         $validated = $request->validate([
             'member_ids' => 'required|array|min:1',
             'member_ids.*' => 'exists:members,id',
@@ -541,13 +550,21 @@ class ContributionController extends Controller
         
         $contributions = $query->get();
 
+        // Current Period Status Logic
+        $currentStatus = 'unpaid';
+        $currentLabel = '-';
+        $now = Carbon::now();
+
         if ($type->period === 'once') {
              $paid = $contributions->where('status', 'paid')->isNotEmpty();
+             $pending = $contributions->where('status', 'pending')->isNotEmpty();
              return [
                  'paid' => $paid ? 1 : 0,
                  'total' => 1,
                  'percentage' => $paid ? 100 : 0,
-                 'text' => $paid ? 'Lunas' : 'Belum Bayar'
+                 'text' => $paid ? 'Lunas' : ($pending ? 'Menunggu Verifikasi' : 'Belum Bayar'),
+                 'current_period_status' => $paid ? 'paid' : ($pending ? 'pending' : 'unpaid'),
+                 'current_period_label' => 'Sekali Bayar'
              ];
         }
 
@@ -566,7 +583,27 @@ class ContributionController extends Controller
         }
 
         $paidMap = $contributions->where('status', 'paid')->keyBy('payment_period');
+        $pendingMap = $contributions->where('status', 'pending')->keyBy('payment_period');
         
+        // Determine Current Period Key
+        $currentKey = '';
+        if ($type->period === 'monthly') {
+            $currentKey = $now->format('Y-m');
+            $currentLabel = $now->isoFormat('MMMM Y');
+        } elseif ($type->period === 'weekly') {
+            $currentKey = $now->format('o-W');
+            $currentLabel = 'Minggu ke-' . $now->weekOfYear;
+        } elseif ($type->period === 'yearly') {
+            $currentKey = $now->format('Y');
+            $currentLabel = 'Tahun ' . $now->format('Y');
+        }
+
+        if ($paidMap->has($currentKey)) {
+            $currentStatus = 'paid';
+        } elseif ($pendingMap->has($currentKey)) {
+            $currentStatus = 'pending';
+        }
+
         $totalPeriods = 0;
         $paidPeriods = 0;
         $current = $startDate->copy();
@@ -607,6 +644,8 @@ class ContributionController extends Controller
             'total' => $totalPeriods,
             'percentage' => $percentage,
             'text' => "$paidPeriods / $totalPeriods Periode",
+            'current_period_status' => $currentStatus,
+            'current_period_label' => $currentLabel
         ];
     }
     
@@ -839,6 +878,7 @@ class ContributionController extends Controller
     {
         $contribution = Contribution::findOrFail($id);
         $action = $request->input('action'); // 'approve' or 'reject'
+        $comment = trim((string) $request->input('comment'));
 
         $status = match ($action) {
             'approve' => 'paid',
@@ -850,12 +890,16 @@ class ContributionController extends Controller
             return redirect()->back()->with('error', 'Aksi tidak valid');
         }
 
-        DB::transaction(function () use ($contribution, $status) {
-            $contribution->update([
+        DB::transaction(function () use ($contribution, $status, $comment) {
+            $payload = [
                 'status' => $status,
                 'verified_at' => now(),
                 'verified_by' => auth()->id(),
-            ]);
+            ];
+            if ($status === 'rejected' && $comment) {
+                $payload['notes'] = ($contribution->notes ? ($contribution->notes . "\n") : '') . 'Alasan penolakan: ' . $comment;
+            }
+            $contribution->update($payload);
 
             if ($status === 'paid' && $contribution->wallet) {
                 $contribution->wallet->increment('balance', $contribution->amount);

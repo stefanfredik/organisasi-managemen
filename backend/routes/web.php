@@ -93,13 +93,10 @@ Route::middleware('auth')->group(function () {
         Route::delete('contributions/{contribution}', [\App\Http\Controllers\ContributionController::class, 'destroy'])->name('contributions.destroy');
     });
 
-    Route::middleware('permission:view_contributions')->group(function () {
-        // New Monitoring Routes (Must be before wildcards)
-        // New Monitoring Routes
+    // Monitoring Routes
+    Route::middleware('permission:view_contribution_monitoring')->group(function () {
         Route::get('contributions/monitoring', [\App\Http\Controllers\ContributionController::class, 'monitoringList'])->name('contributions.monitoring.index');
-        Route::get('contributions/verification', [\App\Http\Controllers\ContributionController::class, 'verification'])->name('contributions.verification');
-        Route::post('contributions/verification/{id}', [\App\Http\Controllers\ContributionController::class, 'verifyAction'])->name('contributions.verify-action');
-        
+
         // Specific Monitoring Routes (Dashboard, Matrix, History)
         Route::prefix('contributions/monitoring/{contributionType}')->name('contributions.monitoring.')->group(function() {
             Route::get('/dashboard', [\App\Http\Controllers\ContributionController::class, 'monitoringDashboard'])->name('dashboard');
@@ -107,7 +104,13 @@ Route::middleware('auth')->group(function () {
             Route::get('/matrix/export', [\App\Http\Controllers\ContributionController::class, 'exportMatrix'])->name('matrix.export');
             Route::get('/history', [\App\Http\Controllers\ContributionController::class, 'monitoringHistory'])->name('history');
         });
+    });
 
+    Route::middleware('permission:view_contributions')->group(function () {
+        // Verification Routes
+        Route::get('contributions/verification', [\App\Http\Controllers\ContributionController::class, 'verification'])->name('contributions.verification');
+        Route::post('contributions/verification/{id}', [\App\Http\Controllers\ContributionController::class, 'verifyAction'])->name('contributions.verify-action');
+        
         Route::get('contributions', [\App\Http\Controllers\ContributionController::class, 'index'])->name('contributions.index');
         Route::get('contributions/{contribution}', [\App\Http\Controllers\ContributionController::class, 'show'])->name('contributions.show');
         Route::post('contributions', [\App\Http\Controllers\ContributionController::class, 'store'])->name('contributions.store');

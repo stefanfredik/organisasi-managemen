@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Setting;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -23,9 +24,11 @@ class SettingController extends Controller
     public function index()
     {
         $settings = Setting::all()->groupBy('group');
+        $roles = User::getRoles();
 
         return Inertia::render('Administration/Settings/Index', [
             'settings' => $settings,
+            'roles' => $roles,
         ]);
     }
 

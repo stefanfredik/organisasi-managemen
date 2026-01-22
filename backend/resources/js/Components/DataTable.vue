@@ -17,6 +17,14 @@ const props = defineProps({
         default: true
     },
     searchRoute: String,
+    striped: {
+        type: Boolean,
+        default: false
+    },
+    dense: {
+        type: Boolean,
+        default: false
+    },
 });
 
 const search = ref(props.filters?.search || '');
@@ -58,23 +66,38 @@ watch(search, debounce((value) => {
                         <th 
                             v-for="col in columns" 
                             :key="col.key"
-                            class="px-8 py-5 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400"
-                            :class="col.headerClass"
+                            :class="[
+                                dense ? 'px-6 py-3' : 'px-8 py-5',
+                                'text-[11px] font-black uppercase tracking-[0.2em] text-slate-400',
+                                col.headerClass
+                            ]"
                         >
                             {{ col.label }}
                         </th>
-                        <th v-if="actions" class="px-8 py-5 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">
+                        <th v-if="actions" :class="[
+                            dense ? 'px-6 py-3' : 'px-8 py-5',
+                            'text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 text-right'
+                        ]">
                             Aksi
                         </th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50">
-                    <tr v-for="(row, index) in data.data" :key="row.id || index" class="hover:bg-slate-50/50 transition-colors group">
+                    <tr 
+                        v-for="(row, index) in data.data" 
+                        :key="row.id || index" 
+                        :class="[
+                            'transition-colors group',
+                            striped ? (index % 2 === 0 ? 'bg-white hover:bg-slate-50/50' : 'bg-slate-50/30 hover:bg-slate-50/50') : 'hover:bg-slate-50/50'
+                        ]"
+                    >
                         <td 
                             v-for="col in columns" 
                             :key="col.key"
-                            class="px-8 py-5"
-                            :class="col.cellClass"
+                            :class="[
+                                dense ? 'px-6 py-3' : 'px-8 py-5',
+                                col.cellClass
+                            ]"
                         >
                             <slot :name="'cell-' + col.key" :row="row">
                                 <span class="text-sm font-medium text-slate-600">
@@ -82,7 +105,10 @@ watch(search, debounce((value) => {
                                 </span>
                             </slot>
                         </td>
-                        <td v-if="actions" class="px-8 py-5 text-right">
+                        <td v-if="actions" :class="[
+                            dense ? 'px-6 py-3' : 'px-8 py-5',
+                            'text-right'
+                        ]">
                             <slot name="actions" :row="row"></slot>
                         </td>
                     </tr>
