@@ -19,11 +19,18 @@ class ContributionType extends Model
         'period',
         'description',
         'is_active',
+        'due_date',
+        'start_date',
+        'end_date',
+        'recurring_day',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'is_active' => 'boolean',
+        'due_date' => 'date',
+        'start_date' => 'date',
+        'end_date' => 'date',
     ];
 
     public function contributions(): HasMany

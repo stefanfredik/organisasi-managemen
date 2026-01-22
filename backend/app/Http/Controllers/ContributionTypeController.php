@@ -26,6 +26,10 @@ class ContributionTypeController extends Controller
             'period' => 'required|in:once,daily,weekly,monthly,yearly',
             'description' => 'nullable|string',
             'is_active' => 'required|boolean',
+            'due_date' => 'nullable|date',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+            'recurring_day' => 'nullable|integer|min:1|max:31',
         ]);
 
         ContributionType::create($validated);
@@ -42,6 +46,10 @@ class ContributionTypeController extends Controller
             'period' => 'required|in:once,daily,weekly,monthly,yearly',
             'description' => 'nullable|string',
             'is_active' => 'required|boolean',
+            'due_date' => 'nullable|date',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+            'recurring_day' => 'nullable|integer|min:1|max:31',
         ]);
 
         $contributionType->update($validated);

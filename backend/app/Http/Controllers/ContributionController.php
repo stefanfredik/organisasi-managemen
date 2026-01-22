@@ -9,9 +9,134 @@ use App\Models\Wallet;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class ContributionController extends Controller
 {
+    public function getMemberStatus(Request $request, ContributionType $contributionType)
+    {
+        $user = auth()->user();
+        // If admin is viewing a member's status (optional feature), allow generic member selection
+        if ($request->has('member_id') && in_array($user->role, ['admin', 'bendahara'])) {
+             $member = Member::findOrFail($request->member_id);
+        } else {
+             $member = Member::where('user_id', $user->id)->firstOrFail();
+        }
+
+        $query = Contribution::where('member_id', $member->id)
+                             ->where('contribution_type_id', $contributionType->id)
+                             ->where('status', '!=', 'rejected'); // Active payments
+        
+        $contributions = $query->get();
+
+        if ($contributionType->period === 'once') {
+             $paid = $contributions->where('status', 'paid')->first();
+             $pending = $contributions->where('status', 'pending')->first();
+             
+             return response()->json([
+                 'type' => 'once',
+                 'status' => $paid ? 'paid' : ($pending ? 'pending' : 'unpaid'),
+                 'contribution' => $paid ?? $pending,
+             ]);
+        }
+
+        // Periodic
+        $startDate = $contributionType->start_date 
+            ? Carbon::parse($contributionType->start_date) 
+            : Carbon::parse($contributionType->created_at)->startOfMonth();
+        
+        if ($contributionType->end_date) {
+            $endDate = Carbon::parse($contributionType->end_date);
+        } else {
+             // For open-ended, show up to current time + 1 period? 
+             // Or just up to now.
+             $endDate = Carbon::now();
+             if ($contributionType->period === 'monthly') $endDate->endOfMonth();
+             if ($contributionType->period === 'yearly') $endDate->endOfYear();
+        }
+
+        $periods = [];
+        $current = $startDate->copy();
+        
+        $paidMap = $contributions->keyBy('payment_period'); // Assumes payment_period matches generated key
+        
+        $totalPeriods = 0;
+        $paidPeriods = 0;
+
+        // Safety break to prevent infinite loops if logic fails
+        $maxIterations = 500;
+        $iterations = 0;
+
+        while ($current <= $endDate && $iterations < $maxIterations) {
+            $key = '';
+            $label = '';
+            $periodDueDate = null;
+            
+            if ($contributionType->period === 'monthly') {
+                $key = $current->format('Y-m');
+                $label = $current->isoFormat('MMMM Y');
+                if ($contributionType->recurring_day) {
+                    // Try to set day, clamp to EndOfMonth
+                    $d = $current->copy()->day(min($contributionType->recurring_day, $current->daysInMonth));
+                    $periodDueDate = $d->format('Y-m-d');
+                }
+                $next = $current->copy()->addMonth();
+            } elseif ($contributionType->period === 'weekly') {
+                $key = $current->format('o-W'); // ISO Year and Week
+                $label = 'Minggu ke-' . $current->weekOfYear . ' ' . $current->year;
+                 // Calculate due date based on recurring_day (1=Mon, 7=Sun)
+                if ($contributionType->recurring_day) {
+                    $d = $current->copy()->startOfWeek()->addDays($contributionType->recurring_day - 1);
+                    $periodDueDate = $d->format('Y-m-d');
+                }
+                $next = $current->copy()->addWeek();
+            } elseif ($contributionType->period === 'yearly') {
+                $key = $current->format('Y');
+                $label = $current->format('Y');
+                 if ($contributionType->due_date) {
+                    // Use the Month/Day from due_date for this year
+                    $baseDue = Carbon::parse($contributionType->due_date);
+                    $periodDueDate = $current->copy()->month($baseDue->month)->day($baseDue->day)->format('Y-m-d');
+                }
+                $next = $current->copy()->addYear();
+            } else {
+                 $next = $current->copy()->addDay(); // Fallback
+            }
+
+            $status = 'unpaid';
+            $contribution = null;
+            
+            if ($paidMap->has($key)) {
+                $c = $paidMap->get($key);
+                $status = $c->status;
+                $contribution = $c;
+                if ($status === 'paid') $paidPeriods++;
+            }
+            
+            $periods[] = [
+                'period' => $key,
+                'label' => $label,
+                'due_date' => $periodDueDate,
+                'status' => $status,
+                'contribution' => $contribution
+            ];
+            
+            $totalPeriods++;
+            $current = $next;
+            $iterations++;
+        }
+
+        return response()->json([
+            'type' => $contributionType->period,
+            'periods' => $periods,
+            'summary' => [
+                'total' => $totalPeriods,
+                'paid' => $paidPeriods,
+                'percentage' => $totalPeriods > 0 ? round(($paidPeriods / $totalPeriods) * 100, 1) : 0,
+            ]
+        ]);
+    }
+
     public function index(Request $request)
     {
         $query = Contribution::with(['member' => function ($query) {

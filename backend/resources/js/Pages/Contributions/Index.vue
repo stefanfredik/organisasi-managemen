@@ -11,6 +11,7 @@ import InputError from '@/Components/InputError.vue';
 import SearchBar from '@/Components/SearchBar.vue';
 import FilterDropdown from '@/Components/FilterDropdown.vue';
 import axios from 'axios';
+import MemberContributionDetailModal from './Partials/MemberContributionDetailModal.vue';
 
 const props = defineProps({
     contributions: Object,
@@ -26,10 +27,12 @@ const isAdminOrTreasurer = computed(() => ['admin', 'bendahara'].includes(user.v
 const showCreateModal = ref(false);
 const showVerifyModal = ref(false);
 const showEditModal = ref(false);
+const showMemberDetailModal = ref(false);
 const activeTab = ref('riwayat');
 const showFiltersModal = ref(false);
 const showFiltersDropdown = ref(false);
 const selectedContribution = ref(null);
+const selectedTypeForDetail = ref(null);
 const filteredMembers = ref([]);
 const payAllUnpaid = ref(false);
 const periodsCount = ref(1);
@@ -264,36 +267,21 @@ const onContributionTypeChange = async (e) => {
     const typeId = e.target.value;
     const type = props.types.find(t => t.id == typeId);
     
-    console.log('=== Contribution Type Changed ===');
-    console.log('Selected Type ID:', typeId);
-    console.log('Type Object:', type);
-    
     if (type) {
         form.amount = type.amount;
-        console.log('Setting amount to:', type.amount);
-        
         // Auto-generate payment period for recurring contributions
         updatePaymentPeriod(type.period, form.payment_date);
         updateGeneratedPeriods(type.period, form.payment_date, periodsCount.value);
     }
     
-    // Reset member selection only for admin/bendahara. Keep member id for anggota.
     if (isAdminOrTreasurer.value) {
         form.member_id = '';
     } else {
         form.member_id = user.value.member?.id || form.member_id;
     }
     
-    // Wait for Vue to update the reactive state before fetching
     await new Promise(resolve => setTimeout(resolve, 0));
-    
-    console.log('About to fetch unpaid members...');
-    console.log('Current payment_period:', form.payment_period);
-    
-    // Fetch unpaid members for this contribution type
     await fetchUnpaidMembers();
-    
-    console.log('Filtered members after fetch:', filteredMembers.value);
 };
 
 const onPaymentDateChange = () => {
@@ -301,7 +289,6 @@ const onPaymentDateChange = () => {
     if (type) {
         updatePaymentPeriod(type.period, form.payment_date);
         updateGeneratedPeriods(type.period, form.payment_date, periodsCount.value);
-        // Re-fetch unpaid members when period changes
         fetchUnpaidMembers();
     }
 };
@@ -309,10 +296,8 @@ const onPaymentDateChange = () => {
 const updatePaymentPeriod = (period, date) => {
     if (!date || period === 'once') {
         form.payment_period = '';
-        console.log('Payment period cleared (once or no date)');
         return;
     }
-    
     const paymentDate = new Date(date);
     const year = paymentDate.getFullYear();
     const month = String(paymentDate.getMonth() + 1).padStart(2, '0');
@@ -338,8 +323,6 @@ const updatePaymentPeriod = (period, date) => {
         default:
             form.payment_period = '';
     }
-    
-    console.log(`Payment period generated: ${form.payment_period} (period: ${period}, date: ${date})`);
 };
 
 const makePeriod = (period, date) => {
@@ -413,29 +396,17 @@ const updateGeneratedPeriods = (period, date, count) => {
             generatedPeriods.value.push(`${y}-${m}-${day}`);
         }
     }
-    console.log('Generated periods:', generatedPeriods.value);
 };
 
 const fetchUnpaidMembers = async () => {
     const typeId = form.contribution_type_id;
-    
     if (typeId && isAdminOrTreasurer.value) {
         try {
             const params = { contribution_type_id: typeId };
-            
-            // Include payment period for recurring contributions
-            if (form.payment_period) {
-                params.payment_period = form.payment_period;
-            }
-            
-            console.log('Fetching unpaid members with params:', params);
-            
+            if (form.payment_period) params.payment_period = form.payment_period;
             const response = await axios.get(route('contributions.unpaid-members'), { params });
             filteredMembers.value = response.data;
-            
-            console.log('Unpaid members count:', response.data.length);
         } catch (error) {
-            console.error('Error fetching unpaid members:', error);
             filteredMembers.value = [];
         }
     } else {
@@ -448,9 +419,14 @@ const formatCurrency = (amount) => {
 };
 
 const openPayForType = async (type) => {
-    if (user.value.role === 'anggota' && !type.wallet_id) {
+    if (!isAdminOrTreasurer.value) {
+        // Member View: Open New Modal
+        selectedTypeForDetail.value = type;
+        showMemberDetailModal.value = true;
         return;
     }
+    
+    // Admin View: Use old method
     form.contribution_type_id = String(type.id);
     form.amount = type.amount;
     updatePaymentPeriod(type.period, form.payment_date);
@@ -1185,5 +1161,12 @@ const statusLabels = {
                 </form>
             </div>
         </Modal>
+
+        <MemberContributionDetailModal 
+            :show="showMemberDetailModal" 
+            :type="selectedTypeForDetail" 
+            @close="showMemberDetailModal = false"
+            @success="showMemberDetailModal = false"
+        />
     </AuthenticatedLayout>
 </template>

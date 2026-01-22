@@ -24,6 +24,10 @@ const form = useForm({
     period: 'monthly',
     description: '',
     is_active: true,
+    start_date: '',
+    end_date: '',
+    due_date: '',
+    recurring_day: '',
 });
 
 const openCreateModal = () => {
@@ -40,6 +44,10 @@ const openEditModal = (type) => {
     form.period = type.period;
     form.description = type.description;
     form.is_active = !!type.is_active;
+    form.start_date = type.start_date;
+    form.end_date = type.end_date;
+    form.due_date = type.due_date;
+    form.recurring_day = type.recurring_day;
     showModal.value = true;
 };
 
@@ -205,6 +213,45 @@ const periods = {
                     <div>
                         <InputLabel value="Deskripsi (Opsional)" class="text-[10px] font-bold uppercase text-gray-400 mb-1" />
                         <textarea v-model="form.description" rows="3" class="w-full border-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl shadow-sm font-medium" placeholder="Rincian mengenai iuran ini..."></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                             <InputLabel value="Tanggal Mulai (Opsional)" class="text-[10px] font-bold uppercase text-gray-400 mb-1" />
+                             <TextInput type="date" class="w-full border-gray-100 rounded-xl text-sm" v-model="form.start_date" />
+                             <InputError :message="form.errors.start_date" />
+                        </div>
+                        <div>
+                             <InputLabel value="Batas Akhir (Opsional)" class="text-[10px] font-bold uppercase text-gray-400 mb-1" />
+                             <TextInput type="date" class="w-full border-gray-100 rounded-xl text-sm" v-model="form.end_date" />
+                             <InputError :message="form.errors.end_date" />
+                        </div>
+                    </div>
+
+                    <div v-if="form.period === 'monthly'">
+                         <InputLabel value="Tanggal Jatuh Tempo (Harian)" class="text-[10px] font-bold uppercase text-gray-400 mb-1" />
+                         <TextInput type="number" min="1" max="31" class="w-full border-gray-100 rounded-xl font-bold" v-model="form.recurring_day" placeholder="Contoh: 10 (Setiap tanggal 10)" />
+                         <InputError :message="form.errors.recurring_day" />
+                    </div>
+
+                     <div v-if="form.period === 'weekly'">
+                         <InputLabel value="Jadwal (Hari)" class="text-[10px] font-bold uppercase text-gray-400 mb-1" />
+                         <select v-model="form.recurring_day" class="w-full border-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl font-bold text-gray-700 shadow-sm">
+                             <option value="1">Senin</option>
+                             <option value="2">Selasa</option>
+                             <option value="3">Rabu</option>
+                             <option value="4">Kamis</option>
+                             <option value="5">Jumat</option>
+                             <option value="6">Sabtu</option>
+                             <option value="7">Minggu</option>
+                         </select>
+                         <InputError :message="form.errors.recurring_day" />
+                    </div>
+
+                    <div v-if="['once', 'yearly'].includes(form.period)">
+                         <InputLabel value="Tanggal Jatuh Tempo" class="text-[10px] font-bold uppercase text-gray-400 mb-1" />
+                         <TextInput type="date" class="w-full border-gray-100 rounded-xl text-sm" v-model="form.due_date" />
+                         <InputError :message="form.errors.due_date" />
                     </div>
 
                     <div class="flex items-center bg-gray-50 p-4 rounded-xl border border-dashed border-gray-200">
