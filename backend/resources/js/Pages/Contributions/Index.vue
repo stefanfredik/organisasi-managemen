@@ -419,21 +419,32 @@ const formatCurrency = (amount) => {
 };
 
 const openPayForType = async (type) => {
-    if (!isAdminOrTreasurer.value) {
-        // Member View: Open New Modal
-        selectedTypeForDetail.value = type;
-        showMemberDetailModal.value = true;
-        return;
+    try {
+        console.log('Opening payment for type:', type);
+        // Direct check on role to avoid computed issues
+        const role = user.value?.role;
+        const isOfficial = ['admin', 'bendahara'].includes(role);
+
+        if (!isOfficial) {
+            console.log('User is member, opening detail modal');
+            // Member View: Open New Modal
+            selectedTypeForDetail.value = type;
+            showMemberDetailModal.value = true;
+            return;
+        }
+        
+        console.log('User is admin, opening create modal');
+        // Admin View: Use old method
+        form.contribution_type_id = String(type.id);
+        form.amount = type.amount;
+        updatePaymentPeriod(type.period, form.payment_date);
+        periodsCount.value = 1;
+        updateGeneratedPeriods(type.period, form.payment_date, periodsCount.value);
+        await fetchUnpaidMembers();
+        showCreateModal.value = true;
+    } catch (e) {
+        console.error('Error opening payment modal:', e);
     }
-    
-    // Admin View: Use old method
-    form.contribution_type_id = String(type.id);
-    form.amount = type.amount;
-    updatePaymentPeriod(type.period, form.payment_date);
-    periodsCount.value = 1;
-    updateGeneratedPeriods(type.period, form.payment_date, periodsCount.value);
-    await fetchUnpaidMembers();
-    showCreateModal.value = true;
 };
 
 const getStatusBadge = (status) => {
@@ -461,8 +472,8 @@ const statusLabels = {
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">
                     {{ isAdminOrTreasurer ? 'Manajemen Iuran Anggota' : 'Riwayat Iuran Saya' }}
                 </h2>
-                <PrimaryButton @click="showCreateModal = true">
-                    Bayar Iuran
+                <PrimaryButton v-if="isAdminOrTreasurer" @click="showCreateModal = true">
+                    Bayar Iuran Manual
                 </PrimaryButton>
             </div>
         </template>
@@ -494,6 +505,19 @@ const statusLabels = {
                                 <div class="mt-3">
                                     <p class="text-xs font-bold uppercase text-gray-500">Nominal</p>
                                     <p class="text-base font-black text-indigo-600">{{ formatCurrency(type.amount) }}</p>
+                                </div>
+                                
+                                <div v-if="user.role === 'anggota' && type.user_progress && type.period !== 'once'" class="mt-3">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="text-[10px] font-bold uppercase text-gray-400">Progres</span>
+                                        <span class="text-[10px] font-black" :class="type.user_progress.percentage === 100 ? 'text-green-600' : 'text-gray-700'">{{ type.user_progress.text }} ({{ type.user_progress.percentage }}%)</span>
+                                    </div>
+                                    <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                        <div class="h-full rounded-full transition-all duration-500" 
+                                            :class="type.user_progress.percentage === 100 ? 'bg-green-500' : 'bg-indigo-500'" 
+                                            :style="{ width: type.user_progress.percentage + '%' }">
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="mt-4">
                                     <div v-if="isTypePaidForCurrentPeriod(type) && user.role === 'anggota'" class="w-full px-4 py-2.5 rounded-xl text-sm font-black uppercase tracking-widest text-green-700 bg-green-50 border border-green-200 text-center">

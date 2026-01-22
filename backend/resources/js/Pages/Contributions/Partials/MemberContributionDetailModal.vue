@@ -44,16 +44,23 @@ const formatCurrency = (val) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(val);
 };
 
+const errorMessage = ref(null);
+
 const fetchStatus = async () => {
     if (!props.type) return;
     loading.value = true;
+    errorMessage.value = null;
+    statusData.value = null;
     try {
-        const res = await axios.get(route('contributions.my-status', props.type.id));
+        // Ensure route uses updated parameter name if needed, but usually ID passing is position-agnostic in Ziggy for single param
+        const url = route('contributions.my-status', props.type.id);
+        const res = await axios.get(url);
         statusData.value = res.data;
         // Reset selection
         selectedPeriods.value = [];
     } catch (e) {
         console.error(e);
+        errorMessage.value = e.response?.data?.message || 'Gagal memuat status pembayaran. Pastikan Anda terdaftar sebagai anggota aktif.';
     } finally {
         loading.value = false;
     }
@@ -76,7 +83,10 @@ const togglePeriod = (periodKey) => {
 };
 
 const submit = () => {
-    if (!member.value) return; // safety
+    if (!member.value) {
+        alert("Data anggota tidak ditemukan. Silakan hubungi admin.");
+        return; 
+    }
     
     // Setup form
     form.member_ids = [member.value.id];
@@ -128,6 +138,16 @@ const selectAllUnpaid = () => {
 
             <div v-if="loading" class="py-12 text-center text-gray-500 text-sm">
                 Memuat data...
+            </div>
+            
+            <div v-else-if="errorMessage" class="py-8 text-center">
+                <div class="text-red-500 mb-2">
+                    <svg class="h-10 w-10 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <p class="text-gray-900 font-bold">{{ errorMessage }}</p>
+                <SecondaryButton class="mt-4" @click="fetchStatus">Coba Lagi</SecondaryButton>
             </div>
 
             <div v-else-if="statusData">

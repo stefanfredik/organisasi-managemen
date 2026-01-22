@@ -16,11 +16,19 @@ class ContributionController extends Controller
     public function getMemberStatus(Request $request, ContributionType $contributionType)
     {
         $user = auth()->user();
-        // If admin is viewing a member's status (optional feature), allow generic member selection
-        if ($request->has('member_id') && in_array($user->role, ['admin', 'bendahara'])) {
-             $member = Member::findOrFail($request->member_id);
-        } else {
-             $member = Member::where('user_id', $user->id)->firstOrFail();
+        
+        try {
+            // If admin is viewing a member's status (optional feature), allow generic member selection
+            if ($request->has('member_id') && in_array($user->role, ['admin', 'bendahara'])) {
+                 $member = Member::findOrFail($request->member_id);
+            } else {
+                 $member = Member::where('user_id', $user->id)->first();
+                 if (!$member) {
+                     return response()->json(['message' => 'Akun Anda tidak terhubung dengan data Anggota. Hubungi Admin.'], 404);
+                 }
+            }
+        } catch (\Exception $e) {
+             return response()->json(['message' => 'Data anggota tidak ditemukan.'], 404);
         }
 
         $query = Contribution::where('member_id', $member->id)
@@ -188,9 +196,20 @@ class ContributionController extends Controller
             }
         }
 
+        $types = ContributionType::where('is_active', true)->get();
+
+        if (in_array(auth()->user()->role, ['member', 'anggota'])) {
+             $member = Member::where('user_id', auth()->id())->first();
+             if ($member) {
+                 foreach ($types as $type) {
+                     $type->user_progress = $this->calculateTypeProgress($member, $type);
+                 }
+             }
+        }
+
         return Inertia::render('Contributions/Index', [
             'contributions' => $query->latest()->paginate(10)->withQueryString(),
-            'types' => ContributionType::where('is_active', true)->get(),
+            'types' => $types,
             'wallets' => Wallet::where('is_active', true)->get(),
             'members' => Member::active()->get(['id', 'full_name', 'member_code']),
             'filters' => [
@@ -423,7 +442,7 @@ class ContributionController extends Controller
 
         $periods = $validated['periods'] ?? [$validated['payment_period'] ?? null];
 
-        DB::transaction(function () use ($validated, $contributionType, $receiptPath, $periods) {
+        DB::transaction(function () use ($validated, $contributionType, $receiptPath, $periods, $userRole) {
             foreach ($validated['member_ids'] as $memberId) {
                 foreach ($periods as $period) {
                     if ($period !== null) {
@@ -509,5 +528,82 @@ class ContributionController extends Controller
             'paid_members' => $paidMembers,
             'unpaid_members' => $unpaidMembers,
         ]);
+    }
+
+    private function calculateTypeProgress(Member $member, ContributionType $type)
+    {
+        $query = Contribution::where('member_id', $member->id)
+                             ->where('contribution_type_id', $type->id)
+                             ->where('status', '!=', 'rejected');
+        
+        $contributions = $query->get();
+
+        if ($type->period === 'once') {
+             $paid = $contributions->where('status', 'paid')->isNotEmpty();
+             return [
+                 'paid' => $paid ? 1 : 0,
+                 'total' => 1,
+                 'percentage' => $paid ? 100 : 0,
+                 'text' => $paid ? 'Lunas' : 'Belum Bayar'
+             ];
+        }
+
+        // Periodic
+        $startDate = $type->start_date 
+            ? Carbon::parse($type->start_date) 
+            : Carbon::parse($type->created_at)->startOfMonth();
+        
+        if ($type->end_date) {
+            $endDate = Carbon::parse($type->end_date);
+        } else {
+             $endDate = Carbon::now();
+             if ($type->period === 'monthly') $endDate->endOfMonth();
+             if ($type->period === 'yearly') $endDate->endOfYear();
+             if ($type->period === 'weekly') $endDate->endOfWeek();
+        }
+
+        $paidMap = $contributions->where('status', 'paid')->keyBy('payment_period');
+        
+        $totalPeriods = 0;
+        $paidPeriods = 0;
+        $current = $startDate->copy();
+        
+        $maxIterations = 500; // Safety
+        
+        while ($current <= $endDate && $totalPeriods < $maxIterations) {
+            $key = '';
+            
+            if ($type->period === 'monthly') {
+                $key = $current->format('Y-m');
+            } elseif ($type->period === 'weekly') {
+                $key = $current->format('o-W');
+            } elseif ($type->period === 'yearly') {
+                $key = $current->format('Y');
+            } else {
+                 $totalPeriods++;
+                 $current->addDay();
+                 continue; 
+            }
+
+            if ($paidMap->has($key)) {
+                $paidPeriods++;
+            }
+            
+            $totalPeriods++;
+            
+            if ($type->period === 'monthly') $current->addMonth();
+            elseif ($type->period === 'weekly') $current->addWeek();
+            elseif ($type->period === 'yearly') $current->addYear();
+            else $current->addDay();
+        }
+
+        $percentage = $totalPeriods > 0 ? round(($paidPeriods / $totalPeriods) * 100) : 0;
+        
+        return [
+            'paid' => $paidPeriods,
+            'total' => $totalPeriods,
+            'percentage' => $percentage,
+            'text' => "$paidPeriods / $totalPeriods Periode",
+        ];
     }
 }
