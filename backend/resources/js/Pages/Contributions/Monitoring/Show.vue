@@ -16,6 +16,7 @@ const props = defineProps({
 const form = ref({
     start_date: props.filters.start_date || '',
     end_date: props.filters.end_date || '',
+    period_filter: props.filters.period_filter || '',
 });
 
 const formatCurrency = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(val);
@@ -81,7 +82,35 @@ const applyFilter = () => {
 
                 <!-- Main Content -->
                 <div class="flex-1 space-y-6">
-                    <!-- Stats Cards -->
+                    <!-- Member Status Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group">
+                           <div class="absolute -right-6 -top-6 w-24 h-24 bg-green-50 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+                            <div class="relative z-10">
+                                <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Anggota Lunas</div>
+                                <div class="text-3xl font-black text-green-600">{{ stats.member_status?.paid || 0 }}</div>
+                                <div class="mt-1 text-xs text-green-600 font-bold bg-green-50 inline-block px-2 py-1 rounded-lg">Periode Ini</div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group">
+                            <div class="absolute -right-6 -top-6 w-24 h-24 bg-gray-50 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+                            <div class="relative z-10">
+                                <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Anggota Belum</div>
+                                <div class="text-3xl font-black text-gray-700">{{ stats.member_status?.unpaid || 0 }}</div>
+                                <div class="mt-1 text-xs text-gray-500 font-bold bg-gray-50 inline-block px-2 py-1 rounded-lg">Belum Bayar</div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group">
+                             <div class="absolute -right-6 -top-6 w-24 h-24 bg-red-50 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+                            <div class="relative z-10">
+                                <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Anggota Tunggak</div>
+                                <div class="text-3xl font-black text-red-600">{{ stats.member_status?.arrears || 0 }}</div>
+                                <div class="mt-1 text-xs text-red-600 font-bold bg-red-50 inline-block px-2 py-1 rounded-lg">Menunggak</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Financial Stats -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                             <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Total Terkumpul</div>
@@ -100,6 +129,12 @@ const applyFilter = () => {
                     <!-- Filters -->
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                            <div class="col-span-1" v-if="['monthly', 'yearly', 'weekly'].includes(type.period)">
+                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Periode Status</label>
+                                <input v-if="type.period === 'monthly'" type="month" v-model="form.period_filter" class="w-full rounded-xl border-gray-200 text-sm font-bold text-gray-700 focus:ring-indigo-500 focus:border-indigo-500">
+                                <input v-else-if="type.period === 'weekly'" type="week" v-model="form.period_filter" class="w-full rounded-xl border-gray-200 text-sm font-bold text-gray-700 focus:ring-indigo-500 focus:border-indigo-500">
+                                <input v-else-if="type.period === 'yearly'" type="number" placeholder="YYYY" v-model="form.period_filter" class="w-full rounded-xl border-gray-200 text-sm font-bold text-gray-700 focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
                             <div class="col-span-1">
                                 <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Dari Tanggal</label>
                                 <input type="date" v-model="form.start_date" class="w-full rounded-xl border-gray-200 text-sm font-bold text-gray-700 focus:ring-indigo-500 focus:border-indigo-500">
@@ -122,6 +157,13 @@ const applyFilter = () => {
                             type="line" 
                             color="indigo" 
                             height="300px" 
+                        />
+                        <ChartWidget 
+                            v-if="charts.status_distribution"
+                            title="Distribusi Status Anggota"
+                            :data="charts.status_distribution"
+                            type="doughnut"
+                            height="300px"
                         />
                     </div>
                 </div>

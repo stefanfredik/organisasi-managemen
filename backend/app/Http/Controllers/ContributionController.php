@@ -612,9 +612,75 @@ class ContributionController extends Controller
     
     public function monitoringList()
     {
-        $types = ContributionType::where('is_active', true)->withCount(['contributions' => function($q) {
-             $q->where('status', 'paid');
-        }])->get();
+        $totalActiveMembers = Member::where('status', 'active')->count(); // Ensure 'active' scope or column exists. If not, just count().
+        // If status column doesn't exist on Member, use checks on User?
+        // Let's assume Member has status or use count() for now as safer bet if status is standard.
+        // Actually, previous code `Member::active()` suggests a scope exists.
+        
+        $types = ContributionType::where('is_active', true)
+            ->withCount([
+                'contributions as paid_count' => function ($query) {
+                    $query->where('status', 'paid');
+                },
+                'contributions as pending_count' => function ($query) {
+                    $query->where('status', 'pending');
+                }
+            ])
+            ->withSum([
+                'contributions as collected_amount' => function ($query) {
+                    $query->where('status', 'paid');
+                }
+            ], 'amount')
+            ->get();
+
+        // Calculate specific "Current Period" stats
+        $types->transform(function ($type) use ($totalActiveMembers) {
+            $currentPeriodPaidCount = 0;
+            $targetCount = $totalActiveMembers;
+            $currentPeriodLabel = 'Periode Ini';
+
+            if ($type->period === 'monthly') {
+                // Assume 2025-01 format based on getMemberStatus usage
+                $currentPeriodKey = Carbon::now()->format('Y-m'); 
+                $currentPeriodLabel = Carbon::now()->locale('id')->isoFormat('MMMM Y');
+                
+                // Try finding by Y-m first (standard)
+                $currentPeriodPaidCount = $type->contributions()
+                    ->where('status', 'paid')
+                    ->where(function($q) use ($currentPeriodKey, $currentPeriodLabel) {
+                        $q->where('payment_period', $currentPeriodKey)
+                          ->orWhere('payment_period', $currentPeriodLabel); // Fallback if stored as label
+                    })
+                    ->count();
+
+            } elseif ($type->period === 'yearly') {
+                $currentPeriodKey = Carbon::now()->format('Y');
+                $currentPeriodLabel = $currentPeriodKey;
+                
+                $currentPeriodPaidCount = $type->contributions()
+                    ->where('status', 'paid')
+                    ->where('payment_period', $currentPeriodKey)
+                    ->count();
+
+            } elseif ($type->period === 'weekly') {
+                 $currentPeriodKey = Carbon::now()->format('o-W');
+                 $currentPeriodLabel = 'Minggu ini';
+                 $currentPeriodPaidCount = $type->contributions()
+                    ->where('status', 'paid')
+                    ->where('payment_period', $currentPeriodKey)
+                    ->count();
+            } else {
+                // One time
+                $currentPeriodLabel = 'Total';
+                $currentPeriodPaidCount = $type->paid_count; // Cumulative
+            }
+
+            $type->current_period_paid = $currentPeriodPaidCount;
+            $type->target_count = $targetCount;
+            $type->current_period_label = $currentPeriodLabel;
+
+            return $type;
+        });
         
         return Inertia::render('Contributions/Monitoring/Index', [
             'types' => $types,
@@ -646,20 +712,124 @@ class ContributionController extends Controller
             ->get()
             ->map(function($item) {
                 return [
-                    'label' => Carbon::parse($item->month)->translatedFormat('M'),
+                    'label' => Carbon::parse($item->month)->translatedFormat('M Y'),
                     'value' => (float)$item->total
                 ];
             });
 
+        // Calculate Member Status (Current Period Snapshot)
+        $totalMembers = Member::where('status', 'active')->count();
+        
+        $referenceDate = $request->input('period_filter') 
+            ? Carbon::parse($request->input('period_filter')) 
+            : Carbon::now();
+        
+        $currentPeriodKey = null;
+        $prevPeriodKey = null;
+        $isPeriodic = true;
+        
+        if ($contributionType->period === 'monthly') {
+            $currentPeriodKey = $referenceDate->format('Y-m');
+            $prevPeriodKey = $referenceDate->copy()->subMonth()->format('Y-m');
+        } elseif ($contributionType->period === 'yearly') {
+            $currentPeriodKey = $referenceDate->format('Y');
+            $prevPeriodKey = $referenceDate->copy()->subYear()->format('Y');
+        } elseif ($contributionType->period === 'weekly') {
+            $currentPeriodKey = $referenceDate->format('o-W');
+            $prevPeriodKey = $referenceDate->copy()->subWeek()->format('o-W');
+        } else {
+            $isPeriodic = false;
+        }
+
+        $paidCurrent = 0;
+        $paidPrevious = 0;
+
+        if ($isPeriodic) {
+             $paidCurrent = Contribution::where('contribution_type_id', $contributionType->id)
+                ->where('status', 'paid')
+                ->where(function($q) use ($currentPeriodKey) {
+                    $q->where('payment_period', $currentPeriodKey)
+                      ->orWhere('payment_period', 'like', "%$currentPeriodKey%"); // Relaxed check
+                })
+                ->count();
+                
+             $paidPrevious = Contribution::where('contribution_type_id', $contributionType->id)
+                ->where('status', 'paid')
+                 ->where(function($q) use ($prevPeriodKey) {
+                    $q->where('payment_period', $prevPeriodKey)
+                      ->orWhere('payment_period', 'like', "%$prevPeriodKey%");
+                })
+                ->count();
+        } else {
+             // For One-Time
+             $paidCurrent = Contribution::where('contribution_type_id', $contributionType->id)
+                ->where('status', 'paid')
+                ->distinct('member_id')
+                ->count('member_id');
+             $paidPrevious = $paidCurrent; // Assume no arrears for one-time context
+        }
+
+        // Logic Implementation
+        if (!$isPeriodic) {
+            $lunas = $paidCurrent;
+            $tunggak = 0; 
+            $belum = max($totalMembers - $lunas, 0);
+        } else {
+            $lunas = $paidCurrent;
+            // Arrears = Active members who paid neither current nor previous?
+            // Simplified logic requested:
+            // Tunggak: Missed Previous Period.
+            $tunggak = max($totalMembers - $paidPrevious, 0);
+            
+            // Belum: Not Paid Current (but assuming history is OK, i.e. not in Tunggak count for dashboard simplicity, or we separate them rigidly).
+            // Let's separate rigidly:
+            // Lunas: Paid Current.
+            // Tunggak: Missed Previous.
+            // Belum (Just This Month): (Total - Lunas) - Tunggak?
+            // If someone is Lunas, they are not Belum or Tunggak.
+            // If someone missed Previous, they are Tunggak.
+            // If someone paid Previous but missed Current, they are Belum.
+            
+            // Wait, if someone Paid Current, they count as Lunas.
+            // But if they missed Previous, are they Lunas? They paid *current*.
+            // Let's assume Lunas is strictly "Status of Current Period".
+            
+            // So:
+            // Lunas = Paid Current.
+            // Potential Problematic = Total - Lunas.
+            // From Potential Problematic, how many are Tunggak?
+            // Tunggak = (Total - Paid Previous).
+            // But Paid Previous might overlap with Lunas.
+            // Let's stick to simple aggregates:
+            // Tunggak = Active Members who did NOT pay Previous.
+            // Belum = (Total - Lunas) - Tunggak.
+            // Safety clamp:
+            $belum = max($totalMembers - $lunas - $tunggak, 0);
+        }
+
+        $memberStatus = [
+            'paid' => $lunas,
+            'unpaid' => $belum,
+            'arrears' => $tunggak,
+        ];
+        
+        $statusDistribution = [
+            ['label' => 'Lunas', 'value' => $lunas, 'color' => '#16a34a'],
+            ['label' => 'Belum Bayar', 'value' => $belum, 'color' => '#9ca3af'],
+            ['label' => 'Menunggak', 'value' => $tunggak, 'color' => '#dc2626'],
+        ];
+
         return Inertia::render('Contributions/Monitoring/Show', [
             'type' => $contributionType,
-            'stats' => $stats,
+            'stats' => array_merge($stats, ['member_status' => $memberStatus]),
             'charts' => [
                 'monthly' => $monthlyData,
+                'status_distribution' => $statusDistribution,
             ],
              'filters' => [
-                'start_date' => $startDate->format('Y-m-d'),
-                'end_date' => $endDate->format('Y-m-d'),
+                 'start_date' => $request->input('start_date') ? $startDate->format('Y-m-d') : null,
+                 'end_date' => $request->input('end_date') ? $endDate->format('Y-m-d') : null,
+                 'period_filter' => $request->input('period_filter'),
             ],
         ]);
     }

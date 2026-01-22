@@ -14,7 +14,7 @@ const props = defineProps({
     type: {
         type: String,
         default: 'bar',
-        validator: (value) => ['bar', 'line'].includes(value),
+        validator: (value) => ['bar', 'line', 'doughnut', 'pie'].includes(value),
     },
     color: {
         type: String,
@@ -57,6 +57,37 @@ const colorClasses = computed(() => {
         purple: 'bg-purple-500 hover:bg-purple-600',
     };
     return colors[props.color] || colors.indigo;
+});
+
+const pieSegments = computed(() => {
+    if (!props.data || props.data.length === 0) return [];
+    
+    const total = props.data.reduce((acc, item) => acc + (item.value || 0), 0);
+    if (total === 0) return [];
+
+    const radius = 40;
+    const circumference = 2 * Math.PI * radius;
+    let cumulativeOffset = 0;
+
+    // Default palette if item.color is missing
+    const palette = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#3b82f6'];
+
+    return props.data.map((item, index) => {
+        const value = item.value || 0;
+        const percentage = (value / total) * 100;
+        const segmentLength = (value / total) * circumference;
+        
+        const segment = {
+            ...item,
+            percentage: Math.round(percentage),
+            circumference: segmentLength,
+            offset: cumulativeOffset,
+            color: item.color || palette[index % palette.length],
+        };
+        
+        cumulativeOffset += segmentLength;
+        return segment;
+    });
 });
 </script>
 
@@ -109,6 +140,7 @@ const colorClasses = computed(() => {
         </div>
         
         <!-- Line Chart (Simple implementation) -->
+        <!-- Line Chart (Simple implementation) -->
         <div v-else-if="type === 'line'" class="relative" :style="{ height }">
             <svg class="w-full h-full" viewBox="0 0 400 200" preserveAspectRatio="none">
                 <!-- Grid lines -->
@@ -120,9 +152,9 @@ const colorClasses = computed(() => {
                 <!-- Line path -->
                 <polyline
                     :points="data.map((item, index) => {
-                        const x = (index / (data.length - 1)) * 400;
-                        const y = 200 - (item.value / maxValue) * 180;
-                        return `${x},${y}`;
+                        const x = (index / (data.length - 1 || 1)) * 400; // Guard div by zero
+                        const y = 200 - (item.value / (maxValue || 1)) * 180;
+                        return `${x},${isNaN(y) ? 200 : y}`;
                     }).join(' ')"
                     fill="none"
                     :stroke="colorClasses.split(' ')[0].replace('bg-', '')"
@@ -135,21 +167,55 @@ const colorClasses = computed(() => {
                 <circle
                     v-for="(item, index) in data"
                     :key="`point-${index}`"
-                    :cx="(index / (data.length - 1)) * 400"
-                    :cy="200 - (item.value / maxValue) * 180"
+                    :cx="(index / (data.length - 1 || 1)) * 400"
+                    :cy="200 - (item.value / (maxValue || 1)) * 180"
                     r="4"
-                    :fill="colorClasses.split(' ')[0].replace('bg-', '')"
-                    class="cursor-pointer"
+                    class="fill-indigo-500 cursor-pointer hover:r-6 transition-all"
                 >
                     <title>{{ item.label }}: {{ formatValue(item.value) }}</title>
                 </circle>
             </svg>
             
             <!-- Labels -->
-            <div class="flex justify-between mt-2">
-                <span v-for="(item, index) in data" :key="`label-${index}`" class="text-xs text-gray-600">
+            <div class="flex justify-between mt-2 overflow-hidden">
+                <span v-for="(item, index) in data" :key="`label-${index}`" class="text-xs text-gray-600 truncate px-1">
                     {{ item.label }}
                 </span>
+            </div>
+        </div>
+
+        <!-- Doughnut / Pie Chart -->
+        <div v-else-if="type === 'doughnut' || type === 'pie'" class="relative flex flex-col md:flex-row items-center justify-center gap-6" :style="{ height }">
+            <div class="relative w-48 h-48 shrink-0">
+                <svg viewBox="0 0 100 100" class="w-full h-full transform -rotate-90">
+                    <circle v-for="(segment, index) in pieSegments" :key="index"
+                        cx="50" cy="50" r="40"
+                        fill="transparent"
+                        :stroke="segment.color"
+                        :stroke-width="type === 'doughnut' ? 20 : 40"
+                        :stroke-dasharray="`${segment.circumference} ${100 * Math.PI}`"
+                        :stroke-dashoffset="-segment.offset"
+                        class="transition-all duration-500 hover:opacity-80"
+                    >
+                        <title>{{ segment.label }}: {{ segment.value }} ({{ segment.percentage }}%)</title>
+                    </circle>
+                </svg>
+                <!-- Center Text for Doughnut -->
+                <div v-if="type === 'doughnut'" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span class="text-xs text-gray-400 font-bold uppercase">Total</span>
+                    <span class="text-xl font-black text-gray-800">{{ data.reduce((a, b) => a + b.value, 0) }}</span>
+                </div>
+            </div>
+
+            <!-- Legend -->
+            <div class="flex-1 w-full grid grid-cols-2 gap-2 content-center">
+                <div v-for="(item, index) in pieSegments" :key="index" class="flex items-center text-xs">
+                    <span class="w-3 h-3 rounded-full mr-2" :style="{ backgroundColor: item.color }"></span>
+                    <div class="flex flex-col">
+                        <span class="font-bold text-gray-700">{{ item.label }}</span>
+                        <span class="text-gray-500">{{ item.value }} ({{ item.percentage }}%)</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
