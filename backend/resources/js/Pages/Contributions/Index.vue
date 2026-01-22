@@ -480,6 +480,22 @@ const statusLabels = {
 
         <div class="py-12">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                <!-- Admin Navigation Tabs -->
+                <div v-if="isAdminOrTreasurer" class="flex space-x-2 border-b border-gray-200 pb-2 overflow-x-auto mb-6">
+                    <Link :href="route('contributions.monitoring')" class="px-4 py-2 text-sm font-bold rounded-lg text-gray-600 hover:bg-gray-50">
+                        Dashboard
+                    </Link>
+                    <Link :href="route('contributions.verification')" class="px-4 py-2 text-sm font-bold rounded-lg text-gray-600 hover:bg-gray-50">
+                        Verifikasi
+                    </Link>
+                    <Link :href="route('contributions.matrix')" class="px-4 py-2 text-sm font-bold rounded-lg text-gray-600 hover:bg-gray-50">
+                        Matrix
+                    </Link>
+                    <Link :href="route('contributions.index')" class="px-4 py-2 text-sm font-bold rounded-lg bg-indigo-50 text-indigo-700">
+                        Riwayat Transaksi
+                    </Link>
+                </div>
+
                 <!-- Active Dues -->
                 <div class="bg-white overflow-hidden shadow-sm rounded-xl mb-8">
                     <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">

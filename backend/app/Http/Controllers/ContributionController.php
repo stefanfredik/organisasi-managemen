@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ContributionMatrixExport;
 
 class ContributionController extends Controller
 {
@@ -532,6 +534,7 @@ class ContributionController extends Controller
 
     private function calculateTypeProgress(Member $member, ContributionType $type)
     {
+        // ... (existing code) ...
         $query = Contribution::where('member_id', $member->id)
                              ->where('contribution_type_id', $type->id)
                              ->where('status', '!=', 'rejected');
@@ -605,5 +608,202 @@ class ContributionController extends Controller
             'percentage' => $percentage,
             'text' => "$paidPeriods / $totalPeriods Periode",
         ];
+    }
+    
+    public function monitoring(Request $request)
+    {
+        // Dashboard Monitoring
+        $types = ContributionType::where('is_active', true)->get();
+        $totalMembers = Member::active()->count();
+        
+        // Simple aggregate stats for now
+        $stats = [
+            'total_contribution_active' => $types->count(),
+            'total_collected' => Contribution::where('status', 'paid')->sum('amount'),
+            'total_pending' => Contribution::where('status', 'pending')->count(),
+        ];
+        
+        $matrixIds = $request->input('matrix_type_id') ? [$request->input('matrix_type_id')] : $types->pluck('id')->toArray();
+        
+        // We can pass data for the charts here as well
+        
+        return Inertia::render('Contributions/Monitoring/Dashboard', [
+            'types' => $types,
+            'stats' => $stats,
+             'filters' => [
+                'start_date' => $request->input('start_date'),
+                'end_date' => $request->input('end_date'),
+            ],
+        ]);
+    }
+    
+    public function verifyAction(Request $request, $id)
+    {
+        $contribution = Contribution::findOrFail($id);
+        $action = $request->input('action'); // 'approve' or 'reject'
+
+        $status = match ($action) {
+            'approve' => 'paid',
+            'reject' => 'rejected',
+            default => null,
+        };
+
+        if (!$status) {
+            return redirect()->back()->with('error', 'Aksi tidak valid');
+        }
+
+        DB::transaction(function () use ($contribution, $status) {
+            $contribution->update([
+                'status' => $status,
+                'verified_at' => now(),
+                'verified_by' => auth()->id(),
+            ]);
+
+            if ($status === 'paid' && $contribution->wallet) {
+                $contribution->wallet->increment('balance', $contribution->amount);
+            }
+        });
+
+        return redirect()->back()->with('success', 'Transaksi berhasil diverifikasi.');
+    }
+
+    public function verification(Request $request)
+    {
+        // Only Pending
+        $query = Contribution::with(['member', 'type', 'wallet'])
+            ->where('status', 'pending')
+            ->latest();
+            
+        if ($request->filled('contribution_type_id')) {
+            $query->where('contribution_type_id', $request->input('contribution_type_id'));
+        }
+            
+        return Inertia::render('Contributions/Monitoring/Verification', [
+            'pendingTransactions' => $query->paginate(15)->withQueryString(),
+            'types' => ContributionType::where('is_active', true)->get(),
+        ]);
+    }
+    
+    public function matrix(Request $request)
+    {
+        $types = ContributionType::where('is_active', true)->get();
+        
+        // Default to first type if exists
+        $selectedTypeId = $request->input('type_id') ?? ($types->first()->id ?? null);
+        $year = $request->input('year', date('Y'));
+        
+        $years = range(date('Y'), date('Y') - 4);
+
+        if (!$selectedTypeId) {
+             return Inertia::render('Contributions/Monitoring/Matrix', [
+                'contributionTypes' => $types,
+                'years' => $years,
+                'filters' => ['type_id' => $selectedTypeId, 'year' => $year],
+                'matrixData' => null,
+            ]);
+        }
+
+        $type = ContributionType::findOrFail($selectedTypeId);
+        $members = Member::active()->orderBy('full_name')->get();
+        
+        // Generate Periods with Labels
+        $periods = [];
+        if ($type->period === 'monthly') {
+            for ($m = 1; $m <= 12; $m++) {
+                $date = Carbon::createFromDate($year, $m, 1);
+                $periods[] = [
+                    'key' => $date->format('Y-m'),
+                    'label' => $date->translatedFormat('M'), // Jan, Feb...
+                ];
+            }
+        } elseif ($type->period === 'yearly') {
+            $periods[] = [
+                'key' => (string)$year,
+                'label' => (string)$year
+            ];
+        } elseif ($type->period === 'weekly') {
+            $dto = new Carbon();
+            $dto->setISODate($year, 53);
+            $weeksInYear = ($dto->format('W') === '53' ? 53 : 52);
+            for ($w = 1; $w <= $weeksInYear; $w++) {
+                $periods[] = [
+                    'key' => sprintf('%s-%02d', $year, $w),
+                    'label' => 'W'.$w,
+                ];
+            }
+        } else {
+            // Once
+            $periods[] = [
+                'key' => 'once',
+                'label' => 'Status'
+            ];
+        }
+
+        // Fetch contributions (Paid and Pending)
+        $contributions = Contribution::where('contribution_type_id', $type->id)
+            ->whereIn('status', ['paid', 'pending', 'partial'])
+            ->when($type->period !== 'once', function($q) use ($year) {
+               $q->where('payment_period', 'like', "$year%"); 
+            })
+            ->get()
+            ->groupBy('member_id');
+            
+        $matrixMembers = $members->map(function($member) use ($contributions, $periods, $type) {
+            $memberContribs = $contributions->get($member->id, collect());
+            $statusByPeriod = [];
+            
+            foreach ($periods as $p) {
+                $key = $p['key'];
+                
+                // For 'once', we just look if any record exists
+                if ($type->period === 'once') {
+                     $c = $memberContribs->first();
+                } else {
+                     $c = $memberContribs->firstWhere('payment_period', $key);
+                }
+
+                $status = 'unpaid';
+                if ($c) {
+                    $status = $c->status;
+                }
+                
+                $statusByPeriod[$key] = $status;
+            }
+            
+            return [
+                'id' => $member->id,
+                'name' => $member->full_name,
+                'member_code' => $member->member_code,
+                'status_by_period' => $statusByPeriod
+            ];
+        });
+
+        return Inertia::render('Contributions/Monitoring/Matrix', [
+            'contributionTypes' => $types,
+            'years' => $years,
+            'filters' => ['type_id' => (int)$selectedTypeId, 'year' => $year],
+            'matrixData' => [
+                'type' => $type,
+                'periods' => $periods,
+                'members' => $matrixMembers,
+            ],
+        ]);
+    }
+    public function exportMatrix(Request $request)
+    {
+        $types = ContributionType::where('is_active', true)->get();
+        // Default to first type if exists or query param
+        $selectedTypeId = $request->input('type_id') ?? ($types->first()->id ?? null);
+        $year = $request->input('year', date('Y'));
+
+        if (!$selectedTypeId) {
+            return redirect()->back()->with('error', 'Tidak ada jenis iuran yang dipilih.');
+        }
+
+        $type = ContributionType::findOrFail($selectedTypeId);
+        
+        $fileName = sprintf('Matrix-Iuran-%s-%s.xlsx', \Str::slug($type->name), $year);
+
+        return Excel::download(new ContributionMatrixExport($type, $year), $fileName);
     }
 }

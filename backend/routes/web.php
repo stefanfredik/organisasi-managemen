@@ -94,12 +94,21 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware('permission:view_contributions')->group(function () {
+        // New Monitoring Routes (Must be before wildcards)
+        Route::get('contributions/monitoring', [\App\Http\Controllers\ContributionController::class, 'monitoring'])->name('contributions.monitoring');
+        Route::get('contributions/verification', [\App\Http\Controllers\ContributionController::class, 'verification'])->name('contributions.verification');
+        Route::get('contributions/matrix', [\App\Http\Controllers\ContributionController::class, 'matrix'])->name('contributions.matrix');
+        Route::get('contributions/matrix/export', [\App\Http\Controllers\ContributionController::class, 'exportMatrix'])->name('contributions.matrix.export');
+        Route::post('contributions/verification/{id}', [\App\Http\Controllers\ContributionController::class, 'verifyAction'])->name('contributions.verify-action');
+
         Route::get('contributions', [\App\Http\Controllers\ContributionController::class, 'index'])->name('contributions.index');
         Route::get('contributions/{contribution}', [\App\Http\Controllers\ContributionController::class, 'show'])->name('contributions.show');
         Route::post('contributions', [\App\Http\Controllers\ContributionController::class, 'store'])->name('contributions.store');
         Route::post('contributions/bulk', [\App\Http\Controllers\ContributionController::class, 'storeBulk'])->name('contributions.bulk-store');
         Route::get('contributions/period-summary', [\App\Http\Controllers\ContributionController::class, 'periodSummary'])->name('contributions.period-summary');
         Route::get('contributions/{contributionType}/my-status', [\App\Http\Controllers\ContributionController::class, 'getMemberStatus'])->name('contributions.my-status');
+        
+
     });
 
     // Donation Management
