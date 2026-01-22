@@ -171,6 +171,14 @@ const formatCurrency = (amount) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(amount);
 };
 
+const openPayForType = async (type) => {
+    form.contribution_type_id = String(type.id);
+    form.amount = type.amount;
+    updatePaymentPeriod(type.period, form.payment_date);
+    await fetchUnpaidMembers();
+    showCreateModal.value = true;
+};
+
 const getStatusBadge = (status) => {
     const map = {
         pending: 'bg-yellow-100 text-yellow-700',
@@ -204,6 +212,45 @@ const statusLabels = {
 
         <div class="py-12">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                <!-- Active Dues -->
+                <div class="bg-white overflow-hidden shadow-sm rounded-xl mb-8">
+                    <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest">Daftar Iuran Aktif</h3>
+                    </div>
+                    <div class="p-6">
+                        <div v-if="types && types.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div v-for="type in types" :key="type.id" class="border border-gray-200 rounded-xl p-4 hover:shadow-md transition bg-white">
+                                <div class="flex items-start justify-between">
+                                    <div>
+                                        <p class="text-xs font-bold uppercase text-gray-500">Jenis Iuran</p>
+                                        <p class="text-sm font-black text-gray-900">{{ type.name }}</p>
+                                    </div>
+                                    <span class="px-2 py-1 rounded-lg text-[11px] font-bold uppercase tracking-widest"
+                                        :class="type.period === 'monthly' ? 'bg-indigo-50 text-indigo-600 border border-indigo-200' 
+                                            : type.period === 'yearly' ? 'bg-blue-50 text-blue-600 border border-blue-200'
+                                            : type.period === 'weekly' ? 'bg-amber-50 text-amber-600 border border-amber-200'
+                                            : type.period === 'daily' ? 'bg-green-50 text-green-600 border border-green-200'
+                                            : 'bg-gray-50 text-gray-600 border border-gray-200'">
+                                        {{ (type.period || 'once') }}
+                                    </span>
+                                </div>
+                                <div class="mt-3">
+                                    <p class="text-xs font-bold uppercase text-gray-500">Nominal</p>
+                                    <p class="text-base font-black text-indigo-600">{{ formatCurrency(type.amount) }}</p>
+                                </div>
+                                <div class="mt-4">
+                                    <button type="button" @click="openPayForType(type)"
+                                        class="w-full px-4 py-2.5 rounded-xl text-sm font-black uppercase tracking-widest text-white bg-gray-900 hover:bg-gray-800 transition">
+                                        Bayar Iuran Ini
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else class="text-center text-gray-400 text-sm py-8">
+                            Belum ada jenis iuran aktif.
+                        </div>
+                    </div>
+                </div>
                 <!-- Data Table -->
                 <div class="bg-white overflow-hidden shadow-sm rounded-xl">
                     <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
