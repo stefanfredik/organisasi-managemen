@@ -98,6 +98,7 @@ Route::middleware('auth')->group(function () {
         Route::get('contributions/{contribution}', [\App\Http\Controllers\ContributionController::class, 'show'])->name('contributions.show');
         Route::post('contributions', [\App\Http\Controllers\ContributionController::class, 'store'])->name('contributions.store');
         Route::post('contributions/bulk', [\App\Http\Controllers\ContributionController::class, 'storeBulk'])->name('contributions.bulk-store');
+        Route::get('contributions/period-summary', [\App\Http\Controllers\ContributionController::class, 'periodSummary'])->name('contributions.period-summary');
     });
 
     // Donation Management

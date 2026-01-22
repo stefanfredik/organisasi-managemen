@@ -26,6 +26,7 @@ const isAdminOrTreasurer = computed(() => ['admin', 'bendahara'].includes(user.v
 const showCreateModal = ref(false);
 const showVerifyModal = ref(false);
 const showEditModal = ref(false);
+const activeTab = ref('riwayat');
 const showFiltersModal = ref(false);
 const showFiltersDropdown = ref(false);
 const selectedContribution = ref(null);
@@ -119,6 +120,59 @@ const editForm = useForm({
     notes: '',
     receipt: null,
 });
+
+const periodic = ref({
+    typeId: '',
+    date: new Date().toISOString().split('T')[0],
+    periodKey: '',
+    summary: null,
+    loading: false,
+});
+
+const updatePeriodicKey = () => {
+    const t = props.types.find(tt => String(tt.id) === String(periodic.value.typeId));
+    periodic.value.periodKey = t ? makePeriod(t.period, periodic.value.date) : '';
+};
+
+const loadPeriodSummary = async () => {
+    updatePeriodicKey();
+    const typeId = periodic.value.typeId;
+    const periodKey = periodic.value.periodKey;
+    if (!typeId || !periodKey) {
+        periodic.value.summary = null;
+        return;
+    }
+    periodic.value.loading = true;
+    try {
+        const res = await axios.get(route('contributions.period-summary'), {
+            params: { contribution_type_id: typeId, payment_period: periodKey },
+        });
+        periodic.value.summary = res.data;
+    } catch (e) {
+        periodic.value.summary = null;
+    } finally {
+        periodic.value.loading = false;
+    }
+};
+
+watch(() => activeTab.value, (tab) => {
+    if (tab === 'periodik') {
+        loadPeriodSummary();
+    }
+});
+
+watch([() => periodic.value.typeId, () => periodic.value.date], () => {
+    if (activeTab.value === 'periodik') {
+        loadPeriodSummary();
+    } else {
+        updatePeriodicKey();
+    }
+});
+
+const formatPercent = (p) => {
+    const v = Math.max(0, Math.min(100, Number(p) || 0));
+    return v;
+};
 
 const openVerifyModal = (contribution) => {
     selectedContribution.value = contribution;
@@ -487,9 +541,29 @@ const statusLabels = {
                 <!-- Data Table -->
                 <div class="bg-white overflow-hidden shadow-sm rounded-xl">
                     <div class="p-6 border-b border-gray-100 bg-gray-50/50">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                            <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest">Daftar Pembayaran</h3>
-                            <div v-if="isAdminOrTreasurer" class="flex items-center gap-2">
+                        <div class="flex items-center justify-between gap-4">
+                            <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest">Iuran Anggota</h3>
+                            <div class="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    @click="activeTab = 'riwayat'"
+                                    class="px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition"
+                                    :class="activeTab === 'riwayat' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'"
+                                >
+                                    Riwayat
+                                </button>
+                                <button
+                                    type="button"
+                                    @click="activeTab = 'periodik'"
+                                    class="px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition"
+                                    :class="activeTab === 'periodik' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'"
+                                >
+                                    Periodik
+                                </button>
+                            </div>
+                        </div>
+                        <div v-if="activeTab === 'riwayat'">
+                            <div class="mt-4 flex items-center justify-end gap-2" v-if="isAdminOrTreasurer">
                                 <button
                                     type="button"
                                     class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-700 transition hover:bg-gray-50"
@@ -513,44 +587,143 @@ const statusLabels = {
                                     Popup
                                 </button>
                             </div>
-                        </div>
-                        <div v-if="isAdminOrTreasurer" class="mt-4">
-                            <div class="max-w-md">
-                                <SearchBar
-                                    v-model="filters.search"
-                                    placeholder="Cari nama, kode anggota, atau catatan..."
-                                />
+                            <div v-if="isAdminOrTreasurer" class="mt-4">
+                                <div class="max-w-md">
+                                    <SearchBar
+                                        v-model="filters.search"
+                                        placeholder="Cari nama, kode anggota, atau catatan..."
+                                    />
+                                </div>
+                            </div>
+                            <div v-if="showFiltersDropdown" class="fixed inset-0 z-40" @click="showFiltersDropdown = false"></div>
+                            <div v-if="showFiltersDropdown && isAdminOrTreasurer" class="relative">
+                                <div class="absolute right-6 top-6 z-50 w-80 rounded-xl border border-gray-200 bg-white shadow-xl overflow-hidden">
+                                    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+                                        <span class="text-[10px] font-bold uppercase tracking-widest text-gray-500">Filters</span>
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center justify-center rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-indigo-600 hover:text-indigo-700"
+                                            @click="resetFilters"
+                                        >
+                                            Reset
+                                        </button>
+                                    </div>
+                                    <div class="p-4 space-y-4">
+                                        <div class="space-y-2">
+                                            <InputLabel value="Jenis Iuran" class="text-[10px] font-bold uppercase text-gray-500" />
+                                            <FilterDropdown v-model="filters.contribution_type_id" :options="typeOptions" label="Semua Jenis" />
+                                        </div>
+                                        <div class="space-y-2">
+                                            <InputLabel value="Status" class="text-[10px] font-bold uppercase text-gray-500" />
+                                            <FilterDropdown v-model="filters.status" :options="statusOptions" label="Semua Status" />
+                                        </div>
+                                        <div class="space-y-2">
+                                            <InputLabel value="Metode" class="text-[10px] font-bold uppercase text-gray-500" />
+                                            <FilterDropdown v-model="filters.payment_method" :options="paymentMethodOptions" label="Semua Metode" />
+                                        </div>
+                                        <div class="space-y-2">
+                                            <InputLabel value="Dompet" class="text-[10px] font-bold uppercase text-gray-500" />
+                                            <FilterDropdown v-model="filters.wallet_id" :options="walletOptions" label="Semua Dompet" />
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div v-if="showFiltersDropdown" class="fixed inset-0 z-40" @click="showFiltersDropdown = false"></div>
-                        <div v-if="showFiltersDropdown && isAdminOrTreasurer" class="relative">
-                            <div class="absolute right-6 top-6 z-50 w-80 rounded-xl border border-gray-200 bg-white shadow-xl overflow-hidden">
-                                <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-                                    <span class="text-[10px] font-bold uppercase tracking-widest text-gray-500">Filters</span>
-                                    <button
-                                        type="button"
-                                        class="inline-flex items-center justify-center rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-indigo-600 hover:text-indigo-700"
-                                        @click="resetFilters"
-                                    >
-                                        Reset
-                                    </button>
+                        <div v-else class="mt-4">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <InputLabel value="Jenis Iuran" class="text-[10px] font-bold uppercase text-gray-500 mb-1" />
+                                    <select v-model="periodic.typeId" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+                                        <option value="">-- Pilih Jenis --</option>
+                                        <option v-for="t in types" :key="t.id" :value="String(t.id)">{{ t.name }}</option>
+                                    </select>
                                 </div>
-                                <div class="p-4 space-y-4">
-                                    <div class="space-y-2">
-                                        <InputLabel value="Jenis Iuran" class="text-[10px] font-bold uppercase text-gray-500" />
-                                        <FilterDropdown v-model="filters.contribution_type_id" :options="typeOptions" label="Semua Jenis" />
+                                <div>
+                                    <InputLabel value="Tanggal Acuan" class="text-[10px] font-bold uppercase text-gray-500 mb-1" />
+                                    <input type="date" v-model="periodic.date" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm" />
+                                </div>
+                                <div>
+                                    <InputLabel value="Periode" class="text-[10px] font-bold uppercase text-gray-500 mb-1" />
+                                    <div class="w-full rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-black text-indigo-700">
+                                        {{ periodic.periodKey || '-' }}
                                     </div>
-                                    <div class="space-y-2">
-                                        <InputLabel value="Status" class="text-[10px] font-bold uppercase text-gray-500" />
-                                        <FilterDropdown v-model="filters.status" :options="statusOptions" label="Semua Status" />
+                                </div>
+                            </div>
+                            <div class="mt-6">
+                                <div v-if="periodic.loading" class="p-6 border border-gray-200 rounded-xl text-sm text-gray-500">
+                                    Memuat ringkasan...
+                                </div>
+                                <div v-else-if="periodic.summary" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                    <div class="p-6 border border-gray-200 rounded-xl">
+                                        <p class="text-[10px] uppercase font-bold text-gray-500 mb-2">Progres Terkumpul</p>
+                                        <div class="h-3 rounded-full bg-gray-100 overflow-hidden">
+                                            <div class="h-3 bg-indigo-600" :style="{ width: formatPercent(periodic.summary.percentage) + '%' }"></div>
+                                        </div>
+                                        <p class="mt-2 text-sm font-black text-indigo-700">{{ formatPercent(periodic.summary.percentage) }}%</p>
                                     </div>
-                                    <div class="space-y-2">
-                                        <InputLabel value="Metode" class="text-[10px] font-bold uppercase text-gray-500" />
-                                        <FilterDropdown v-model="filters.payment_method" :options="paymentMethodOptions" label="Semua Metode" />
+                                    <div class="p-6 border border-gray-200 rounded-xl">
+                                        <p class="text-[10px] uppercase font-bold text-gray-500 mb-2">Ringkasan Anggota</p>
+                                        <div class="text-sm font-black text-gray-900">Aktif: {{ periodic.summary.active_count }}</div>
+                                        <div class="text-sm font-black text-green-700">Sudah: {{ periodic.summary.paid_count }}</div>
+                                        <div class="text-sm font-black text-red-700">Belum: {{ periodic.summary.unpaid_count }}</div>
                                     </div>
-                                    <div class="space-y-2">
-                                        <InputLabel value="Dompet" class="text-[10px] font-bold uppercase text-gray-500" />
-                                        <FilterDropdown v-model="filters.wallet_id" :options="walletOptions" label="Semua Dompet" />
+                                    <div class="p-6 border border-gray-200 rounded-xl">
+                                        <p class="text-[10px] uppercase font-bold text-gray-500 mb-2">Nominal</p>
+                                        <div class="text-sm font-black text-indigo-700">Terkumpul: {{ formatCurrency(periodic.summary.collected_amount) }}</div>
+                                        <div class="text-sm font-black text-gray-900">Target: {{ formatCurrency(periodic.summary.expected_amount) }}</div>
+                                    </div>
+                                </div>
+                                <div v-else class="p-6 border border-gray-200 rounded-xl text-sm text-gray-500">
+                                    Pilih jenis iuran dan tanggal acuan untuk melihat ringkasan.
+                                </div>
+                            </div>
+                            <div v-if="periodic.summary" class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <div class="border border-gray-200 rounded-xl overflow-hidden">
+                                    <div class="px-6 py-4 bg-gray-50/50 border-b border-gray-100 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                                        Sudah Membayar
+                                    </div>
+                                    <div class="p-6 overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-50/50 uppercase tracking-widest text-[10px] font-bold text-gray-400">
+                                                <tr>
+                                                    <th class="px-6 py-3 text-left">Nama</th>
+                                                    <th class="px-6 py-3 text-left">Kode</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-100">
+                                                <tr v-for="m in periodic.summary.paid_members" :key="m.id" class="hover:bg-gray-50/50 transition">
+                                                    <td class="px-6 py-3 text-sm font-bold text-gray-900">{{ m.full_name }}</td>
+                                                    <td class="px-6 py-3 text-sm font-bold text-gray-500">{{ m.member_code }}</td>
+                                                </tr>
+                                                <tr v-if="!periodic.summary.paid_members.length">
+                                                    <td colspan="2" class="px-6 py-3 text-sm text-gray-400">Belum ada pembayaran untuk periode ini.</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="border border-gray-200 rounded-xl overflow-hidden">
+                                    <div class="px-6 py-4 bg-gray-50/50 border-b border-gray-100 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                                        Belum Membayar
+                                    </div>
+                                    <div class="p-6 overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-50/50 uppercase tracking-widest text-[10px] font-bold text-gray-400">
+                                                <tr>
+                                                    <th class="px-6 py-3 text-left">Nama</th>
+                                                    <th class="px-6 py-3 text-left">Kode</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-100">
+                                                <tr v-for="m in periodic.summary.unpaid_members" :key="m.id" class="hover:bg-gray-50/50 transition">
+                                                    <td class="px-6 py-3 text-sm font-bold text-gray-900">{{ m.full_name }}</td>
+                                                    <td class="px-6 py-3 text-sm font-bold text-gray-500">{{ m.member_code }}</td>
+                                                </tr>
+                                                <tr v-if="!periodic.summary.unpaid_members.length">
+                                                    <td colspan="2" class="px-6 py-3 text-sm text-gray-400">Semua anggota sudah membayar untuk periode ini.</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
@@ -612,7 +785,7 @@ const statusLabels = {
                         </div>
                     </Modal>
 
-                    <div class="overflow-x-auto">
+                    <div v-if="activeTab === 'riwayat'" class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50/50 uppercase tracking-widest text-[10px] font-bold text-gray-400">
                                 <tr>

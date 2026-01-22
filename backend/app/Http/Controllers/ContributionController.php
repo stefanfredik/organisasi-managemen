@@ -328,4 +328,61 @@ class ContributionController extends Controller
 
         return redirect()->back()->with('success', 'Pembayaran iuran massal berhasil dicatat untuk anggota terpilih. Menunggu verifikasi.');
     }
+
+    public function periodSummary(Request $request)
+    {
+        $request->validate([
+            'contribution_type_id' => 'required|exists:contribution_types,id',
+            'payment_period' => 'required|string',
+        ]);
+
+        $type = ContributionType::findOrFail($request->input('contribution_type_id'));
+        if (!$type->period || $type->period === 'once') {
+            return response()->json([
+                'message' => 'Jenis iuran ini tidak bersifat periodik.',
+            ], 422);
+        }
+
+        $period = $request->input('payment_period');
+
+        $activeMembers = Member::active()->get(['id', 'full_name', 'member_code']);
+        $activeCount = $activeMembers->count();
+
+        $paidContributions = Contribution::where('contribution_type_id', $type->id)
+            ->where('status', 'paid')
+            ->where('payment_period', $period)
+            ->get(['member_id', 'amount']);
+
+        $paidMemberIds = $paidContributions->pluck('member_id')->unique()->values()->toArray();
+        $paidCount = count($paidMemberIds);
+        $collectedAmount = (float) $paidContributions->sum('amount');
+        $expectedAmount = (float) ($type->amount * $activeCount);
+        $percentage = $activeCount > 0 ? round(($paidCount / $activeCount) * 100, 2) : 0.0;
+
+        $paidMembers = Member::active()
+            ->whereIn('id', $paidMemberIds)
+            ->get(['id', 'full_name', 'member_code']);
+
+        $unpaidMembers = Member::active()
+            ->whereNotIn('id', $paidMemberIds)
+            ->get(['id', 'full_name', 'member_code']);
+
+        return response()->json([
+            'type' => [
+                'id' => $type->id,
+                'name' => $type->name,
+                'period' => $type->period,
+                'amount' => (float) $type->amount,
+            ],
+            'period' => $period,
+            'active_count' => $activeCount,
+            'paid_count' => $paidCount,
+            'unpaid_count' => max($activeCount - $paidCount, 0),
+            'collected_amount' => $collectedAmount,
+            'expected_amount' => $expectedAmount,
+            'percentage' => $percentage,
+            'paid_members' => $paidMembers,
+            'unpaid_members' => $unpaidMembers,
+        ]);
+    }
 }
