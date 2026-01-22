@@ -18,11 +18,17 @@ const props = defineProps({
     types: Array,
     wallets: Array,
     members: Array,
+    context: {
+        type: String,
+        default: 'default', // 'default', 'admin-history'
+    },
+    type: Object, // For admin-history context
 });
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
 const isAdminOrTreasurer = computed(() => ['admin', 'bendahara'].includes(user.value.role));
+const isAdminHistory = computed(() => props.context === 'admin-history');
 
 const showCreateModal = ref(false);
 const showVerifyModal = ref(false);
@@ -464,37 +470,78 @@ const statusLabels = {
 </script>
 
 <template>
-    <Head title="Iuran Anggota" />
+    <Head :title="isAdminHistory ? `Riwayat - ${type?.name || ''}` : 'Iuran Anggota'" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex justify-between items-center">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">
+                 <div v-if="isAdminHistory" class="flex items-center">
+                     <Link :href="route('contributions.monitoring.index')" class="mr-3 text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    </Link>
+                    <h2 class="text-xl font-semibold leading-tight text-gray-800">
+                        Riwayat: {{ type?.name || '' }}
+                    </h2>
+                </div>
+                <h2 v-else class="text-xl font-semibold leading-tight text-gray-800">
                     {{ isAdminOrTreasurer ? 'Manajemen Iuran Anggota' : 'Riwayat Iuran Saya' }}
                 </h2>
-                <PrimaryButton v-if="isAdminOrTreasurer" @click="showCreateModal = true">
+                <PrimaryButton v-if="isAdminOrTreasurer && !isAdminHistory" @click="showCreateModal = true">
                     Bayar Iuran Manual
                 </PrimaryButton>
             </div>
         </template>
 
         <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <!-- Admin Navigation Tabs -->
-                <div v-if="isAdminOrTreasurer" class="flex space-x-2 border-b border-gray-200 pb-2 overflow-x-auto mb-6">
-                    <Link :href="route('contributions.monitoring')" class="px-4 py-2 text-sm font-bold rounded-lg text-gray-600 hover:bg-gray-50">
-                        Dashboard
+            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8" :class="{ 'flex flex-col md:flex-row gap-6': isAdminHistory }">
+                
+                <!-- Sidebar (Only for History Mode) -->
+                <div v-if="isAdminHistory" class="w-full md:w-64 shrink-0">
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden sticky top-6">
+                        <div class="p-4 bg-gray-50 border-b border-gray-100">
+                            <h3 class="font-bold text-gray-700">Menu</h3>
+                        </div>
+                        <div class="p-2 space-y-1">
+                            <Link :href="route('contributions.monitoring.dashboard', type?.id)" 
+                                class="flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-colors"
+                                :class="route().current('contributions.monitoring.dashboard') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'"
+                            >
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                                Dashboard
+                            </Link>
+                            <Link :href="route('contributions.monitoring.matrix', type?.id)" 
+                                class="flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-colors"
+                                :class="route().current('contributions.monitoring.matrix') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'"
+                            >
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7-8v8m14-8v8M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                Matrix
+                            </Link>
+                            <Link :href="route('contributions.monitoring.history', type?.id)" 
+                                class="flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-colors"
+                                :class="route().current('contributions.monitoring.history') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'"
+                            >
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Riwayat Transaksi
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Global Admin Navigation Tabs (Only if NOT History mode) -->
+                <div v-if="isAdminOrTreasurer && !isAdminHistory" class="flex space-x-2 border-b border-gray-200 pb-2 overflow-x-auto mb-6">
+                    <Link :href="route('contributions.monitoring.index')" class="px-4 py-2 text-sm font-bold rounded-lg text-gray-600 hover:bg-gray-50">
+                        Jenis Iuran Aktif
                     </Link>
                     <Link :href="route('contributions.verification')" class="px-4 py-2 text-sm font-bold rounded-lg text-gray-600 hover:bg-gray-50">
                         Verifikasi
-                    </Link>
-                    <Link :href="route('contributions.matrix')" class="px-4 py-2 text-sm font-bold rounded-lg text-gray-600 hover:bg-gray-50">
-                        Matrix
                     </Link>
                     <Link :href="route('contributions.index')" class="px-4 py-2 text-sm font-bold rounded-lg bg-indigo-50 text-indigo-700">
                         Riwayat Transaksi
                     </Link>
                 </div>
+
+                <!-- Main Content Container -->
+                 <div :class="{ 'flex-1 space-y-6': isAdminHistory }">
 
                 <!-- Active Dues -->
                 <div class="bg-white overflow-hidden shadow-sm rounded-xl mb-8">
@@ -821,7 +868,7 @@ const statusLabels = {
                                         <div class="text-[10px] text-gray-400">{{ contribution.member?.member_code || '-' }}</div>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="text-sm font-bold text-gray-700">{{ contribution.type.name }}</div>
+                                        <div class="text-sm font-bold text-gray-700">{{ contribution.type?.name || '-' }}</div>
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-500 font-bold">
                                         {{ contribution.payment_date ? new Date(contribution.payment_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-' }}
@@ -880,6 +927,8 @@ const statusLabels = {
                 </div>
             </div>
         </div>
+
+                </div> <!-- End Main Content Container -->
 
         <!-- Modal Bayar Iuran -->
         <Modal :show="showCreateModal" @close="showCreateModal = false">

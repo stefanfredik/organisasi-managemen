@@ -289,7 +289,7 @@ const hasPermission = (permission) => {
                             </Link>
                             <Link
                                 v-if="hasPermission('view_contributions')"
-                                :href="$page.props.auth.user.role === 'anggota' ? route('contributions.index') : route('contributions.monitoring')"
+                                :href="$page.props.auth.user.role === 'anggota' ? route('contributions.index') : route('contributions.monitoring.index')"
                                 :class="[
                                     'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-bold text-sm',
                                     route().current('contributions.*')

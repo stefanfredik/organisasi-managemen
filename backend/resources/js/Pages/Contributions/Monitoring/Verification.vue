@@ -56,16 +56,13 @@ const verifyTransaction = (id, action) => {
                 
                 <!-- Navigation Tabs -->
                 <div class="flex space-x-2 border-b border-gray-200 pb-2 overflow-x-auto">
-                    <Link :href="route('contributions.monitoring')" class="px-4 py-2 text-sm font-bold rounded-lg text-gray-600 hover:bg-gray-50">
-                        Dashboard
+                    <Link :href="route('contributions.monitoring.index')" class="px-4 py-2 text-sm font-bold rounded-lg text-gray-600 hover:bg-gray-50">
+                        Jenis Iuran Aktif
                     </Link>
                     <Link :href="route('contributions.verification')" class="px-4 py-2 text-sm font-bold rounded-lg bg-indigo-50 text-indigo-700">
                         Verifikasi
                     </Link>
-                    <Link :href="route('contributions.matrix')" class="px-4 py-2 text-sm font-bold rounded-lg text-gray-600 hover:bg-gray-50">
-                        Matrix
-                    </Link>
-                    <Link :href="route('contributions.index')" class="px-4 py-2 text-sm font-bold rounded-lg text-gray-600 hover:bg-gray-50">
+                     <Link :href="route('contributions.index')" class="px-4 py-2 text-sm font-bold rounded-lg text-gray-600 hover:bg-gray-50">
                         Riwayat Transaksi
                     </Link>
                 </div>

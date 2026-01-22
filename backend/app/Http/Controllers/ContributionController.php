@@ -610,32 +610,60 @@ class ContributionController extends Controller
         ];
     }
     
-    public function monitoring(Request $request)
+    public function monitoringList()
     {
-        // Dashboard Monitoring
-        $types = ContributionType::where('is_active', true)->get();
-        $totalMembers = Member::active()->count();
+        $types = ContributionType::where('is_active', true)->withCount(['contributions' => function($q) {
+             $q->where('status', 'paid');
+        }])->get();
         
-        // Simple aggregate stats for now
+        return Inertia::render('Contributions/Monitoring/Index', [
+            'types' => $types,
+        ]);
+    }
+
+    public function monitoringDashboard(Request $request, ContributionType $contributionType)
+    {
+        $startDate = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : Carbon::now()->startOfYear();
+        $endDate = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : Carbon::now()->endOfYear();
+
+        // Base Query
+        $baseQuery = Contribution::where('contribution_type_id', $contributionType->id)
+            ->whereBetween('payment_date', [$startDate, $endDate]);
+
+        // Stats
         $stats = [
-            'total_contribution_active' => $types->count(),
-            'total_collected' => Contribution::where('status', 'paid')->sum('amount'),
-            'total_pending' => Contribution::where('status', 'pending')->count(),
+            'total_collected' => (clone $baseQuery)->where('status', 'paid')->sum('amount'),
+            'total_pending' => (clone $baseQuery)->where('status', 'pending')->count(),
+            'total_transactions' => (clone $baseQuery)->count(),
         ];
         
-        $matrixIds = $request->input('matrix_type_id') ? [$request->input('matrix_type_id')] : $types->pluck('id')->toArray();
-        
-        // We can pass data for the charts here as well
-        
-        return Inertia::render('Contributions/Monitoring/Dashboard', [
-            'types' => $types,
+        // Chart: Monthly Trend
+        $monthlyData = (clone $baseQuery)
+            ->where('status', 'paid')
+            ->selectRaw("DATE_FORMAT(payment_date, '%Y-%m') as month, SUM(amount) as total")
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get()
+            ->map(function($item) {
+                return [
+                    'label' => Carbon::parse($item->month)->translatedFormat('M'),
+                    'value' => (float)$item->total
+                ];
+            });
+
+        return Inertia::render('Contributions/Monitoring/Show', [
+            'type' => $contributionType,
             'stats' => $stats,
+            'charts' => [
+                'monthly' => $monthlyData,
+            ],
              'filters' => [
-                'start_date' => $request->input('start_date'),
-                'end_date' => $request->input('end_date'),
+                'start_date' => $startDate->format('Y-m-d'),
+                'end_date' => $endDate->format('Y-m-d'),
             ],
         ]);
     }
+
     
     public function verifyAction(Request $request, $id)
     {
@@ -684,44 +712,28 @@ class ContributionController extends Controller
         ]);
     }
     
-    public function matrix(Request $request)
+    public function monitoringMatrix(Request $request, ContributionType $contributionType)
     {
-        $types = ContributionType::where('is_active', true)->get();
-        
-        // Default to first type if exists
-        $selectedTypeId = $request->input('type_id') ?? ($types->first()->id ?? null);
         $year = $request->input('year', date('Y'));
-        
         $years = range(date('Y'), date('Y') - 4);
-
-        if (!$selectedTypeId) {
-             return Inertia::render('Contributions/Monitoring/Matrix', [
-                'contributionTypes' => $types,
-                'years' => $years,
-                'filters' => ['type_id' => $selectedTypeId, 'year' => $year],
-                'matrixData' => null,
-            ]);
-        }
-
-        $type = ContributionType::findOrFail($selectedTypeId);
         $members = Member::active()->orderBy('full_name')->get();
         
         // Generate Periods with Labels
         $periods = [];
-        if ($type->period === 'monthly') {
+        if ($contributionType->period === 'monthly') {
             for ($m = 1; $m <= 12; $m++) {
                 $date = Carbon::createFromDate($year, $m, 1);
                 $periods[] = [
                     'key' => $date->format('Y-m'),
-                    'label' => $date->translatedFormat('M'), // Jan, Feb...
+                    'label' => $date->translatedFormat('M'), 
                 ];
             }
-        } elseif ($type->period === 'yearly') {
+        } elseif ($contributionType->period === 'yearly') {
             $periods[] = [
                 'key' => (string)$year,
                 'label' => (string)$year
             ];
-        } elseif ($type->period === 'weekly') {
+        } elseif ($contributionType->period === 'weekly') {
             $dto = new Carbon();
             $dto->setISODate($year, 53);
             $weeksInYear = ($dto->format('W') === '53' ? 53 : 52);
@@ -732,31 +744,29 @@ class ContributionController extends Controller
                 ];
             }
         } else {
-            // Once
             $periods[] = [
                 'key' => 'once',
                 'label' => 'Status'
             ];
         }
 
-        // Fetch contributions (Paid and Pending)
-        $contributions = Contribution::where('contribution_type_id', $type->id)
+        // Fetch contributions
+        $contributions = Contribution::where('contribution_type_id', $contributionType->id)
             ->whereIn('status', ['paid', 'pending', 'partial'])
-            ->when($type->period !== 'once', function($q) use ($year) {
+            ->when($contributionType->period !== 'once', function($q) use ($year) {
                $q->where('payment_period', 'like', "$year%"); 
             })
             ->get()
             ->groupBy('member_id');
             
-        $matrixMembers = $members->map(function($member) use ($contributions, $periods, $type) {
+        $matrixMembers = $members->map(function($member) use ($contributions, $periods, $contributionType) {
             $memberContribs = $contributions->get($member->id, collect());
             $statusByPeriod = [];
             
             foreach ($periods as $p) {
                 $key = $p['key'];
                 
-                // For 'once', we just look if any record exists
-                if ($type->period === 'once') {
+                if ($contributionType->period === 'once') {
                      $c = $memberContribs->first();
                 } else {
                      $c = $memberContribs->firstWhere('payment_period', $key);
@@ -779,14 +789,34 @@ class ContributionController extends Controller
         });
 
         return Inertia::render('Contributions/Monitoring/Matrix', [
-            'contributionTypes' => $types,
+            'type' => $contributionType,
             'years' => $years,
-            'filters' => ['type_id' => (int)$selectedTypeId, 'year' => $year],
+            'filters' => ['year' => $year],
             'matrixData' => [
-                'type' => $type,
                 'periods' => $periods,
                 'members' => $matrixMembers,
             ],
+        ]);
+    }
+    
+    public function monitoringHistory(Request $request, ContributionType $contributionType) {
+        $query = Contribution::with(['member'])
+            ->where('contribution_type_id', $contributionType->id)
+            ->latest();
+
+        if ($request->input('search')) {
+            $search = $request->input('search');
+            $query->whereHas('member', function($q) use ($search) {
+                $q->where('full_name', 'like', "%{$search}%")
+                  ->orWhere('member_code', 'like', "%{$search}%");
+            });
+        }
+        
+        return Inertia::render('Contributions/Index', [
+             'contributions' => $query->paginate(15)->withQueryString(),
+             'filters' => $request->only(['search']),
+             'context' => 'admin-history', // Tell Index.vue to act as admin history
+             'type' => $contributionType,
         ]);
     }
     public function exportMatrix(Request $request)
