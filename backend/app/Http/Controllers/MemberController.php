@@ -210,15 +210,16 @@ class MemberController extends Controller
 
         // Load contribution history with type information
         $contributions = $member->contributions()
-            ->with('contributionType')
+            ->with('type')
             ->latest()
             ->get()
             ->map(function ($contribution) {
                 return [
                     'id' => $contribution->id,
-                    'type_name' => $contribution->contributionType->name ?? '-',
+                    'type_name' => $contribution->type->name ?? '-',
                     'amount' => $contribution->amount,
                     'payment_date' => $contribution->payment_date,
+                    'payment_period' => $contribution->payment_period,
                     'payment_method' => $contribution->payment_method,
                     'status' => $contribution->status,
                     'notes' => $contribution->notes,

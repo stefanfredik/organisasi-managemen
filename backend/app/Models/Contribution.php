@@ -19,6 +19,7 @@ class Contribution extends Model
         'amount',
         'payment_date',
         'payment_period',
+        'payment_method',
         'status',
         'receipt_path',
         'notes',

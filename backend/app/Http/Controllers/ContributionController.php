@@ -12,21 +12,74 @@ use Illuminate\Support\Facades\DB;
 
 class ContributionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $query = Contribution::with(['member' => function ($query) {
             $query->withTrashed();
         }, 'type', 'wallet', 'verifier']);
 
-        if (auth()->user()->role === 'member') {
-            $query->where('member_id', auth()->user()->member->id);
+        if (in_array(auth()->user()->role, ['member', 'anggota'])) {
+            $member = Member::where('user_id', auth()->id())->first();
+            if ($member) {
+                $query->where('member_id', $member->id);
+            } else {
+                // If no linked member, show empty list for safety
+                $query->whereRaw('1 = 0');
+            }
+        } else {
+            if ($request->filled('search')) {
+                $search = $request->input('search');
+                $query->whereHas('member', function ($q) use ($search) {
+                    $q->where('full_name', 'like', '%' . $search . '%')
+                        ->orWhere('member_code', 'like', '%' . $search . '%');
+                });
+            }
+            if ($request->filled('contribution_type_id')) {
+                $query->where('contribution_type_id', $request->input('contribution_type_id'));
+            }
+            if ($request->filled('status')) {
+                $query->where('status', $request->input('status'));
+            }
+            if ($request->filled('payment_method')) {
+                $query->where('payment_method', $request->input('payment_method'));
+            }
+            if ($request->filled('wallet_id')) {
+                $query->where('wallet_id', $request->input('wallet_id'));
+            }
+            if ($request->filled('payment_period')) {
+                $query->where('payment_period', $request->input('payment_period'));
+            }
+            if ($request->filled('start_date')) {
+                $query->whereDate('payment_date', '>=', $request->input('start_date'));
+            }
+            if ($request->filled('end_date')) {
+                $query->whereDate('payment_date', '<=', $request->input('end_date'));
+            }
+            if ($request->filled('min_amount')) {
+                $query->where('amount', '>=', (float) $request->input('min_amount'));
+            }
+            if ($request->filled('max_amount')) {
+                $query->where('amount', '<=', (float) $request->input('max_amount'));
+            }
         }
 
         return Inertia::render('Contributions/Index', [
-            'contributions' => $query->latest()->paginate(10),
+            'contributions' => $query->latest()->paginate(10)->withQueryString(),
             'types' => ContributionType::where('is_active', true)->get(),
             'wallets' => Wallet::where('is_active', true)->get(),
             'members' => Member::active()->get(['id', 'full_name', 'member_code']),
+            'filters' => [
+                'search' => $request->input('search'),
+                'contribution_type_id' => $request->input('contribution_type_id'),
+                'status' => $request->input('status'),
+                'payment_method' => $request->input('payment_method'),
+                'wallet_id' => $request->input('wallet_id'),
+                'payment_period' => $request->input('payment_period'),
+                'start_date' => $request->input('start_date'),
+                'end_date' => $request->input('end_date'),
+                'min_amount' => $request->input('min_amount'),
+                'max_amount' => $request->input('max_amount'),
+            ],
         ]);
     }
 
@@ -82,24 +135,47 @@ class ContributionController extends Controller
 
     public function store(Request $request)
     {
+        $userRole = auth()->user()->role;
         $validated = $request->validate([
-            'member_id' => 'required|exists:members,id',
+            'member_id' => in_array($userRole, ['member', 'anggota']) ? 'nullable|exists:members,id' : 'required|exists:members,id',
             'contribution_type_id' => 'required|exists:contribution_types,id',
             'amount' => 'required|numeric|min:0',
             'payment_date' => 'required|date',
             'payment_period' => 'nullable|string',
+            'payment_method' => 'nullable|in:transfer,cash',
+            'wallet_id' => 'nullable|exists:wallets,id',
             'notes' => 'nullable|string',
             'receipt' => 'nullable|image|max:2048',
         ]);
 
+        if (in_array($userRole, ['member', 'anggota'])) {
+            $member = Member::where('user_id', auth()->id())->first();
+            if (!$member) {
+                return redirect()->back()->with('error', 'Akun anggota Anda belum terhubung ke data Member. Silakan hubungi admin.');
+            }
+            $validated['member_id'] = $member->id;
+        }
+
         // Get wallet from contribution type
         $contributionType = ContributionType::findOrFail($validated['contribution_type_id']);
 
-        if (!$contributionType->wallet_id) {
-            return redirect()->back()->with('error', 'Jenis iuran ini belum memiliki dompet tujuan. Silakan hubungi administrator.');
+        if ($contributionType->wallet_id) {
+            $validated['wallet_id'] = $contributionType->wallet_id;
+        } else {
+            // Allow admin/treasurer to choose wallet when type is not linked
+            if (in_array(auth()->user()->role, ['admin', 'bendahara']) && $request->wallet_id) {
+                $validated['wallet_id'] = $request->wallet_id;
+            } else {
+                return redirect()->back()->with('error', 'Jenis iuran ini belum memiliki dompet tujuan. Silakan hubungi administrator.');
+            }
         }
 
-        $validated['wallet_id'] = $contributionType->wallet_id;
+        // Force member/anggota to transfer method; allow admin/treasurer choice
+        if (in_array($userRole, ['member', 'anggota'])) {
+            $validated['payment_method'] = 'transfer';
+        } else {
+            $validated['payment_method'] = $validated['payment_method'] ?? 'cash';
+        }
 
         if ($request->hasFile('receipt')) {
             $validated['receipt_path'] = $request->file('receipt')->store('receipts', 'public');
@@ -135,6 +211,47 @@ class ContributionController extends Controller
         return redirect()->back()->with('success', 'Status pembayaran berhasil diperbarui.');
     }
 
+    public function update(Request $request, Contribution $contribution)
+    {
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0',
+            'payment_date' => 'required|date',
+            'payment_period' => 'nullable|string',
+            'payment_method' => 'required|in:transfer,cash',
+            'notes' => 'nullable|string',
+            'receipt' => 'nullable|image|max:2048',
+        ]);
+
+        $oldAmount = $contribution->amount;
+
+        $receiptPath = $contribution->receipt_path;
+        if ($request->hasFile('receipt')) {
+            $receiptPath = $request->file('receipt')->store('receipts', 'public');
+        }
+
+        DB::transaction(function () use ($validated, $contribution, $oldAmount, $receiptPath) {
+            if ($contribution->status === 'paid' && $contribution->wallet) {
+                $diff = $validated['amount'] - $oldAmount;
+                if ($diff > 0) {
+                    $contribution->wallet->increment('balance', $diff);
+                } elseif ($diff < 0) {
+                    $contribution->wallet->decrement('balance', abs($diff));
+                }
+            }
+
+            $contribution->update([
+                'amount' => $validated['amount'],
+                'payment_date' => $validated['payment_date'],
+                'payment_period' => $validated['payment_period'] ?? null,
+                'payment_method' => $validated['payment_method'],
+                'notes' => $validated['notes'] ?? null,
+                'receipt_path' => $receiptPath,
+            ]);
+        });
+
+        return redirect()->back()->with('success', 'Data iuran berhasil diperbarui.');
+    }
+
     public function destroy(Contribution $contribution)
     {
         DB::transaction(function () use ($contribution) {
@@ -145,5 +262,70 @@ class ContributionController extends Controller
         });
 
         return redirect()->back()->with('success', 'Data pembayaran berhasil dihapus.');
+    }
+
+    public function storeBulk(Request $request)
+    {
+        $userRole = auth()->user()->role;
+        $validated = $request->validate([
+            'member_ids' => 'required|array|min:1',
+            'member_ids.*' => 'exists:members,id',
+            'contribution_type_id' => 'required|exists:contribution_types,id',
+            'amount' => 'required|numeric|min:0',
+            'payment_date' => 'required|date',
+            'payment_period' => 'nullable|string',
+            'periods' => 'nullable|array',
+            'periods.*' => 'string',
+            'payment_method' => 'nullable|in:transfer,cash',
+            'wallet_id' => 'nullable|exists:wallets,id',
+            'notes' => 'nullable|string',
+            'receipt' => 'nullable|image|max:2048',
+        ]);
+
+        $contributionType = ContributionType::findOrFail($validated['contribution_type_id']);
+
+        if (!$contributionType->wallet_id) {
+            // Allow admin/treasurer to choose wallet for bulk when type not linked
+            if (!(in_array(auth()->user()->role, ['admin', 'bendahara']) && $request->wallet_id)) {
+                return redirect()->back()->with('error', 'Jenis iuran ini belum memiliki dompet tujuan. Silakan pilih dompet atau hubungi administrator.');
+            }
+        }
+
+        $receiptPath = null;
+        if ($request->hasFile('receipt')) {
+            $receiptPath = $request->file('receipt')->store('receipts', 'public');
+        }
+
+        $periods = $validated['periods'] ?? [$validated['payment_period'] ?? null];
+
+        DB::transaction(function () use ($validated, $contributionType, $receiptPath, $periods) {
+            foreach ($validated['member_ids'] as $memberId) {
+                foreach ($periods as $period) {
+                    if ($period !== null) {
+                        $alreadyPaid = Contribution::where('member_id', $memberId)
+                            ->where('contribution_type_id', $validated['contribution_type_id'])
+                            ->where('payment_period', $period)
+                            ->where('status', 'paid')
+                            ->exists();
+                        if ($alreadyPaid) {
+                            continue;
+                        }
+                    }
+                    Contribution::create([
+                        'member_id' => $memberId,
+                        'contribution_type_id' => $validated['contribution_type_id'],
+                        'amount' => $validated['amount'],
+                        'payment_date' => $validated['payment_date'],
+                        'payment_period' => $period,
+                        'payment_method' => in_array($userRole, ['admin', 'bendahara']) ? ($validated['payment_method'] ?? 'cash') : 'transfer',
+                        'notes' => $validated['notes'] ?? null,
+                        'receipt_path' => $receiptPath,
+                        'wallet_id' => $contributionType->wallet_id ?? $validated['wallet_id'],
+                    ]);
+                }
+            }
+        });
+
+        return redirect()->back()->with('success', 'Pembayaran iuran massal berhasil dicatat untuk anggota terpilih. Menunggu verifikasi.');
     }
 }

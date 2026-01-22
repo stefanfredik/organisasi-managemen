@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed } from 'vue';
-import { Head, useForm, Link, usePage } from '@inertiajs/vue3';
+import { ref, computed, watch } from 'vue';
+import { Head, useForm, Link, usePage, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Modal from '@/Components/Modal.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
@@ -8,6 +8,8 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
+import SearchBar from '@/Components/SearchBar.vue';
+import FilterDropdown from '@/Components/FilterDropdown.vue';
 import axios from 'axios';
 
 const props = defineProps({
@@ -23,26 +25,115 @@ const isAdminOrTreasurer = computed(() => ['admin', 'bendahara'].includes(user.v
 
 const showCreateModal = ref(false);
 const showVerifyModal = ref(false);
+const showEditModal = ref(false);
+const showFiltersModal = ref(false);
+const showFiltersDropdown = ref(false);
 const selectedContribution = ref(null);
 const filteredMembers = ref([]);
+const payAllUnpaid = ref(false);
+const periodsCount = ref(1);
+const generatedPeriods = ref([]);
 
+const filters = ref({
+    search: page.props.filters?.search || '',
+    contribution_type_id: page.props.filters?.contribution_type_id || '',
+    status: page.props.filters?.status || '',
+    payment_method: page.props.filters?.payment_method || '',
+    wallet_id: page.props.filters?.wallet_id || '',
+    payment_period: page.props.filters?.payment_period || '',
+    start_date: page.props.filters?.start_date || '',
+    end_date: page.props.filters?.end_date || '',
+    min_amount: page.props.filters?.min_amount || '',
+    max_amount: page.props.filters?.max_amount || '',
+});
+
+const statusOptions = [
+    { value: 'pending', label: 'Pending' },
+    { value: 'paid', label: 'Dibayar' },
+    { value: 'rejected', label: 'Ditolak' },
+];
+const paymentMethodOptions = [
+    { value: 'transfer', label: 'Transfer' },
+    { value: 'cash', label: 'Cash' },
+];
+const typeOptions = computed(() => (props.types || []).map(t => ({ value: String(t.id), label: t.name })));
+const walletOptions = computed(() => (props.wallets || []).map(w => ({ value: String(w.id), label: w.name })));
+
+const applyFilters = () => {
+    const params = { ...filters.value };
+    Object.keys(params).forEach(k => {
+        if (params[k] === '' || params[k] === null) delete params[k];
+    });
+    router.get(route('contributions.index'), params, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+    });
+};
+
+const resetFilters = () => {
+    filters.value = {
+        search: '',
+        contribution_type_id: '',
+        status: '',
+        payment_method: '',
+        wallet_id: '',
+        payment_period: '',
+        start_date: '',
+        end_date: '',
+        min_amount: '',
+        max_amount: '',
+    };
+    applyFilters();
+};
+
+let filtersDebounce = null;
+watch(filters, () => {
+    if (!isAdminOrTreasurer.value) return;
+    if (filtersDebounce) clearTimeout(filtersDebounce);
+    filtersDebounce = setTimeout(() => applyFilters(), 300);
+}, { deep: true });
 const form = useForm({
     member_id: user.value.role === 'anggota' ? user.value.member?.id : '',
     contribution_type_id: '',
     amount: '',
     payment_date: new Date().toISOString().split('T')[0],
     payment_period: '',
+    payment_method: 'transfer',
+    wallet_id: '',
     notes: '',
     receipt: null,
+    member_ids: [],
+    periods: [],
 });
 
 const verifyForm = useForm({
     status: 'paid',
 });
 
+const editForm = useForm({
+    amount: '',
+    payment_date: '',
+    payment_period: '',
+    payment_method: 'transfer',
+    notes: '',
+    receipt: null,
+});
+
 const openVerifyModal = (contribution) => {
     selectedContribution.value = contribution;
     showVerifyModal.value = true;
+};
+
+const openEditModal = (contribution) => {
+    selectedContribution.value = contribution;
+    editForm.amount = contribution.amount;
+    editForm.payment_date = contribution.payment_date;
+    editForm.payment_period = contribution.payment_period || makePeriod(contribution.type?.period, contribution.payment_date);
+    editForm.payment_method = contribution.payment_method || 'transfer';
+    editForm.notes = contribution.notes || '';
+    editForm.receipt = null;
+    showEditModal.value = true;
 };
 
 const submitVerify = () => {
@@ -54,14 +145,65 @@ const submitVerify = () => {
     });
 };
 
-const submitCreate = () => {
-    form.post(route('contributions.store'), {
+const onEditPaymentDateChange = () => {
+    const period = selectedContribution.value?.type?.period;
+    editForm.payment_period = makePeriod(period, editForm.payment_date);
+};
+
+const submitEdit = () => {
+    editForm.put(route('contributions.update', selectedContribution.value.id), {
         onSuccess: () => {
-            showCreateModal.value = false;
-            form.reset();
-            filteredMembers.value = [];
+            showEditModal.value = false;
+            selectedContribution.value = null;
+            editForm.reset();
         },
     });
+};
+
+const submitCreate = () => {
+    const type = props.types.find(t => t.id == form.contribution_type_id);
+    const isRecurring = type && type.period && type.period !== 'once';
+    form.periods = isRecurring ? generatedPeriods.value : [];
+
+    // Ensure member id stays set for anggota
+    if (!isAdminOrTreasurer.value) {
+        form.member_id = user.value.member?.id;
+    }
+
+    if (isAdminOrTreasurer.value && payAllUnpaid.value) {
+        form.member_ids = filteredMembers.value.map(m => m.id);
+        form.post(route('contributions.bulk-store'), {
+            onSuccess: () => {
+                showCreateModal.value = false;
+                form.reset();
+                filteredMembers.value = [];
+                payAllUnpaid.value = false;
+                generatedPeriods.value = [];
+                periodsCount.value = 1;
+            },
+        });
+    } else if (isRecurring && generatedPeriods.value.length > 1) {
+        form.member_ids = form.member_id ? [form.member_id] : [];
+        form.post(route('contributions.bulk-store'), {
+            onSuccess: () => {
+                showCreateModal.value = false;
+                form.reset();
+                filteredMembers.value = [];
+                generatedPeriods.value = [];
+                periodsCount.value = 1;
+            },
+        });
+    } else {
+        form.post(route('contributions.store'), {
+            onSuccess: () => {
+                showCreateModal.value = false;
+                form.reset();
+                filteredMembers.value = [];
+                generatedPeriods.value = [];
+                periodsCount.value = 1;
+            },
+        });
+    }
 };
 
 const onContributionTypeChange = async (e) => {
@@ -78,10 +220,15 @@ const onContributionTypeChange = async (e) => {
         
         // Auto-generate payment period for recurring contributions
         updatePaymentPeriod(type.period, form.payment_date);
+        updateGeneratedPeriods(type.period, form.payment_date, periodsCount.value);
     }
     
-    // Reset member selection
-    form.member_id = '';
+    // Reset member selection only for admin/bendahara. Keep member id for anggota.
+    if (isAdminOrTreasurer.value) {
+        form.member_id = '';
+    } else {
+        form.member_id = user.value.member?.id || form.member_id;
+    }
     
     // Wait for Vue to update the reactive state before fetching
     await new Promise(resolve => setTimeout(resolve, 0));
@@ -99,6 +246,7 @@ const onPaymentDateChange = () => {
     const type = props.types.find(t => t.id == form.contribution_type_id);
     if (type) {
         updatePaymentPeriod(type.period, form.payment_date);
+        updateGeneratedPeriods(type.period, form.payment_date, periodsCount.value);
         // Re-fetch unpaid members when period changes
         fetchUnpaidMembers();
     }
@@ -140,6 +288,80 @@ const updatePaymentPeriod = (period, date) => {
     console.log(`Payment period generated: ${form.payment_period} (period: ${period}, date: ${date})`);
 };
 
+const makePeriod = (period, date) => {
+    if (!date || period === 'once') return '';
+    const paymentDate = new Date(date);
+    const year = paymentDate.getFullYear();
+    const month = String(paymentDate.getMonth() + 1).padStart(2, '0');
+    const day = String(paymentDate.getDate()).padStart(2, '0');
+    switch (period) {
+        case 'monthly':
+            return `${year}-${month}`;
+        case 'yearly':
+            return `${year}`;
+        case 'weekly': {
+            const firstDayOfYear = new Date(year, 0, 1);
+            const pastDaysOfYear = (paymentDate - firstDayOfYear) / 86400000;
+            const weekNumber = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+            return `${year}-W${String(weekNumber).padStart(2, '0')}`;
+        }
+        case 'daily':
+            return `${year}-${month}-${day}`;
+        default:
+            return '';
+    }
+};
+
+const isTypePaidForCurrentPeriod = (type) => {
+    if (user.value.role !== 'anggota') return false;
+    const today = new Date().toISOString().split('T')[0];
+    const periodKey = makePeriod(type.period, today);
+    const myId = user.value.member?.id;
+    if (!myId) return false;
+    return (props.contributions?.data || []).some(c => {
+        const sameType = c.contribution_type_id === type.id || c.type?.id === type.id;
+        const sameMember = c.member_id === myId;
+        const isPaid = c.status === 'paid';
+        if (!sameType || !sameMember || !isPaid) return false;
+        if (type.period === 'once') return true;
+        return c.payment_period === periodKey;
+    });
+};
+
+const updateGeneratedPeriods = (period, date, count) => {
+    generatedPeriods.value = [];
+    if (!period || period === 'once' || !date || count <= 0) return;
+    const start = new Date(date);
+    for (let i = 0; i < count; i++) {
+        const d = new Date(start);
+        if (period === 'monthly') {
+            d.setMonth(start.getMonth() + i);
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            generatedPeriods.value.push(`${y}-${m}`);
+        } else if (period === 'yearly') {
+            d.setFullYear(start.getFullYear() + i);
+            const y = d.getFullYear();
+            generatedPeriods.value.push(`${y}`);
+        } else if (period === 'weekly') {
+            const d2 = new Date(start);
+            d2.setDate(start.getDate() + i * 7);
+            const y = d2.getFullYear();
+            const firstDayOfYear = new Date(y, 0, 1);
+            const pastDaysOfYear = (d2 - firstDayOfYear) / 86400000;
+            const weekNumber = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+            generatedPeriods.value.push(`${y}-W${String(weekNumber).padStart(2, '0')}`);
+        } else if (period === 'daily') {
+            d.setDate(start.getDate() + i);
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            generatedPeriods.value.push(`${y}-${m}-${day}`);
+        }
+    }
+    console.log('Generated periods:', generatedPeriods.value);
+};
+
 const fetchUnpaidMembers = async () => {
     const typeId = form.contribution_type_id;
     
@@ -172,9 +394,14 @@ const formatCurrency = (amount) => {
 };
 
 const openPayForType = async (type) => {
+    if (user.value.role === 'anggota' && !type.wallet_id) {
+        return;
+    }
     form.contribution_type_id = String(type.id);
     form.amount = type.amount;
     updatePaymentPeriod(type.period, form.payment_date);
+    periodsCount.value = 1;
+    updateGeneratedPeriods(type.period, form.payment_date, periodsCount.value);
     await fetchUnpaidMembers();
     showCreateModal.value = true;
 };
@@ -239,7 +466,13 @@ const statusLabels = {
                                     <p class="text-base font-black text-indigo-600">{{ formatCurrency(type.amount) }}</p>
                                 </div>
                                 <div class="mt-4">
-                                    <button type="button" @click="openPayForType(type)"
+                                    <div v-if="isTypePaidForCurrentPeriod(type) && user.role === 'anggota'" class="w-full px-4 py-2.5 rounded-xl text-sm font-black uppercase tracking-widest text-green-700 bg-green-50 border border-green-200 text-center">
+                                        Sudah dibayarkan untuk periode ini
+                                    </div>
+                                    <div v-else-if="user.role === 'anggota' && !type.wallet_id" class="w-full px-4 py-2.5 rounded-xl text-sm font-black uppercase tracking-widest text-amber-700 bg-amber-50 border border-amber-200 text-center">
+                                        Belum tersedia dompet tujuan
+                                    </div>
+                                    <button v-else type="button" @click="openPayForType(type)"
                                         class="w-full px-4 py-2.5 rounded-xl text-sm font-black uppercase tracking-widest text-white bg-gray-900 hover:bg-gray-800 transition">
                                         Bayar Iuran Ini
                                     </button>
@@ -253,9 +486,131 @@ const statusLabels = {
                 </div>
                 <!-- Data Table -->
                 <div class="bg-white overflow-hidden shadow-sm rounded-xl">
-                    <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest">Daftar Pembayaran</h3>
+                    <div class="p-6 border-b border-gray-100 bg-gray-50/50">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest">Daftar Pembayaran</h3>
+                            <div v-if="isAdminOrTreasurer" class="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-700 transition hover:bg-gray-50"
+                                    @click="showFiltersDropdown = !showFiltersDropdown"
+                                    title="Dropdown"
+                                >
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                                    </svg>
+                                    Dropdown
+                                </button>
+                                <button
+                                    type="button"
+                                    class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-700 transition hover:bg-gray-50"
+                                    @click="showFiltersModal = true"
+                                    title="Popup"
+                                >
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                                    </svg>
+                                    Popup
+                                </button>
+                            </div>
+                        </div>
+                        <div v-if="isAdminOrTreasurer" class="mt-4">
+                            <div class="max-w-md">
+                                <SearchBar
+                                    v-model="filters.search"
+                                    placeholder="Cari nama, kode anggota, atau catatan..."
+                                />
+                            </div>
+                        </div>
+                        <div v-if="showFiltersDropdown" class="fixed inset-0 z-40" @click="showFiltersDropdown = false"></div>
+                        <div v-if="showFiltersDropdown && isAdminOrTreasurer" class="relative">
+                            <div class="absolute right-6 top-6 z-50 w-80 rounded-xl border border-gray-200 bg-white shadow-xl overflow-hidden">
+                                <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+                                    <span class="text-[10px] font-bold uppercase tracking-widest text-gray-500">Filters</span>
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center justify-center rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-indigo-600 hover:text-indigo-700"
+                                        @click="resetFilters"
+                                    >
+                                        Reset
+                                    </button>
+                                </div>
+                                <div class="p-4 space-y-4">
+                                    <div class="space-y-2">
+                                        <InputLabel value="Jenis Iuran" class="text-[10px] font-bold uppercase text-gray-500" />
+                                        <FilterDropdown v-model="filters.contribution_type_id" :options="typeOptions" label="Semua Jenis" />
+                                    </div>
+                                    <div class="space-y-2">
+                                        <InputLabel value="Status" class="text-[10px] font-bold uppercase text-gray-500" />
+                                        <FilterDropdown v-model="filters.status" :options="statusOptions" label="Semua Status" />
+                                    </div>
+                                    <div class="space-y-2">
+                                        <InputLabel value="Metode" class="text-[10px] font-bold uppercase text-gray-500" />
+                                        <FilterDropdown v-model="filters.payment_method" :options="paymentMethodOptions" label="Semua Metode" />
+                                    </div>
+                                    <div class="space-y-2">
+                                        <InputLabel value="Dompet" class="text-[10px] font-bold uppercase text-gray-500" />
+                                        <FilterDropdown v-model="filters.wallet_id" :options="walletOptions" label="Semua Dompet" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
+                    <Modal :show="showFiltersModal" @close="showFiltersModal = false" maxWidth="2xl">
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-sm font-bold text-gray-700 uppercase tracking-widest">Filter Iuran</h3>
+                                <button
+                                    type="button"
+                                    class="inline-flex items-center justify-center rounded-md px-2 py-1 text-xs text-gray-500 hover:text-gray-700"
+                                    @click="showFiltersModal = false"
+                                >
+                                    Tutup
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="space-y-2">
+                                    <InputLabel value="Jenis Iuran" class="text-[10px] font-bold uppercase text-gray-500" />
+                                    <FilterDropdown v-model="filters.contribution_type_id" :options="typeOptions" label="Semua Jenis" />
+                                </div>
+                                <div class="space-y-2">
+                                    <InputLabel value="Status" class="text-[10px] font-bold uppercase text-gray-500" />
+                                    <FilterDropdown v-model="filters.status" :options="statusOptions" label="Semua Status" />
+                                </div>
+                                <div class="space-y-2">
+                                    <InputLabel value="Metode" class="text-[10px] font-bold uppercase text-gray-500" />
+                                    <FilterDropdown v-model="filters.payment_method" :options="paymentMethodOptions" label="Semua Metode" />
+                                </div>
+                                <div class="space-y-2">
+                                    <InputLabel value="Dompet" class="text-[10px] font-bold uppercase text-gray-500" />
+                                    <FilterDropdown v-model="filters.wallet_id" :options="walletOptions" label="Semua Dompet" />
+                                </div>
+                                <div class="space-y-2">
+                                    <InputLabel value="Periode" class="text-[10px] font-bold uppercase text-gray-500" />
+                                    <input v-model="filters.payment_period" type="text" placeholder="YYYY-MM atau YYYY" class="block w-full py-2 px-3 text-sm border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                                </div>
+                                <div class="space-y-2">
+                                    <InputLabel value="Tanggal Bayar" class="text-[10px] font-bold uppercase text-gray-500" />
+                                    <div class="flex gap-2">
+                                        <input v-model="filters.start_date" type="date" class="block flex-1 w-full py-2 px-3 text-sm border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                                        <input v-model="filters.end_date" type="date" class="block flex-1 w-full py-2 px-3 text-sm border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                                    </div>
+                                </div>
+                                <div class="space-y-2">
+                                    <InputLabel value="Nominal" class="text-[10px] font-bold uppercase text-gray-500" />
+                                    <div class="flex gap-2">
+                                        <input v-model="filters.min_amount" type="number" placeholder="Min" class="block flex-1 w-full py-2 px-3 text-sm border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                                        <input v-model="filters.max_amount" type="number" placeholder="Max" class="block flex-1 w-full py-2 px-3 text-sm border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-6 flex justify-end gap-2">
+                                <SecondaryButton @click="resetFilters" class="px-4 py-2 rounded-md">Reset</SecondaryButton>
+                                <PrimaryButton @click="applyFilters" class="px-4 py-2 rounded-md">Terapkan</PrimaryButton>
+                            </div>
+                        </div>
+                    </Modal>
 
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
@@ -264,6 +619,7 @@ const statusLabels = {
                                     <th v-if="isAdminOrTreasurer" class="px-6 py-4 text-left">Anggota</th>
                                     <th class="px-6 py-4 text-left">Jenis Iuran</th>
                                     <th class="px-6 py-4 text-left">Tanggal Bayar</th>
+                                    <th class="px-6 py-4 text-left">Periode</th>
                                     <th class="px-6 py-4 text-left">Jumlah</th>
                                     <th class="px-6 py-4 text-left">Status</th>
                                     <th class="px-6 py-4 text-right">Aksi</th>
@@ -279,7 +635,10 @@ const statusLabels = {
                                         <div class="text-sm font-bold text-gray-700">{{ contribution.type.name }}</div>
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-500 font-bold">
-                                        {{ new Date(contribution.payment_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) }}
+                                        {{ contribution.payment_date ? new Date(contribution.payment_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-' }}
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-500 font-bold">
+                                        {{ contribution.payment_period || '-' }}
                                     </td>
                                     <td class="px-6 py-4 text-sm font-black text-indigo-600">
                                         {{ formatCurrency(contribution.amount) }}
@@ -300,11 +659,14 @@ const statusLabels = {
                                             <button v-if="isAdminOrTreasurer && contribution.status === 'pending' && hasPermission('manage_contributions')" @click="openVerifyModal(contribution)" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md shadow-indigo-100 hover:bg-indigo-700 transition">
                                                 Verifikasi
                                             </button>
+                                            <button v-if="isAdminOrTreasurer && contribution.status === 'paid' && hasPermission('manage_contributions')" @click="openEditModal(contribution)" class="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition">
+                                                Ubah
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
                                 <tr v-if="contributions.data.length === 0">
-                                    <td colspan="6" class="px-6 py-12 text-center text-gray-500 italic font-medium">Belum ada riwayat pembayaran iuran.</td>
+                                    <td :colspan="isAdminOrTreasurer ? 7 : 6" class="px-6 py-12 text-center text-gray-500 italic font-medium">Belum ada riwayat pembayaran iuran.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -313,10 +675,17 @@ const statusLabels = {
                     <!-- Pagination -->
                     <div v-if="contributions.links.length > 3" class="px-6 py-4 border-t border-gray-100 flex justify-center">
                         <div class="flex flex-wrap gap-1">
-                            <Link v-for="(link, index) in contributions.links" :key="index" :href="link.url" 
-                                class="px-4 py-2 text-[10px] font-black rounded-lg transition uppercase tracking-tighter"
-                                :class="[link.active ? 'bg-indigo-600 text-white shadow-md' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100', !link.url ? 'opacity-30 cursor-not-allowed' : '']"
-                                v-html="link.label" />
+                            <template v-for="(link, index) in contributions.links" :key="index">
+                                <span v-if="!link.url"
+                                    class="px-4 py-2 text-[10px] font-black rounded-lg uppercase tracking-tighter bg-white text-gray-400 border border-gray-100 opacity-50 cursor-not-allowed"
+                                    v-html="link.label" />
+                                <Link v-else
+                                    :href="link.url"
+                                    :preserve-scroll="true"
+                                    class="px-4 py-2 text-[10px] font-black rounded-lg transition uppercase tracking-tighter"
+                                    :class="link.active ? 'bg-indigo-600 text-white shadow-md' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'"
+                                    v-html="link.label" />
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -356,9 +725,15 @@ const statusLabels = {
                         <!-- Member Selection (Filtered) -->
                         <div v-if="form.contribution_type_id && isAdminOrTreasurer">
                             <InputLabel value="Pilih Anggota" class="text-xs font-bold uppercase text-gray-500 mb-3" />
+                            <div class="flex items-center justify-between mb-3">
+                                <label class="flex items-center gap-2 text-xs font-bold text-gray-600">
+                                    <input type="checkbox" v-model="payAllUnpaid" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                    Bayar untuk semua anggota yang belum membayar
+                                </label>
+                            </div>
                             <select v-model="form.member_id" 
                                 class="w-full px-4 py-3 border-2 border-indigo-100 rounded-xl text-sm font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition bg-white" 
-                                required>
+                                :required="!payAllUnpaid" :disabled="payAllUnpaid">
                                 <option value="">-- Cari Nama/Kode Anggota --</option>
                                 <option v-for="member in filteredMembers" :key="member.id" :value="member.id">
                                     {{ member.full_name }} ({{ member.member_code }})
@@ -374,7 +749,7 @@ const statusLabels = {
                         </div>
 
                         <!-- Date and Amount -->
-                        <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <InputLabel value="Tanggal Bayar" class="text-xs font-bold uppercase text-gray-500 mb-3" />
                                 <input type="date" v-model="form.payment_date" @change="onPaymentDateChange" required
@@ -387,6 +762,54 @@ const statusLabels = {
                                 <InputError class="mt-2" :message="form.errors.amount" />
                             </div>
                         </div>
+
+                        <!-- Payment Method -->
+                        <div v-if="isAdminOrTreasurer">
+                            <InputLabel value="Metode Pembayaran" class="text-xs font-bold uppercase text-gray-500 mb-3" />
+                            <select v-model="form.payment_method" required
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition bg-white">
+                                <option value="transfer">Transfer</option>
+                                <option value="cash">Cash</option>
+                            </select>
+                            <InputError class="mt-2" :message="form.errors.payment_method" />
+                        </div>
+
+                        <!-- Wallet Selection (only if type has no wallet) -->
+                        <div v-if="isAdminOrTreasurer && form.contribution_type_id && !types.find(t => t.id == form.contribution_type_id)?.wallet_id">
+                            <InputLabel value="Pilih Dompet Tujuan" class="text-xs font-bold uppercase text-gray-500 mb-3" />
+                            <select v-model="form.wallet_id" required
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition bg-white">
+                                <option value="">-- Pilih Dompet --</option>
+                                <option v-for="w in wallets" :key="w.id" :value="w.id">
+                                    {{ w.name }}
+                                </option>
+                            </select>
+                            <p class="mt-2 text-xs text-amber-600 italic">Jenis iuran belum terhubung ke dompet. Silakan pilih dompet tujuan.</p>
+                            <InputError class="mt-2" :message="form.errors.wallet_id" />
+                        </div>
+
+                    <!-- Periods Count for Recurring -->
+                    <div v-if="form.contribution_type_id && props.types.find(t => t.id == form.contribution_type_id)?.period !== 'once'">
+                        <InputLabel value="Jumlah Periode" class="text-xs font-bold uppercase text-gray-500 mb-3" />
+                        <div class="grid grid-cols-2 gap-4 items-end">
+                            <div>
+                                <input type="number" min="1" v-model.number="periodsCount" @change="updateGeneratedPeriods(props.types.find(t => t.id == form.contribution_type_id)?.period, form.payment_date, periodsCount)"
+                                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs font-bold uppercase text-gray-500">Total Nominal</p>
+                                <p class="text-sm font-black text-indigo-600">{{ formatCurrency((generatedPeriods.length || 1) * (Number(form.amount) || 0)) }}</p>
+                            </div>
+                        </div>
+                        <div v-if="generatedPeriods.length" class="mt-3 p-3 border border-gray-200 rounded-xl bg-gray-50">
+                            <p class="text-[10px] uppercase font-bold text-gray-500 mb-2">Periode yang akan dibayar</p>
+                            <div class="flex flex-wrap gap-2">
+                                <span v-for="p in generatedPeriods" :key="p" class="px-2 py-1 rounded-lg text-[11px] font-bold uppercase tracking-widest bg-indigo-50 text-indigo-600 border border-indigo-200">
+                                    {{ p }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
 
                         <!-- Payment Period (for recurring contributions) -->
                         <div v-if="form.payment_period" class="bg-indigo-50 border-2 border-indigo-100 rounded-xl p-4">
@@ -496,6 +919,93 @@ const statusLabels = {
                     <div class="flex justify-end gap-3 font-bold pt-4 border-t border-gray-50">
                         <SecondaryButton @click="showVerifyModal = false" class="px-8 py-3 rounded-xl border-0"> Batal </SecondaryButton>
                         <PrimaryButton :class="{ 'opacity-25': verifyForm.processing }" :disabled="verifyForm.processing" class="px-10 py-4 rounded-2xl shadow-xl shadow-indigo-100 uppercase tracking-widest text-[10px] font-black">
+                            Simpan Perubahan
+                        </PrimaryButton>
+                    </div>
+                </form>
+            </div>
+        </Modal>
+        
+        <!-- Modal Edit -->
+        <Modal :show="showEditModal" @close="showEditModal = false">
+            <div class="p-8">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-xl font-black text-gray-900 uppercase tracking-tight">Ubah Data Iuran</h2>
+                    <button @click="showEditModal = false" class="text-gray-400 hover:text-gray-600 transition">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div v-if="selectedContribution" class="mb-6 grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-[10px] uppercase font-black text-gray-400 mb-1">Anggota</p>
+                        <p class="text-sm font-black text-gray-900">{{ selectedContribution.member?.full_name || '-' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] uppercase font-black text-gray-400 mb-1">Jenis Iuran</p>
+                        <p class="text-sm font-black text-gray-900">{{ selectedContribution.type?.name || '-' }}</p>
+                    </div>
+                </div>
+
+                <form @submit.prevent="submitEdit" class="space-y-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <InputLabel value="Tanggal Bayar" class="text-xs font-bold uppercase text-gray-500 mb-3" />
+                            <input type="date" v-model="editForm.payment_date" @change="onEditPaymentDateChange" required
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
+                        </div>
+                        <div>
+                            <InputLabel value="Nominal (Rp)" class="text-xs font-bold uppercase text-gray-500 mb-3" />
+                            <input type="number" v-model.number="editForm.amount" required step="0.01"
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm font-black text-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <InputLabel value="Metode Pembayaran" class="text-xs font-bold uppercase text-gray-500 mb-3" />
+                            <select v-model="editForm.payment_method" required
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition bg-white">
+                                <option value="transfer">Transfer</option>
+                                <option value="cash">Cash</option>
+                            </select>
+                        </div>
+                        <div v-if="editForm.payment_period">
+                            <InputLabel value="Periode Pembayaran" class="text-xs font-bold uppercase text-gray-500 mb-3" />
+                            <div class="px-4 py-3 border-2 border-indigo-100 rounded-xl text-sm font-black text-indigo-900 bg-indigo-50">
+                                {{ editForm.payment_period }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <InputLabel value="Catatan" class="text-xs font-bold uppercase text-gray-500 mb-3" />
+                        <textarea v-model="editForm.notes" rows="2"
+                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition resize-none"></textarea>
+                    </div>
+
+                    <div>
+                        <InputLabel value="Perbarui Bukti Bayar (Opsional)" class="text-xs font-bold uppercase text-indigo-600 mb-3" />
+                        <div class="relative border-2 border-dashed border-gray-200 hover:border-indigo-400 rounded-xl p-6 text-center transition cursor-pointer group" @click="$refs.editReceiptInput.click()">
+                            <input ref="editReceiptInput" type="file" @input="editForm.receipt = $event.target.files[0]" accept="image/*" class="hidden" />
+                            <div class="space-y-2">
+                                <svg class="mx-auto h-10 w-10 text-gray-400 group-hover:text-indigo-500 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <div class="text-sm">
+                                    <span v-if="!editForm.receipt" class="font-bold text-indigo-600 group-hover:text-indigo-700">BROWSE...</span>
+                                    <span v-else class="font-bold text-green-600">{{ editForm.receipt.name }}</span>
+                                </div>
+                                <p v-if="!editForm.receipt" class="text-xs text-gray-400">* Maksimal ukuran file 2MB (format gambar).</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-3 font-bold pt-4 border-t border-gray-50">
+                        <SecondaryButton @click="showEditModal = false" class="px-8 py-3 rounded-xl border-0"> Batal </SecondaryButton>
+                        <PrimaryButton :class="{ 'opacity-25': editForm.processing }" :disabled="editForm.processing" class="px-10 py-4 rounded-2xl shadow-xl shadow-indigo-100 uppercase tracking-widest text-[10px] font-black">
                             Simpan Perubahan
                         </PrimaryButton>
                     </div>

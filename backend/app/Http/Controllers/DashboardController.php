@@ -161,7 +161,7 @@ class DashboardController extends Controller
     {
         // Get member's contributions
         $contributions = Contribution::where('member_id', $member->id)
-            ->with('contributionType')
+            ->with('type')
             ->latest()
             ->limit(5)
             ->get();
