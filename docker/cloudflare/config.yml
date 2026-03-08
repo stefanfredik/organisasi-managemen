@@ -1,0 +1,10 @@
+tunnel: f9fe9942-9cd5-4c56-b425-cf2d45f54252
+credentials-file: /etc/cloudflared/credentials.json
+protocol: http2
+
+ingress:
+  - hostname: mbeliling.organisasi.online
+    service: http://nginx:80
+  - hostname: mbeliling.kopiflores.my.id
+    service: http://nginx:80
+  - service: http://nginx:80
