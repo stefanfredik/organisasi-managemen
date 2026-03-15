@@ -5,6 +5,4 @@ protocol: http2
 ingress:
   - hostname: mbeliling.organisasi.online
     service: http://nginx:80
-  - hostname: mbeliling.kopiflores.my.id
-    service: http://nginx:80
-  - service: http://nginx:80
+  - service: http_status:404
