@@ -28,11 +28,11 @@ class DashboardController extends Controller
         
         // Get upcoming events
         $upcomingEvents = Event::query()
-            ->where('status', 'published')
-            ->where('start_date', '>=', now())
+            ->whereIn('status', ['published', 'ongoing'])
+            ->where('start_date', '>=', now()->startOfDay())
             ->orderBy('start_date')
             ->limit(5)
-            ->get();
+            ->get(['id', 'name', 'start_date', 'end_date', 'location', 'status']);
         
         // Get recent announcements
         $recentAnnouncements = Announcement::query()
@@ -53,7 +53,10 @@ class DashboardController extends Controller
         if ($user->role === 'anggota' && $user->member) {
             $personalData = $this->getPersonalData($user->member);
         }
-        
+
+        // Get members with birthdays this week
+        $birthdayMembers = $this->getBirthdayMembers();
+
         return Inertia::render('Dashboard', [
             'stats' => $stats,
             'recentActivities' => $recentActivities,
@@ -61,6 +64,7 @@ class DashboardController extends Controller
             'recentAnnouncements' => $recentAnnouncements,
             'financialSummary' => $financialSummary,
             'personalData' => $personalData,
+            'birthdayMembers' => $birthdayMembers,
         ]);
     }
     
@@ -71,8 +75,8 @@ class DashboardController extends Controller
         // Common stats for all roles
         $stats['totalMembers'] = Member::count();
         $stats['activeMembers'] = Member::where('status', 'active')->count();
-        $stats['upcomingEvents'] = Event::where('status', 'published')
-            ->where('start_date', '>=', now())
+        $stats['upcomingEvents'] = Event::whereIn('status', ['published', 'ongoing'])
+            ->where('start_date', '>=', now()->startOfDay())
             ->count();
         
         // Role-specific stats
@@ -183,5 +187,33 @@ class DashboardController extends Controller
                 ->where('status', 'pending')
                 ->count(),
         ];
+    }
+
+    private function getBirthdayMembers()
+    {
+        $startOfWeek = now()->startOfWeek();
+        $endOfWeek = now()->endOfWeek();
+
+        return Member::where('status', 'active')
+            ->whereNotNull('date_of_birth')
+            ->get(['id', 'full_name', 'date_of_birth', 'photo'])
+            ->filter(function ($member) use ($startOfWeek, $endOfWeek) {
+                $birthday = Carbon::parse($member->date_of_birth)->setYear(now()->year);
+                return $birthday->between($startOfWeek, $endOfWeek);
+            })
+            ->sortBy(function ($member) {
+                return Carbon::parse($member->date_of_birth)->setYear(now()->year);
+            })
+            ->values()
+            ->map(function ($member) {
+                $birthday = Carbon::parse($member->date_of_birth)->setYear(now()->year);
+                return [
+                    'id' => $member->id,
+                    'full_name' => $member->full_name,
+                    'date_of_birth' => $member->date_of_birth,
+                    'photo' => $member->photo,
+                    'is_today' => $birthday->isToday(),
+                ];
+            });
     }
 }

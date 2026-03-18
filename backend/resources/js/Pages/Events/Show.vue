@@ -19,8 +19,20 @@ import {
 } from '@/components/ui/dropdown-menu';
 import {
     Calendar, MapPin, Users, FileText, Camera, ArrowLeft, Pencil, Trash2,
-    X, ChevronLeft, ChevronRight, MoreVertical, Clock, User, Eye, Globe, UserPlus, Upload,
+    X, ChevronLeft, ChevronRight, MoreVertical, Clock, User, Eye, Globe, UserPlus, Upload, Navigation, ExternalLink,
 } from 'lucide-vue-next';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIconImg from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: markerIcon2x,
+    iconUrl: markerIconImg,
+    shadowUrl: markerShadow,
+});
 
 const props = defineProps({
     event: Object,
@@ -63,8 +75,75 @@ const handleKeyDown = (e) => {
     if (e.key === 'Escape') zoomedIndex.value = null;
 };
 
-onMounted(() => window.addEventListener('keydown', handleKeyDown));
-onUnmounted(() => window.removeEventListener('keydown', handleKeyDown));
+onMounted(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    countdownInterval = setInterval(() => { now.value = new Date(); }, 1000);
+});
+onUnmounted(() => {
+    window.removeEventListener('keydown', handleKeyDown);
+    clearInterval(countdownInterval);
+});
+
+const mapContainer = ref(null);
+const mapContainerMobile = ref(null);
+const hasCoordinates = computed(() => props.event.latitude && props.event.longitude);
+const googleMapsUrl = computed(() => {
+    if (!hasCoordinates.value) return '';
+    return `https://www.google.com/maps?q=${props.event.latitude},${props.event.longitude}`;
+});
+
+// Countdown timer
+const now = ref(new Date());
+let countdownInterval = null;
+
+const countdown = computed(() => {
+    const startDate = new Date(props.event.start_date);
+    const endDate = props.event.end_date ? new Date(props.event.end_date) : null;
+    const current = now.value;
+
+    if (endDate && current > endDate) {
+        return { type: 'ended', label: 'Kegiatan telah selesai' };
+    }
+    if (current >= startDate && (!endDate || current <= endDate)) {
+        const diff = endDate ? endDate - current : 0;
+        if (!endDate) return { type: 'ongoing', label: 'Sedang berlangsung' };
+        const { days, hours, minutes, seconds } = parseDiff(diff);
+        return { type: 'ongoing', label: 'Sedang berlangsung', remaining: 'Sisa', days, hours, minutes, seconds };
+    }
+    const diff = startDate - current;
+    const { days, hours, minutes, seconds } = parseDiff(diff);
+    return { type: 'upcoming', label: 'Dimulai dalam', days, hours, minutes, seconds };
+});
+
+function parseDiff(ms) {
+    const totalSeconds = Math.floor(ms / 1000);
+    return {
+        days: Math.floor(totalSeconds / 86400),
+        hours: Math.floor((totalSeconds % 86400) / 3600),
+        minutes: Math.floor((totalSeconds % 3600) / 60),
+        seconds: totalSeconds % 60,
+    };
+}
+
+const padZero = (n) => String(n).padStart(2, '0');
+
+const initMap = (el) => {
+    if (!el || !hasCoordinates.value) return;
+    const lat = parseFloat(props.event.latitude);
+    const lng = parseFloat(props.event.longitude);
+    const map = L.map(el, { scrollWheelZoom: false }).setView([lat, lng], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(map);
+    L.marker([lat, lng]).addTo(map);
+};
+
+onMounted(() => {
+    if (hasCoordinates.value) {
+        if (mapContainer.value) initMap(mapContainer.value);
+        if (mapContainerMobile.value) initMap(mapContainerMobile.value);
+    }
+});
 
 const participantForm = useForm({ member_id: '', notes: '' });
 const docForm = useForm({ files: [], caption: '' });
@@ -241,12 +320,48 @@ const resetDocForm = () => {
                             <h3 class="text-xl font-bold text-foreground">{{ event.name }}</h3>
                             <Badge :variant="getStatusBadge(event.status)" class="mt-2">{{ getStatusLabel(event.status) }}</Badge>
 
+                            <!-- Countdown Mobile -->
+                            <div v-if="countdown.type !== 'ended'" class="mt-4 w-full">
+                                <div class="countdown-banner rounded-xl px-4 py-3" :class="countdown.type === 'ongoing' ? 'countdown-ongoing' : 'countdown-upcoming'">
+                                    <p class="text-xs font-semibold uppercase tracking-wider mb-2 countdown-label">
+                                        <span class="countdown-pulse-dot"></span>
+                                        {{ countdown.remaining || countdown.label }}
+                                    </p>
+                                    <div v-if="countdown.days !== undefined" class="flex items-center justify-center gap-1.5">
+                                        <div v-if="countdown.days > 0" class="countdown-unit">
+                                            <span class="countdown-number">{{ countdown.days }}</span>
+                                            <span class="countdown-text">Hari</span>
+                                        </div>
+                                        <span v-if="countdown.days > 0" class="countdown-separator">:</span>
+                                        <div class="countdown-unit">
+                                            <span class="countdown-number">{{ padZero(countdown.hours) }}</span>
+                                            <span class="countdown-text">Jam</span>
+                                        </div>
+                                        <span class="countdown-separator">:</span>
+                                        <div class="countdown-unit">
+                                            <span class="countdown-number">{{ padZero(countdown.minutes) }}</span>
+                                            <span class="countdown-text">Menit</span>
+                                        </div>
+                                        <span class="countdown-separator countdown-blink">:</span>
+                                        <div class="countdown-unit">
+                                            <span class="countdown-number countdown-seconds">{{ padZero(countdown.seconds) }}</span>
+                                            <span class="countdown-text">Detik</span>
+                                        </div>
+                                    </div>
+                                    <p v-else class="text-sm font-bold countdown-label">{{ countdown.label }}</p>
+                                </div>
+                            </div>
+
                             <!-- Quick info pills -->
                             <div class="flex flex-wrap justify-center gap-2 mt-4">
                                 <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted rounded-lg text-xs text-muted-foreground">
                                     <Clock class="w-3.5 h-3.5" />
                                     {{ new Date(event.start_date).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }}
                                 </span>
+                                <a v-if="hasCoordinates" :href="googleMapsUrl" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-xs font-medium hover:bg-primary/20 transition-colors">
+                                    <Navigation class="w-3.5 h-3.5" />
+                                    Google Maps
+                                </a>
                                 <span v-if="event.location" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted rounded-lg text-xs text-muted-foreground">
                                     <MapPin class="w-3.5 h-3.5" />
                                     {{ event.location }}
@@ -266,19 +381,62 @@ const resetDocForm = () => {
                                 <h3 class="text-2xl font-bold text-foreground">{{ event.name }}</h3>
                                 <Badge :variant="getStatusBadge(event.status)" class="mt-2">{{ getStatusLabel(event.status) }}</Badge>
                             </div>
+                            <!-- Countdown Desktop -->
+                            <div v-if="countdown.type !== 'ended'" class="countdown-banner rounded-xl px-5 py-3 text-right" :class="countdown.type === 'ongoing' ? 'countdown-ongoing' : 'countdown-upcoming'">
+                                <p class="text-xs font-semibold uppercase tracking-wider mb-1.5 countdown-label flex items-center justify-end gap-1.5">
+                                    <span class="countdown-pulse-dot"></span>
+                                    {{ countdown.remaining || countdown.label }}
+                                </p>
+                                <div v-if="countdown.days !== undefined" class="flex items-center gap-2">
+                                    <div v-if="countdown.days > 0" class="countdown-unit">
+                                        <span class="countdown-number text-xl">{{ countdown.days }}</span>
+                                        <span class="countdown-text">Hari</span>
+                                    </div>
+                                    <span v-if="countdown.days > 0" class="countdown-separator text-xl">:</span>
+                                    <div class="countdown-unit">
+                                        <span class="countdown-number text-xl">{{ padZero(countdown.hours) }}</span>
+                                        <span class="countdown-text">Jam</span>
+                                    </div>
+                                    <span class="countdown-separator text-xl">:</span>
+                                    <div class="countdown-unit">
+                                        <span class="countdown-number text-xl">{{ padZero(countdown.minutes) }}</span>
+                                        <span class="countdown-text">Menit</span>
+                                    </div>
+                                    <span class="countdown-separator text-xl countdown-blink">:</span>
+                                    <div class="countdown-unit">
+                                        <span class="countdown-number text-xl countdown-seconds">{{ padZero(countdown.seconds) }}</span>
+                                        <span class="countdown-text">Detik</span>
+                                    </div>
+                                </div>
+                                <p v-else class="text-base font-bold countdown-label">{{ countdown.label }}</p>
+                            </div>
                         </div>
                         <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="space-y-4">
                                 <div>
                                     <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Waktu Pelaksanaan</h4>
-                                    <p class="mt-1 text-foreground">
-                                        {{ formatDate(event.start_date) }}
-                                        <span v-if="event.end_date"> - {{ formatDate(event.end_date) }}</span>
-                                    </p>
+                                    <div class="mt-1 flex items-center gap-3">
+                                        <p class="text-foreground">
+                                            {{ formatDate(event.start_date) }}
+                                            <span v-if="event.end_date"> - {{ formatDate(event.end_date) }}</span>
+                                        </p>
+                                        <a v-if="hasCoordinates" :href="googleMapsUrl" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-xs font-medium hover:bg-primary/20 transition-colors">
+                                            <Navigation class="w-3.5 h-3.5" />
+                                            Google Maps
+                                        </a>
+                                    </div>
                                 </div>
                                 <div>
                                     <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Lokasi</h4>
                                     <p class="mt-1 text-foreground">{{ event.location || '-' }}</p>
+                                    <div v-if="hasCoordinates" class="mt-1 flex items-center gap-3">
+                                        <span class="text-xs text-muted-foreground">
+                                            <Navigation class="w-3 h-3 inline mr-1" />{{ parseFloat(event.latitude).toFixed(7) }}, {{ parseFloat(event.longitude).toFixed(7) }}
+                                        </span>
+                                        <a :href="googleMapsUrl" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                                            <ExternalLink class="w-3 h-3" /> Google Maps
+                                        </a>
+                                    </div>
                                 </div>
                                 <div>
                                     <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Penanggung Jawab (PIC)</h4>
@@ -303,6 +461,15 @@ const resetDocForm = () => {
                         <div v-if="event.description" class="mt-8">
                             <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Deskripsi Kegiatan</h4>
                             <div class="mt-2 text-foreground whitespace-pre-wrap">{{ event.description }}</div>
+                        </div>
+                        <div v-if="hasCoordinates" class="mt-8">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Peta Lokasi</h4>
+                                <a :href="googleMapsUrl" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                                    <ExternalLink class="w-3 h-3" /> Buka di Google Maps
+                                </a>
+                            </div>
+                            <div ref="mapContainer" class="w-full h-64 rounded-lg border border-input z-0"></div>
                         </div>
                     </div>
                 </div>
@@ -350,6 +517,10 @@ const resetDocForm = () => {
                                         <span class="text-sm text-muted-foreground">Lokasi</span>
                                         <span class="text-sm font-medium text-foreground">{{ event.location || '-' }}</span>
                                     </div>
+                                    <div v-if="hasCoordinates" class="px-4 py-3">
+                                        <span class="text-sm text-muted-foreground block mb-1">Koordinat</span>
+                                        <span class="text-sm font-medium text-foreground">{{ parseFloat(event.latitude).toFixed(7) }}, {{ parseFloat(event.longitude).toFixed(7) }}</span>
+                                    </div>
                                     <div class="flex justify-between items-center px-4 py-3">
                                         <span class="text-sm text-muted-foreground">PIC</span>
                                         <span class="text-sm font-medium text-foreground">{{ event.pic ? event.pic.full_name : '-' }}</span>
@@ -374,6 +545,16 @@ const resetDocForm = () => {
                                 <div class="bg-muted/30 rounded-xl px-4 py-3">
                                     <p class="text-sm text-foreground whitespace-pre-wrap">{{ event.description }}</p>
                                 </div>
+                            </div>
+
+                            <div v-if="hasCoordinates" class="space-y-1">
+                                <div class="flex items-center justify-between px-1 mb-2">
+                                    <h4 class="text-xs font-bold text-muted-foreground uppercase tracking-wider">Peta Lokasi</h4>
+                                    <a :href="googleMapsUrl" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                                        <ExternalLink class="w-3 h-3" /> Google Maps
+                                    </a>
+                                </div>
+                                <div ref="mapContainerMobile" class="w-full h-48 rounded-xl border border-input z-0"></div>
                             </div>
                         </div>
 
@@ -705,4 +886,81 @@ const resetDocForm = () => {
 <style scoped>
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Countdown styles */
+.countdown-upcoming {
+    background: hsl(var(--primary) / 0.08);
+}
+.countdown-ongoing {
+    background: hsl(142 71% 45% / 0.1);
+}
+.countdown-ongoing .countdown-label { color: hsl(142 71% 35%); }
+.countdown-ongoing .countdown-number { color: hsl(142 71% 30%); }
+.countdown-ongoing .countdown-separator { color: hsl(142 71% 35%); }
+.countdown-ongoing .countdown-text { color: hsl(142 71% 40%); }
+.countdown-ongoing .countdown-pulse-dot { background: hsl(142 71% 45%); }
+
+.countdown-upcoming .countdown-label { color: hsl(var(--primary)); }
+.countdown-upcoming .countdown-number { color: hsl(var(--primary)); }
+.countdown-upcoming .countdown-separator { color: hsl(var(--primary) / 0.5); }
+.countdown-upcoming .countdown-text { color: hsl(var(--primary) / 0.7); }
+.countdown-upcoming .countdown-pulse-dot { background: hsl(var(--primary)); }
+
+.countdown-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 2.5rem;
+}
+.countdown-number {
+    font-size: 1.125rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+}
+.countdown-text {
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 2px;
+}
+.countdown-separator {
+    font-weight: 700;
+    font-size: 1.125rem;
+    line-height: 1;
+    align-self: flex-start;
+}
+
+/* Blinking colon */
+.countdown-blink {
+    animation: blink 1s step-end infinite;
+}
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* Seconds flip animation */
+.countdown-seconds {
+    animation: tick 1s ease-out infinite;
+}
+@keyframes tick {
+    0% { transform: translateY(-2px); opacity: 0.6; }
+    20% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+/* Pulsing dot */
+.countdown-pulse-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+}
 </style>

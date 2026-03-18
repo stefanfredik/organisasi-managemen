@@ -7,9 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 
 const props = defineProps({
     structure: Object,
@@ -47,9 +44,9 @@ const submit = () => {
         </template>
 
         <div class="py-6 sm:py-8">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
                 <Card>
-                    <CardContent class="p-6">
+                    <CardContent class="p-4 sm:p-6">
                         <form @submit.prevent="submit">
                             <!-- Posisi & Anggota -->
                             <div class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 mb-4">
@@ -60,17 +57,12 @@ const submit = () => {
                                 </div>
                                 <div>
                                     <Label for="member_id">Anggota (Opsional)</Label>
-                                    <Select v-model="form.member_id">
-                                        <SelectTrigger class="mt-1 w-full">
-                                            <SelectValue placeholder="Pilih anggota" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="">-</SelectItem>
-                                            <SelectItem v-for="m in members" :key="m.id" :value="m.id.toString()">
-                                                {{ m.full_name }}
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <select v-model="form.member_id" class="mt-1 block w-full border-input bg-background focus:border-ring focus:ring-ring rounded-md shadow-sm text-sm h-10 px-3">
+                                        <option value="">Pilih anggota</option>
+                                        <option v-for="m in members" :key="m.id" :value="m.id.toString()">
+                                            {{ m.full_name }}
+                                        </option>
+                                    </select>
                                     <p v-if="form.errors.member_id" class="mt-2 text-sm text-destructive">{{ form.errors.member_id }}</p>
                                 </div>
                             </div>
@@ -84,17 +76,12 @@ const submit = () => {
                                 </div>
                                 <div>
                                     <Label for="parent_id">Induk (Opsional)</Label>
-                                    <Select v-model="form.parent_id">
-                                        <SelectTrigger class="mt-1 w-full">
-                                            <SelectValue placeholder="Pilih induk" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="">-</SelectItem>
-                                            <SelectItem v-for="p in parents" :key="p.id" :value="p.id.toString()">
-                                                {{ p.position_name }}
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <select v-model="form.parent_id" class="mt-1 block w-full border-input bg-background focus:border-ring focus:ring-ring rounded-md shadow-sm text-sm h-10 px-3">
+                                        <option value="">Pilih induk</option>
+                                        <option v-for="p in parents" :key="p.id" :value="p.id.toString()">
+                                            {{ p.position_name }}
+                                        </option>
+                                    </select>
                                     <p v-if="form.errors.parent_id" class="mt-2 text-sm text-destructive">{{ form.errors.parent_id }}</p>
                                 </div>
                                 <div>
@@ -138,7 +125,7 @@ const submit = () => {
                                 </div>
                             </div>
 
-                            <div class="flex items-center justify-end mt-4 gap-4">
+                            <div class="flex items-center justify-end gap-4 sticky bottom-0 bg-card border-t -mx-4 sm:-mx-6 -mb-4 sm:-mb-6 px-4 sm:px-6 py-4 mt-6 md:static md:border-0 md:m-0 md:p-0 md:mt-4">
                                 <Button variant="ghost" as-child>
                                     <Link :href="route('organization-structures.index')">Batal</Link>
                                 </Button>

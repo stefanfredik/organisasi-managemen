@@ -5,6 +5,7 @@ import InputError from '@/Components/InputError.vue';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import MapPicker from '@/Components/MapPicker.vue';
 
 const props = defineProps({
     event: Object,
@@ -17,6 +18,8 @@ const form = useForm({
     start_date: props.event.start_date.slice(0, 16), // Format for datetime-local
     end_date: props.event.end_date ? props.event.end_date.slice(0, 16) : '',
     location: props.event.location,
+    latitude: props.event.latitude,
+    longitude: props.event.longitude,
     pic_id: props.event.pic_id,
     max_participants: props.event.max_participants,
     status: props.event.status,
@@ -107,6 +110,43 @@ const submit = () => {
                                 class="mt-1 block w-full"
                             />
                             <InputError class="mt-2" :message="form.errors.location" />
+                        </div>
+
+                        <!-- Map Picker -->
+                        <div>
+                            <Label>Pilih Lokasi di Peta</Label>
+                            <div class="mt-1">
+                                <MapPicker
+                                    :latitude="form.latitude"
+                                    :longitude="form.longitude"
+                                    @update:latitude="form.latitude = $event"
+                                    @update:longitude="form.longitude = $event"
+                                />
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 mt-2">
+                                <div>
+                                    <Label for="latitude">Latitude</Label>
+                                    <Input
+                                        id="latitude"
+                                        :value="form.latitude ? parseFloat(form.latitude).toFixed(7) : ''"
+                                        type="text"
+                                        class="mt-1 block w-full"
+                                        readonly
+                                    />
+                                    <InputError class="mt-2" :message="form.errors.latitude" />
+                                </div>
+                                <div>
+                                    <Label for="longitude">Longitude</Label>
+                                    <Input
+                                        id="longitude"
+                                        :value="form.longitude ? parseFloat(form.longitude).toFixed(7) : ''"
+                                        type="text"
+                                        class="mt-1 block w-full"
+                                        readonly
+                                    />
+                                    <InputError class="mt-2" :message="form.errors.longitude" />
+                                </div>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
