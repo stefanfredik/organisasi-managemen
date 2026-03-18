@@ -31,10 +31,9 @@ const formatCurrency = (value) => {
     }).format(value);
 };
 
-// Simple bar chart calculations
 const maxAmount = computed(() => {
     const allValues = props.monthlyData.flatMap(d => [d.income, d.expense]);
-    return Math.max(...allValues, 1000000); // Minimum 1M for scale
+    return Math.max(...allValues, 1000000);
 });
 
 const getBarHeight = (amount) => {
@@ -49,153 +48,114 @@ const getBarHeight = (amount) => {
         <template #header>
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                    <Link :href="route('reports.index')" class="text-gray-500 hover:text-gray-700">
+                    <Link :href="route('reports.index')" class="text-muted-foreground hover:text-foreground">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
                     </Link>
-                    <h2 class="text-xl font-semibold text-gray-800">Laporan Arus Kas</h2>
+                    <h2 class="text-xl font-semibold text-foreground">Laporan Arus Kas</h2>
                 </div>
                 <div class="flex items-center space-x-2">
                     <a
                         :href="route('reports.cash-flow.pdf', { start_date: startDate, end_date: endDate })"
                         target="_blank"
-                        class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 active:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                        class="inline-flex items-center px-3 py-1.5 bg-destructive rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-destructive/90 transition"
                     >
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
                         PDF
                     </a>
                     <a
                         :href="route('reports.cash-flow.excel', { start_date: startDate, end_date: endDate })"
-                        class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                        class="inline-flex items-center px-3 py-1.5 bg-success-600 rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-success-700 transition"
                     >
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
                         Excel
                     </a>
                 </div>
             </div>
         </template>
 
-        <div class="py-8">
+        <div class="py-4">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 
-                <!-- Filters -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Filter Periode</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
-                            <input 
-                                type="date" 
-                                v-model="startDate"
-                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                            />
+                <!-- Filters - compact inline -->
+                <div class="bg-card rounded-lg shadow-sm border border p-3 mb-4">
+                    <div class="flex flex-wrap items-end gap-3">
+                        <div class="min-w-[140px]">
+                            <label class="block text-xs font-medium text-muted-foreground mb-1">Dari</label>
+                            <input type="date" v-model="startDate" class="w-full text-sm rounded-md border-input shadow-sm focus:border-ring focus:ring-ring" />
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Akhir</label>
-                            <input 
-                                type="date" 
-                                v-model="endDate"
-                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                            />
+                        <div class="min-w-[140px]">
+                            <label class="block text-xs font-medium text-muted-foreground mb-1">Sampai</label>
+                            <input type="date" v-model="endDate" class="w-full text-sm rounded-md border-input shadow-sm focus:border-ring focus:ring-ring" />
                         </div>
-                        <div class="flex items-end">
-                            <button
-                                @click="applyFilters"
-                                class="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                            >
-                                Terapkan Filter
-                            </button>
-                        </div>
+                        <button @click="applyFilters" class="px-4 py-2 text-sm bg-primary text-white rounded-md hover:bg-primary/90">
+                            Terapkan
+                        </button>
                     </div>
                 </div>
 
                 <!-- Monthly Trend Chart -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-6">Tren Arus Kas Bulanan</h3>
-                    <div class="h-64 flex items-end justify-between gap-2 px-4">
+                <div class="bg-card rounded-lg shadow-sm border border p-4 mb-4">
+                    <h3 class="text-sm font-semibold text-foreground mb-4">Tren Arus Kas Bulanan</h3>
+                    <div class="h-48 flex items-end justify-between gap-1 px-2">
                         <div v-for="item in monthlyData" :key="item.month" class="flex-1 flex flex-col items-center group relative">
-                            <!-- Tooltip -->
-                            <div class="absolute bottom-full mb-2 hidden group-hover:block z-10 bg-gray-900 text-white text-xs rounded p-2 whitespace-nowrap">
+                            <div class="absolute bottom-full mb-2 hidden group-hover:block z-10 bg-foreground text-white text-xs rounded p-2 whitespace-nowrap">
                                 <p class="font-bold">{{ item.month }}</p>
-                                <p class="text-green-400">In: {{ formatCurrency(item.income) }}</p>
-                                <p class="text-red-400">Out: {{ formatCurrency(item.expense) }}</p>
-                                <p class="border-t border-gray-700 mt-1 pt-1" :class="item.net >= 0 ? 'text-green-400' : 'text-red-400'">
+                                <p class="text-success-400">In: {{ formatCurrency(item.income) }}</p>
+                                <p class="text-destructive/60">Out: {{ formatCurrency(item.expense) }}</p>
+                                <p class="border-t border-border mt-1 pt-1" :class="item.net >= 0 ? 'text-success-400' : 'text-destructive/60'">
                                     Net: {{ formatCurrency(item.net) }}
                                 </p>
                             </div>
-                            
-                            <!-- Bars -->
-                            <div class="w-full flex justify-center gap-1">
-                                <div 
-                                    class="w-4 bg-green-500 rounded-t transition-all duration-300"
-                                    :style="{ height: `${getBarHeight(item.income)}%` }"
-                                ></div>
-                                <div 
-                                    class="w-4 bg-red-500 rounded-t transition-all duration-300"
-                                    :style="{ height: `${getBarHeight(item.expense)}%` }"
-                                ></div>
+                            <div class="w-full flex justify-center gap-0.5">
+                                <div class="w-3 bg-success/100 rounded-t transition-all duration-300" :style="{ height: `${getBarHeight(item.income)}%` }"></div>
+                                <div class="w-3 bg-destructive/100 rounded-t transition-all duration-300" :style="{ height: `${getBarHeight(item.expense)}%` }"></div>
                             </div>
-                            
-                            <!-- Month Label -->
-                            <span class="text-[10px] text-gray-500 mt-2 rotate-45 origin-left whitespace-nowrap">{{ item.month }}</span>
+                            <span class="text-[9px] text-muted-foreground mt-1 rotate-45 origin-left whitespace-nowrap">{{ item.month }}</span>
                         </div>
                     </div>
-                    <div class="flex justify-center gap-6 mt-12 text-sm">
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 bg-green-500 rounded-sm"></div>
-                            <span class="text-gray-600">Pemasukan</span>
+                    <div class="flex justify-center gap-4 mt-8 text-xs">
+                        <div class="flex items-center gap-1.5">
+                            <div class="w-2.5 h-2.5 bg-success/100 rounded-sm"></div>
+                            <span class="text-muted-foreground">Pemasukan</span>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 bg-red-500 rounded-sm"></div>
-                            <span class="text-gray-600">Pengeluaran</span>
+                        <div class="flex items-center gap-1.5">
+                            <div class="w-2.5 h-2.5 bg-destructive/100 rounded-sm"></div>
+                            <span class="text-muted-foreground">Pengeluaran</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Category Breakdown Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Income by Category -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Pemasukan per Kategori</h3>
-                        <div class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-card rounded-lg shadow-sm border border p-4">
+                        <h3 class="text-sm font-semibold text-foreground mb-3">Pemasukan per Kategori</h3>
+                        <div class="space-y-2.5">
                             <div v-for="cat in incomeByCategory" :key="cat.category" class="space-y-1">
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-gray-700 font-medium">{{ cat.category }}</span>
-                                    <span class="text-gray-900 font-bold">{{ formatCurrency(cat.total) }}</span>
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-foreground font-medium">{{ cat.category }}</span>
+                                    <span class="text-foreground font-bold">{{ formatCurrency(cat.total) }}</span>
                                 </div>
-                                <div class="w-full bg-gray-100 rounded-full h-2">
-                                    <div 
-                                        class="bg-green-500 h-2 rounded-full" 
-                                        :style="{ width: `${(cat.total / incomeByCategory.reduce((acc, curr) => acc + curr.total, 0)) * 100}%` }"
-                                    ></div>
+                                <div class="w-full bg-muted rounded-full h-1.5">
+                                    <div class="bg-success/100 h-1.5 rounded-full" :style="{ width: `${(cat.total / incomeByCategory.reduce((acc, curr) => acc + curr.total, 0)) * 100}%` }"></div>
                                 </div>
                             </div>
-                            <p v-if="incomeByCategory.length === 0" class="text-sm text-gray-500 text-center py-4">Tidak ada data pemasukan</p>
+                            <p v-if="incomeByCategory.length === 0" class="text-xs text-muted-foreground text-center py-3">Tidak ada data</p>
                         </div>
                     </div>
 
-                    <!-- Expense by Category -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Pengeluaran per Kategori</h3>
-                        <div class="space-y-4">
+                    <div class="bg-card rounded-lg shadow-sm border border p-4">
+                        <h3 class="text-sm font-semibold text-foreground mb-3">Pengeluaran per Kategori</h3>
+                        <div class="space-y-2.5">
                             <div v-for="cat in expenseByCategory" :key="cat.category" class="space-y-1">
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-gray-700 font-medium">{{ cat.category }}</span>
-                                    <span class="text-gray-900 font-bold">{{ formatCurrency(cat.total) }}</span>
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-foreground font-medium">{{ cat.category }}</span>
+                                    <span class="text-foreground font-bold">{{ formatCurrency(cat.total) }}</span>
                                 </div>
-                                <div class="w-full bg-gray-100 rounded-full h-2">
-                                    <div 
-                                        class="bg-red-500 h-2 rounded-full" 
-                                        :style="{ width: `${(cat.total / expenseByCategory.reduce((acc, curr) => acc + curr.total, 0)) * 100}%` }"
-                                    ></div>
+                                <div class="w-full bg-muted rounded-full h-1.5">
+                                    <div class="bg-destructive/100 h-1.5 rounded-full" :style="{ width: `${(cat.total / expenseByCategory.reduce((acc, curr) => acc + curr.total, 0)) * 100}%` }"></div>
                                 </div>
                             </div>
-                            <p v-if="expenseByCategory.length === 0" class="text-sm text-gray-500 text-center py-4">Tidak ada data pengeluaran</p>
+                            <p v-if="expenseByCategory.length === 0" class="text-xs text-muted-foreground text-center py-3">Tidak ada data</p>
                         </div>
                     </div>
                 </div>

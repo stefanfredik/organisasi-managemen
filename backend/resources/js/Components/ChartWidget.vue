@@ -18,7 +18,7 @@ const props = defineProps({
     },
     color: {
         type: String,
-        default: 'indigo',
+        default: 'primary',
     },
     height: {
         type: String,
@@ -49,14 +49,14 @@ const formatValue = (value) => {
 
 const colorClasses = computed(() => {
     const colors = {
-        indigo: 'bg-indigo-500 hover:bg-indigo-600',
-        green: 'bg-green-500 hover:bg-green-600',
+        primary: 'bg-primary/100 hover:bg-primary-600',
+        green: 'bg-success/100 hover:bg-green-600',
         blue: 'bg-blue-500 hover:bg-blue-600',
         yellow: 'bg-yellow-500 hover:bg-yellow-600',
-        red: 'bg-red-500 hover:bg-red-600',
+        red: 'bg-destructive/100 hover:bg-red-600',
         purple: 'bg-purple-500 hover:bg-purple-600',
     };
-    return colors[props.color] || colors.indigo;
+    return colors[props.color] || colors.primary;
 });
 
 const pieSegments = computed(() => {
@@ -92,21 +92,21 @@ const pieSegments = computed(() => {
 </script>
 
 <template>
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ title }}</h3>
+    <div class="bg-card rounded-lg shadow-sm border border p-6">
+        <h3 class="text-lg font-semibold text-foreground mb-4">{{ title }}</h3>
         
         <!-- Loading State -->
         <div v-if="loading" class="animate-pulse" :style="{ height }">
-            <div class="h-full bg-gray-200 rounded"></div>
+            <div class="h-full bg-muted rounded"></div>
         </div>
         
         <!-- Empty State -->
         <div v-else-if="!data || data.length === 0" class="flex items-center justify-center" :style="{ height }">
             <div class="text-center">
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="mx-auto h-12 w-12 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
-                <p class="mt-2 text-sm text-gray-500">Tidak ada data</p>
+                <p class="mt-2 text-sm text-muted-foreground">Tidak ada data</p>
             </div>
         </div>
         
@@ -125,14 +125,14 @@ const pieSegments = computed(() => {
                             :style="{ height: getBarHeight(item.value) }"
                         >
                             <!-- Tooltip on hover -->
-                            <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                            <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-foreground text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                                 {{ formatValue(item.value) }}
                             </div>
                         </div>
                     </div>
                     
                     <!-- Label -->
-                    <div class="mt-2 text-xs text-gray-600 text-center truncate w-full">
+                    <div class="mt-2 text-xs text-muted-foreground text-center truncate w-full">
                         {{ item.label }}
                     </div>
                 </div>
@@ -170,7 +170,7 @@ const pieSegments = computed(() => {
                     :cx="(index / (data.length - 1 || 1)) * 400"
                     :cy="200 - (item.value / (maxValue || 1)) * 180"
                     r="4"
-                    class="fill-indigo-500 cursor-pointer hover:r-6 transition-all"
+                    class="fill-primary-500 cursor-pointer hover:r-6 transition-all"
                 >
                     <title>{{ item.label }}: {{ formatValue(item.value) }}</title>
                 </circle>
@@ -178,7 +178,7 @@ const pieSegments = computed(() => {
             
             <!-- Labels -->
             <div class="flex justify-between mt-2 overflow-hidden">
-                <span v-for="(item, index) in data" :key="`label-${index}`" class="text-xs text-gray-600 truncate px-1">
+                <span v-for="(item, index) in data" :key="`label-${index}`" class="text-xs text-muted-foreground truncate px-1">
                     {{ item.label }}
                 </span>
             </div>
@@ -202,8 +202,8 @@ const pieSegments = computed(() => {
                 </svg>
                 <!-- Center Text for Doughnut -->
                 <div v-if="type === 'doughnut'" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <span class="text-xs text-gray-400 font-bold uppercase">Total</span>
-                    <span class="text-xl font-black text-gray-800">{{ data.reduce((a, b) => a + b.value, 0) }}</span>
+                    <span class="text-xs text-muted-foreground font-bold uppercase">Total</span>
+                    <span class="text-xl font-black text-foreground">{{ data.reduce((a, b) => a + b.value, 0) }}</span>
                 </div>
             </div>
 
@@ -212,8 +212,8 @@ const pieSegments = computed(() => {
                 <div v-for="(item, index) in pieSegments" :key="index" class="flex items-center text-xs">
                     <span class="w-3 h-3 rounded-full mr-2" :style="{ backgroundColor: item.color }"></span>
                     <div class="flex flex-col">
-                        <span class="font-bold text-gray-700">{{ item.label }}</span>
-                        <span class="text-gray-500">{{ item.value }} ({{ item.percentage }}%)</span>
+                        <span class="font-bold text-foreground">{{ item.label }}</span>
+                        <span class="text-muted-foreground">{{ item.value }} ({{ item.percentage }}%)</span>
                     </div>
                 </div>
             </div>

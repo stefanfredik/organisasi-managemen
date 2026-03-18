@@ -25,7 +25,7 @@ const closePhoto = () => {
             <div 
                 v-for="photo in photos" 
                 :key="photo.id" 
-                class="group relative aspect-square bg-slate-100 rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300"
+                class="group relative aspect-square bg-muted rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300"
                 @click="openPhoto(photo)"
             >
                 <img 
@@ -40,8 +40,8 @@ const closePhoto = () => {
                     </svg>
                 </div>
             </div>
-             <div v-if="photos.length === 0" class="col-span-full py-12 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-                <p class="text-slate-400 font-medium">Belum ada foto dalam galeri.</p>
+             <div v-if="photos.length === 0" class="col-span-full py-12 text-center bg-muted rounded-2xl border-2 border-dashed border">
+                <p class="text-muted-foreground font-medium">Belum ada foto dalam galeri.</p>
             </div>
         </div>
 

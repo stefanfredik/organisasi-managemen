@@ -1,3 +1,375 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    :root {
+        --background: 0 0% 100%;
+        --foreground: 222.2 84% 4.9%;
+
+        --card: 0 0% 100%;
+        --card-foreground: 222.2 84% 4.9%;
+
+        --popover: 0 0% 100%;
+        --popover-foreground: 222.2 84% 4.9%;
+
+        --primary: 243 75% 59%;
+        --primary-foreground: 210 40% 98%;
+
+        --secondary: 210 40% 96.1%;
+        --secondary-foreground: 222.2 47.4% 11.2%;
+
+        --muted: 210 40% 96.1%;
+        --muted-foreground: 215.4 16.3% 46.9%;
+
+        --accent: 210 40% 96.1%;
+        --accent-foreground: 222.2 47.4% 11.2%;
+
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 210 40% 98%;
+
+        --border: 214.3 31.8% 91.4%;
+        --input: 214.3 31.8% 91.4%;
+        --ring: 243 75% 59%;
+
+        --radius: 0.5rem;
+
+        /* Mobile bottom nav height */
+        --bottom-nav-height: 64px;
+    }
+
+    .dark {
+        --background: 222.2 84% 4.9%;
+        --foreground: 210 40% 98%;
+
+        --card: 222.2 84% 4.9%;
+        --card-foreground: 210 40% 98%;
+
+        --popover: 222.2 84% 4.9%;
+        --popover-foreground: 210 40% 98%;
+
+        --primary: 243 75% 59%;
+        --primary-foreground: 210 40% 98%;
+
+        --secondary: 217.2 32.6% 17.5%;
+        --secondary-foreground: 210 40% 98%;
+
+        --muted: 217.2 32.6% 17.5%;
+        --muted-foreground: 215 20.2% 65.1%;
+
+        --accent: 217.2 32.6% 17.5%;
+        --accent-foreground: 210 40% 98%;
+
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 210 40% 98%;
+
+        --border: 217.2 32.6% 17.5%;
+        --input: 217.2 32.6% 17.5%;
+        --ring: 243 75% 59%;
+    }
+
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+        overflow-x: hidden;
+        width: 100%;
+    }
+
+    /* Safe area support for notched phones */
+    html {
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Prevent overscroll bounce on iOS */
+    @media (max-width: 1023px) {
+        body {
+            overscroll-behavior-y: contain;
+        }
+    }
+}
+
+@layer components {
+    /* ============================================
+       Modern Mobile UI Components
+       ============================================ */
+
+    /* Bottom Navigation Bar - iOS/Android style */
+    .mobile-bottom-nav {
+        @apply fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t;
+        padding-bottom: max(0.25rem, env(safe-area-inset-bottom));
+        height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
+    }
+
+    .mobile-bottom-nav-item {
+        @apply flex flex-col items-center justify-center gap-0.5 flex-1 py-1.5 px-1
+               text-muted-foreground transition-all duration-200 ease-out
+               active:scale-90 select-none;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .mobile-bottom-nav-item.active {
+        @apply text-primary;
+    }
+
+    .mobile-bottom-nav-item .nav-icon {
+        @apply h-5 w-5 transition-transform duration-200;
+    }
+
+    .mobile-bottom-nav-item.active .nav-icon {
+        @apply scale-110;
+    }
+
+    .mobile-bottom-nav-item .nav-label {
+        @apply text-[10px] font-semibold leading-none;
+    }
+
+    .mobile-bottom-nav-item .nav-dot {
+        @apply w-1 h-1 rounded-full bg-primary mt-0.5 transition-all duration-300;
+    }
+
+    /* Floating Action Button */
+    .mobile-fab {
+        @apply fixed z-50 flex items-center justify-center
+               w-14 h-14 rounded-full bg-primary text-primary-foreground
+               shadow-lg shadow-primary/25
+               active:scale-90 transition-all duration-200;
+        bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 1rem);
+        right: 1rem;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    @media (min-width: 1024px) {
+        .mobile-fab {
+            bottom: 2rem;
+        }
+    }
+
+    /* Pull-to-refresh indicator */
+    .pull-indicator {
+        @apply flex items-center justify-center py-4 text-muted-foreground;
+    }
+
+    /* Mobile card with touch feedback */
+    .mobile-card {
+        @apply bg-card rounded-2xl border p-4 transition-all duration-150
+               active:scale-[0.98] active:bg-accent/50;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Swipeable list item */
+    .swipe-item {
+        @apply relative overflow-hidden;
+        touch-action: pan-y;
+    }
+
+    /* Mobile section header - sticky contextual */
+    .mobile-section-header {
+        @apply sticky top-14 z-30 bg-background/95 backdrop-blur-sm
+               px-4 py-2 border-b;
+    }
+
+    /* Skeleton loading for mobile */
+    .mobile-skeleton {
+        @apply animate-pulse rounded-2xl bg-muted;
+    }
+
+    /* Mobile-optimized horizontal scroll */
+    .mobile-scroll-x {
+        @apply flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide;
+    }
+
+    .mobile-scroll-x > * {
+        @apply snap-start shrink-0;
+    }
+
+    /* Bottom sheet handle */
+    .bottom-sheet-handle {
+        @apply w-10 h-1 rounded-full bg-muted-foreground/20 mx-auto mt-2 mb-3;
+    }
+
+    /* Contextual action bar (appears on selection etc.) */
+    .mobile-action-bar {
+        @apply fixed top-0 left-0 right-0 z-50 h-14 bg-primary text-primary-foreground
+               flex items-center px-4 gap-3
+               animate-in slide-in-from-top duration-200;
+    }
+}
+
+@layer utilities {
+    .touch-target {
+        @apply min-h-[44px] min-w-[44px];
+    }
+
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+
+    .safe-bottom {
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+
+    /* Space for bottom nav on mobile */
+    .pb-bottom-nav {
+        padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 0.5rem);
+    }
+
+    @media (min-width: 1024px) {
+        .pb-bottom-nav {
+            padding-bottom: 0;
+        }
+    }
+
+    /* Haptic-style tap feedback */
+    .tap-highlight {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .tap-highlight:active {
+        @apply scale-[0.97] opacity-80;
+        transition: all 0.1s ease-out;
+    }
+
+    /* Meaningful animations */
+    .animate-in {
+        animation: animateIn 0.2s ease-out;
+    }
+
+    @keyframes animateIn {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fade-up {
+        animation: fadeUp 0.3s ease-out both;
+    }
+
+    @keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(16px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Stagger delay utilities for list animations */
+    .stagger-1 { animation-delay: 0.05s; }
+    .stagger-2 { animation-delay: 0.1s; }
+    .stagger-3 { animation-delay: 0.15s; }
+    .stagger-4 { animation-delay: 0.2s; }
+    .stagger-5 { animation-delay: 0.25s; }
+    .stagger-6 { animation-delay: 0.3s; }
+
+    /* One-hand reach zone optimization */
+    @media (max-width: 1023px) {
+        .mobile-reach-top {
+            @apply order-last;
+        }
+        .mobile-reach-bottom {
+            @apply order-first;
+        }
+    }
+
+    /* ============================================
+       Scroll Reveal Animations
+       ============================================ */
+
+    /* Base: hidden state */
+    [data-reveal] {
+        opacity: 0;
+        transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Default: fade up */
+    [data-reveal=""],
+    [data-reveal="up"] {
+        transform: translateY(32px);
+    }
+
+    [data-reveal="left"] {
+        transform: translateX(-40px);
+    }
+
+    [data-reveal="right"] {
+        transform: translateX(40px);
+    }
+
+    [data-reveal="scale"] {
+        transform: scale(0.92);
+    }
+
+    [data-reveal="fade"] {
+        /* Just opacity, no transform */
+    }
+
+    /* Revealed state */
+    [data-reveal].revealed {
+        opacity: 1;
+        transform: translateY(0) translateX(0) scale(1);
+    }
+
+    /* Reduce motion for accessibility */
+    @media (prefers-reduced-motion: reduce) {
+        [data-reveal] {
+            opacity: 1;
+            transform: none;
+            transition: none;
+        }
+    }
+
+    /* Counter animation for stats */
+    .animate-counter {
+        animation: counterPulse 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes counterPulse {
+        0% { transform: scale(0.8); opacity: 0; }
+        60% { transform: scale(1.05); }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Floating animation for decorative elements */
+    .animate-float {
+        animation: float 6s ease-in-out infinite;
+    }
+
+    .animate-float-delayed {
+        animation: float 6s ease-in-out 2s infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-12px); }
+    }
+
+    /* Parallax-like gradient shift */
+    .animate-gradient {
+        background-size: 200% 200%;
+        animation: gradientShift 8s ease infinite;
+    }
+
+    @keyframes gradientShift {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+}

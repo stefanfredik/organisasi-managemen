@@ -1,10 +1,15 @@
 <script setup>
 import { useForm, Head, Link } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import InputError from "@/Components/InputError.vue";
-import InputLabel from "@/Components/InputLabel.vue";
-import PrimaryButton from "@/Components/PrimaryButton.vue";
-import TextInput from "@/Components/TextInput.vue";
+import ImageUpload from "@/Components/ImageUpload.vue";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 
 const props = defineProps({
     structure: Object,
@@ -24,9 +29,7 @@ const form = useForm({
     photo: null,
 });
 
-const onPhotoChange = (e) => {
-    form.photo = e.target.files[0];
-};
+const currentPhoto = props.structure.photo_path ? `/storage/${props.structure.photo_path}` : null;
 
 const submit = () => {
     form.put(route("organization-structures.update", props.structure.id));
@@ -38,108 +41,112 @@ const submit = () => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            <h2 class="font-semibold text-xl text-foreground leading-tight">
                 Edit Struktur Organisasi
             </h2>
         </template>
 
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 bg-white border-b border-gray-200">
+        <div class="py-6 sm:py-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <Card>
+                    <CardContent class="p-6">
                         <form @submit.prevent="submit">
                             <!-- Posisi & Anggota -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 mb-4">
                                 <div>
-                                    <InputLabel for="position_name" value="Nama Posisi" />
-                                    <TextInput id="position_name" type="text" class="mt-1 block w-full" v-model="form.position_name" required />
-                                    <InputError class="mt-2" :message="form.errors.position_name" />
+                                    <Label for="position_name">Nama Posisi</Label>
+                                    <Input id="position_name" type="text" class="mt-1 block w-full" v-model="form.position_name" required />
+                                    <p v-if="form.errors.position_name" class="mt-2 text-sm text-destructive">{{ form.errors.position_name }}</p>
                                 </div>
                                 <div>
-                                    <InputLabel for="member_id" value="Anggota (Opsional)" />
-                                    <select
-                                        id="member_id"
-                                        class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                                        v-model="form.member_id"
-                                    >
-                                        <option value="">-</option>
-                                        <option v-for="m in members" :key="m.id" :value="m.id">
-                                            {{ m.full_name }}
-                                        </option>
-                                    </select>
-                                    <InputError class="mt-2" :message="form.errors.member_id" />
+                                    <Label for="member_id">Anggota (Opsional)</Label>
+                                    <Select v-model="form.member_id">
+                                        <SelectTrigger class="mt-1 w-full">
+                                            <SelectValue placeholder="Pilih anggota" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="">-</SelectItem>
+                                            <SelectItem v-for="m in members" :key="m.id" :value="m.id.toString()">
+                                                {{ m.full_name }}
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <p v-if="form.errors.member_id" class="mt-2 text-sm text-destructive">{{ form.errors.member_id }}</p>
                                 </div>
                             </div>
 
                             <!-- Hierarchy -->
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                                 <div>
-                                    <InputLabel for="level" value="Level" />
-                                    <TextInput id="level" type="number" class="mt-1 block w-full" v-model="form.level" min="0" required />
-                                    <InputError class="mt-2" :message="form.errors.level" />
+                                    <Label for="level">Level</Label>
+                                    <Input id="level" type="number" class="mt-1 block w-full" v-model="form.level" min="0" required />
+                                    <p v-if="form.errors.level" class="mt-2 text-sm text-destructive">{{ form.errors.level }}</p>
                                 </div>
                                 <div>
-                                    <InputLabel for="parent_id" value="Induk (Opsional)" />
-                                    <select
-                                        id="parent_id"
-                                        class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                                        v-model="form.parent_id"
-                                    >
-                                        <option value="">-</option>
-                                        <option v-for="p in parents" :key="p.id" :value="p.id">
-                                            {{ p.position_name }}
-                                        </option>
-                                    </select>
-                                    <InputError class="mt-2" :message="form.errors.parent_id" />
+                                    <Label for="parent_id">Induk (Opsional)</Label>
+                                    <Select v-model="form.parent_id">
+                                        <SelectTrigger class="mt-1 w-full">
+                                            <SelectValue placeholder="Pilih induk" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="">-</SelectItem>
+                                            <SelectItem v-for="p in parents" :key="p.id" :value="p.id.toString()">
+                                                {{ p.position_name }}
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <p v-if="form.errors.parent_id" class="mt-2 text-sm text-destructive">{{ form.errors.parent_id }}</p>
                                 </div>
                                 <div>
-                                    <InputLabel for="sort_order" value="Urutan" />
-                                    <TextInput id="sort_order" type="number" class="mt-1 block w-full" v-model="form.sort_order" min="0" required />
-                                    <InputError class="mt-2" :message="form.errors.sort_order" />
+                                    <Label for="sort_order">Urutan</Label>
+                                    <Input id="sort_order" type="number" class="mt-1 block w-full" v-model="form.sort_order" min="0" required />
+                                    <p v-if="form.errors.sort_order" class="mt-2 text-sm text-destructive">{{ form.errors.sort_order }}</p>
                                 </div>
                             </div>
 
                             <!-- Period -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 mb-4">
                                 <div>
-                                    <InputLabel for="period_start" value="Tahun Mulai" />
-                                    <TextInput id="period_start" type="number" class="mt-1 block w-full" v-model="form.period_start" required />
-                                    <InputError class="mt-2" :message="form.errors.period_start" />
+                                    <Label for="period_start">Tahun Mulai</Label>
+                                    <Input id="period_start" type="number" class="mt-1 block w-full" v-model="form.period_start" required />
+                                    <p v-if="form.errors.period_start" class="mt-2 text-sm text-destructive">{{ form.errors.period_start }}</p>
                                 </div>
                                 <div>
-                                    <InputLabel for="period_end" value="Tahun Selesai (Opsional)" />
-                                    <TextInput id="period_end" type="number" class="mt-1 block w-full" v-model="form.period_end" />
-                                    <InputError class="mt-2" :message="form.errors.period_end" />
+                                    <Label for="period_end">Tahun Selesai (Opsional)</Label>
+                                    <Input id="period_end" type="number" class="mt-1 block w-full" v-model="form.period_end" />
+                                    <p v-if="form.errors.period_end" class="mt-2 text-sm text-destructive">{{ form.errors.period_end }}</p>
                                 </div>
                             </div>
 
                             <!-- Status -->
-                            <div class="mb-4">
-                                <label class="inline-flex items-center">
-                                    <input type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" v-model="form.is_active" />
-                                    <span class="ml-2 text-sm text-gray-700">Aktif</span>
-                                </label>
-                                <InputError class="mt-2" :message="form.errors.is_active" />
+                            <div class="mb-4 flex items-center space-x-2">
+                                <Checkbox id="is_active" :checked="form.is_active" @update:checked="(val) => form.is_active = val" />
+                                <Label for="is_active" class="text-sm font-normal">Aktif</Label>
+                                <p v-if="form.errors.is_active" class="mt-2 text-sm text-destructive">{{ form.errors.is_active }}</p>
                             </div>
 
                             <!-- Photo -->
                             <div class="mb-4">
-                                <InputLabel for="photo" value="Foto (Opsional)" />
-                                <input id="photo" type="file" accept="image/*" class="mt-1 block w-full" @change="onPhotoChange" />
-                                <InputError class="mt-2" :message="form.errors.photo" />
-
-                                <div v-if="props.structure.photo_path" class="mt-2">
-                                    <img :src="`/storage/${props.structure.photo_path}`" alt="Foto" class="h-20 rounded border" @error="$event.target.style.display = 'none'" />
+                                <Label>Foto (Opsional)</Label>
+                                <div class="mt-1">
+                                    <ImageUpload
+                                        v-model="form.photo"
+                                        :current-image="currentPhoto"
+                                        label="Upload Foto"
+                                        :error="form.errors.photo"
+                                    />
                                 </div>
                             </div>
 
-                            <div class="flex items-center justify-end mt-4">
-                                <Link :href="route('organization-structures.index')" class="text-sm text-gray-600 hover:text-gray-900 mr-4">Batal</Link>
-                                <PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing">Simpan Perubahan</PrimaryButton>
+                            <div class="flex items-center justify-end mt-4 gap-4">
+                                <Button variant="ghost" as-child>
+                                    <Link :href="route('organization-structures.index')">Batal</Link>
+                                </Button>
+                                <Button type="submit" :disabled="form.processing">Simpan Perubahan</Button>
                             </div>
                         </form>
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
             </div>
         </div>
     </AuthenticatedLayout>

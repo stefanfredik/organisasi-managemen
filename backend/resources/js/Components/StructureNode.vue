@@ -11,7 +11,7 @@ const props = defineProps({
 });
 
 const statusBadge = (active) =>
-    active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700";
+    active ? "bg-success-100 text-green-700" : "bg-muted text-foreground";
 const statusText = (active) => (active ? "Aktif" : "Tidak Aktif");
 
 const avatarSrc = (node) => {
@@ -33,7 +33,7 @@ const addPlacement = ref("child");
     <div class="structure-node">
         <div class="flex flex-col items-center">
             <div class="relative group">
-                <div class="rounded-xl bg-white shadow-sm border border-gray-200 px-4 py-3 w-64">
+                <div class="rounded-xl bg-card shadow-sm border border px-4 py-3 w-64">
                     <div class="flex items-center gap-3">
                         <img
                             v-if="avatarSrc(node)"
@@ -42,21 +42,21 @@ const addPlacement = ref("child");
                             alt="avatar"
                             @error="$event.target.style.display = 'none'"
                         />
-                        <div v-else class="h-10 w-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold">
+                        <div v-else class="h-10 w-10 rounded-full bg-primary-600 text-white flex items-center justify-center font-bold">
                             {{ (node.member?.full_name || node.position_name || '?').charAt(0).toUpperCase() }}
                         </div>
                         <div class="min-w-0">
-                            <div class="font-bold text-sm text-gray-900 truncate">
+                            <div class="font-bold text-sm text-foreground truncate">
                                 {{ node.position_name }}
                             </div>
-                            <div class="text-xs text-gray-600 truncate">
+                            <div class="text-xs text-muted-foreground truncate">
                                 {{ node.member?.full_name || '-' }}
                             </div>
                             <div class="mt-1 flex items-center gap-2">
                                 <span class="inline-block text-[10px] px-2 py-0.5 rounded-full" :class="statusBadge(node.is_active)">
                                     {{ statusText(node.is_active) }}
                                 </span>
-                                <span class="text-[10px] text-gray-500">
+                                <span class="text-[10px] text-muted-foreground">
                                     {{ node.period_start }} - {{ node.period_end || 'Sekarang' }}
                                 </span>
                             </div>
@@ -71,7 +71,7 @@ const addPlacement = ref("child");
                 </div>
                 <div v-if="canManage" class="pointer-events-none">
                     <button
-                        class="pointer-events-auto absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition bg-white border border-gray-200 rounded-full w-7 h-7 flex items-center justify-center shadow-sm text-gray-500 hover:text-indigo-700"
+                        class="pointer-events-auto absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition bg-card border border rounded-full w-7 h-7 flex items-center justify-center shadow-sm text-muted-foreground hover:text-primary"
                         @click="assignTrigger++;"
                         aria-label="Tambah/Ganti Anggota"
                     >
@@ -81,7 +81,7 @@ const addPlacement = ref("child");
                     </button>
                     <button
                         v-if="node.parent_id !== null"
-                        class="pointer-events-auto absolute top-1/2 -translate-y-1/2 -right-3 opacity-0 group-hover:opacity-100 transition bg-white border border-gray-200 rounded-full w-7 h-7 flex items-center justify-center shadow-sm text-gray-500 hover:text-green-700"
+                        class="pointer-events-auto absolute top-1/2 -translate-y-1/2 -right-3 opacity-0 group-hover:opacity-100 transition bg-card border border rounded-full w-7 h-7 flex items-center justify-center shadow-sm text-muted-foreground hover:text-green-700"
                         @click="addPlacement = 'sibling'; addTrigger++;"
                         aria-label="Tambah Sejajar"
                     >
@@ -90,7 +90,7 @@ const addPlacement = ref("child");
                         </svg>
                     </button>
                     <button
-                        class="pointer-events-auto absolute -bottom-3 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition bg-white border border-gray-200 rounded-full w-7 h-7 flex items-center justify-center shadow-sm text-gray-500 hover:text-green-700"
+                        class="pointer-events-auto absolute -bottom-3 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition bg-card border border rounded-full w-7 h-7 flex items-center justify-center shadow-sm text-muted-foreground hover:text-green-700"
                         @click="addPlacement = 'child'; addTrigger++;"
                         aria-label="Tambah Dibawah"
                     >
@@ -102,7 +102,7 @@ const addPlacement = ref("child");
 
                 <button
                     v-if="node.children && node.children.length"
-                    class="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-white border border-gray-200 rounded-full w-7 h-7 flex items-center justify-center shadow-sm text-gray-500 hover:text-gray-700"
+                    class="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-card border border rounded-full w-7 h-7 flex items-center justify-center shadow-sm text-muted-foreground hover:text-foreground"
                     @click="toggle(node.id)"
                     :aria-label="collapsed[node.id] ? 'Perluas' : 'Ciutkan'"
                 >
@@ -116,10 +116,10 @@ const addPlacement = ref("child");
             </div>
 
             <div v-if="node.children && node.children.length && !collapsed[node.id]" class="children mt-6 w-full">
-                <div class="connector h-6 w-px bg-gray-300 mx-auto"></div>
+                <div class="connector h-6 w-px bg-border mx-auto"></div>
                 <div class="flex items-start justify-center gap-6">
                     <div v-for="c in node.children" :key="c.id" class="relative">
-                        <div class="h-px w-full bg-gray-300 absolute -top-3"></div>
+                        <div class="h-px w-full bg-border absolute -top-3"></div>
                         <StructureNode :node="c" :collapsed="collapsed" :toggle="toggle" :members="members" :can-manage="canManage" />
                     </div>
                 </div>
@@ -196,7 +196,7 @@ export default {
                 <button
                     v-if="!open"
                     type="button"
-                    class="inline-flex items-center text-xs text-indigo-600 hover:text-indigo-800"
+                    class="inline-flex items-center text-xs text-primary hover:text-primary-800"
                     @click="open = true"
                 >
                     <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -207,7 +207,7 @@ export default {
                 <div v-else class="mt-2 space-y-2">
                     <select
                         v-model="selected"
-                        class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-xs"
+                        class="block w-full border-input focus:border-ring focus:ring-ring rounded-md shadow-sm text-xs"
                     >
                         <option value="">- Kosong -</option>
                         <option v-for="m in members" :key="m.id" :value="m.id">
@@ -218,13 +218,13 @@ export default {
                         <button
                             type="button"
                             @click="save"
-                            class="px-2 py-1 rounded bg-indigo-600 text-white text-xs disabled:opacity-50"
+                            class="px-2 py-1 rounded bg-primary-600 text-white text-xs disabled:opacity-50"
                             :disabled="saving"
                         >Simpan</button>
                         <button
                             type="button"
                             @click="open = false"
-                            class="px-2 py-1 rounded bg-gray-100 text-gray-700 text-xs"
+                            class="px-2 py-1 rounded bg-muted text-foreground text-xs"
                         >Batal</button>
                     </div>
                 </div>
@@ -313,7 +313,7 @@ export default {
                 <button
                     v-if="!open"
                     type="button"
-                    class="inline-flex items-center text-xs text-green-600 hover:text-green-800"
+                    class="inline-flex items-center text-xs text-success-600 hover:text-success-800"
                     @click="open = true"
                 >
                     <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -323,12 +323,12 @@ export default {
                 </button>
                 <div v-else class="mt-2 space-y-2">
                     <div class="flex items-center gap-2">
-                        <label class="text-[11px] text-gray-600">Letak:</label>
-                        <label class="inline-flex items-center gap-1 text-[11px] text-gray-700">
+                        <label class="text-[11px] text-muted-foreground">Letak:</label>
+                        <label class="inline-flex items-center gap-1 text-[11px] text-foreground">
                             <input type="radio" value="child" v-model="placement" />
                             Dibawah
                         </label>
-                        <label class="inline-flex items-center gap-1 text-[11px] text-gray-700">
+                        <label class="inline-flex items-center gap-1 text-[11px] text-foreground">
                             <input type="radio" value="sibling" v-model="placement" />
                             Sejajar
                         </label>
@@ -337,11 +337,11 @@ export default {
                         type="text"
                         v-model="positionName"
                         placeholder="Nama posisi"
-                        class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-xs"
+                        class="block w-full border-input focus:border-ring focus:ring-ring rounded-md shadow-sm text-xs"
                     />
                     <select
                         v-model="selectedMember"
-                        class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-xs"
+                        class="block w-full border-input focus:border-ring focus:ring-ring rounded-md shadow-sm text-xs"
                     >
                         <option value="">- Tanpa anggota -</option>
                         <option v-for="m in members" :key="m.id" :value="m.id">
@@ -358,7 +358,7 @@ export default {
                         <button
                             type="button"
                             @click="open = false"
-                            class="px-2 py-1 rounded bg-gray-100 text-gray-700 text-xs"
+                            class="px-2 py-1 rounded bg-muted text-foreground text-xs"
                         >Batal</button>
                     </div>
                 </div>

@@ -1,0 +1,11 @@
+<script setup>
+import { AlertDialogRoot } from 'radix-vue';
+const props = defineProps({ open: { type: Boolean, default: undefined } });
+const emit = defineEmits(['update:open']);
+</script>
+
+<template>
+    <AlertDialogRoot v-bind="props" @update:open="emit('update:open', $event)">
+        <slot />
+    </AlertDialogRoot>
+</template>

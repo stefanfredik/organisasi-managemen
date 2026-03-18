@@ -27,6 +27,8 @@ class UpdateEventRequest extends FormRequest
             'start_date' => 'sometimes|required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'location' => 'nullable|string|max:255',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'pic_id' => 'nullable|exists:members,id',
             'max_participants' => 'nullable|integer|min:0',
             'status' => 'sometimes|required|in:draft,published,ongoing,completed,cancelled',

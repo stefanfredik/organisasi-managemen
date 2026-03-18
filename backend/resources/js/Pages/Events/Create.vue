@@ -2,9 +2,9 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import TextInput from '@/Components/TextInput.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 const props = defineProps({
     members: Array,
@@ -34,19 +34,19 @@ const submit = () => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">
+            <h2 class="text-xl font-semibold leading-tight text-foreground">
                 Buat Kegiatan Baru
             </h2>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <div class="max-w-3xl mx-auto overflow-hidden bg-white shadow-sm sm:rounded-lg">
+        <div class="py-6 sm:py-8">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="max-w-3xl mx-auto overflow-hidden bg-card shadow-sm sm:rounded-lg">
                     <form @submit.prevent="submit" class="p-6 space-y-6">
                         <!-- Nama Kegiatan -->
                         <div>
-                            <InputLabel for="name" value="Nama Kegiatan" />
-                            <TextInput
+                            <Label for="name">Nama Kegiatan</Label>
+                            <Input
                                 id="name"
                                 v-model="form.name"
                                 type="text"
@@ -59,21 +59,21 @@ const submit = () => {
 
                         <!-- Deskripsi -->
                         <div>
-                            <InputLabel for="description" value="Deskripsi" />
+                            <Label for="description">Deskripsi</Label>
                             <textarea
                                 id="description"
                                 v-model="form.description"
                                 rows="4"
-                                class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                class="mt-1 block w-full border-input focus:border-ring focus:ring-ring rounded-md shadow-sm"
                             ></textarea>
                             <InputError class="mt-2" :message="form.errors.description" />
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
                             <!-- Waktu Mulai -->
                             <div>
-                                <InputLabel for="start_date" value="Waktu Mulai" />
-                                <TextInput
+                                <Label for="start_date">Waktu Mulai</Label>
+                                <Input
                                     id="start_date"
                                     v-model="form.start_date"
                                     type="datetime-local"
@@ -85,8 +85,8 @@ const submit = () => {
 
                             <!-- Waktu Selesai -->
                             <div>
-                                <InputLabel for="end_date" value="Waktu Selesai (Opsional)" />
-                                <TextInput
+                                <Label for="end_date">Waktu Selesai (Opsional)</Label>
+                                <Input
                                     id="end_date"
                                     v-model="form.end_date"
                                     type="datetime-local"
@@ -98,8 +98,8 @@ const submit = () => {
 
                         <!-- Lokasi -->
                         <div>
-                            <InputLabel for="location" value="Lokasi" />
-                            <TextInput
+                            <Label for="location">Lokasi</Label>
+                            <Input
                                 id="location"
                                 v-model="form.location"
                                 type="text"
@@ -108,14 +108,14 @@ const submit = () => {
                             <InputError class="mt-2" :message="form.errors.location" />
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
                             <!-- PIC -->
                             <div>
-                                <InputLabel for="pic_id" value="Penanggung Jawab (PIC)" />
+                                <Label for="pic_id">Penanggung Jawab (PIC)</Label>
                                 <select
                                     id="pic_id"
                                     v-model="form.pic_id"
-                                    class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    class="mt-1 block w-full border-input focus:border-ring focus:ring-ring rounded-md shadow-sm"
                                 >
                                     <option value="">Pilih PIC</option>
                                     <option
@@ -131,8 +131,8 @@ const submit = () => {
 
                             <!-- Maks Peserta -->
                             <div>
-                                <InputLabel for="max_participants" value="Maksimal Peserta" />
-                                <TextInput
+                                <Label for="max_participants">Maksimal Peserta</Label>
+                                <Input
                                     id="max_participants"
                                     v-model="form.max_participants"
                                     type="number"
@@ -142,14 +142,14 @@ const submit = () => {
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
                             <!-- Status -->
                             <div>
-                                <InputLabel for="status" value="Status" />
+                                <Label for="status">Status</Label>
                                 <select
                                     id="status"
                                     v-model="form.status"
-                                    class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    class="mt-1 block w-full border-input focus:border-ring focus:ring-ring rounded-md shadow-sm"
                                     required
                                 >
                                     <option value="draft">Draft</option>
@@ -164,9 +164,9 @@ const submit = () => {
                                     <input
                                         type="checkbox"
                                         v-model="form.is_public"
-                                        class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                        class="rounded border-input text-primary shadow-sm focus:ring-ring"
                                     />
-                                    <span class="ml-2 text-sm text-gray-600">Publikasikan di halaman depan</span>
+                                    <span class="ml-2 text-sm text-muted-foreground">Publikasikan di halaman depan</span>
                                 </label>
                                 <InputError class="mt-2" :message="form.errors.is_public" />
                             </div>
@@ -175,16 +175,16 @@ const submit = () => {
                         <div class="flex items-center justify-end gap-4">
                             <Link
                                 :href="route('events.index')"
-                                class="text-sm text-gray-600 hover:text-gray-900"
+                                class="text-sm text-muted-foreground hover:text-foreground"
                             >
                                 Batal
                             </Link>
-                            <PrimaryButton
+                            <Button type="submit"
                                 :class="{ 'opacity-25': form.processing }"
                                 :disabled="form.processing"
                             >
                                 Simpan Kegiatan
-                            </PrimaryButton>
+                            </Button>
                         </div>
                     </form>
                 </div>

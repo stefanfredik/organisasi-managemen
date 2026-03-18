@@ -2,12 +2,15 @@
 import { ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import Modal from '@/Components/Modal.vue';
-import SecondaryButton from '@/Components/SecondaryButton.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import TextInput from '@/Components/TextInput.vue';
-import InputError from '@/Components/InputError.vue';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import {
+    Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
+import { Plus, Pencil } from 'lucide-vue-next';
 
 const props = defineProps({
     wallets: Array,
@@ -76,93 +79,47 @@ const formatCurrency = (amount) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex justify-between items-center">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                    Kas & Dompet Organisasi
-                </h2>
-                <PrimaryButton @click="openModal()" v-if="$page.props.auth.user.role === 'admin' || $page.props.auth.user.role === 'bendahara'">
+            <div class="flex items-center justify-between gap-3">
+                <h2 class="text-lg font-semibold leading-tight text-foreground">Kas & Dompet</h2>
+                <Button size="sm" @click="openModal()" v-if="$page.props.auth.user.role === 'admin' || $page.props.auth.user.role === 'bendahara'">
                     Tambah Dompet
-                </PrimaryButton>
+                </Button>
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <!-- Summary Stats Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <!-- Total Saldo -->
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all">
-                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <svg class="w-16 h-16 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-                                <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd" />
-                            </svg>
-                        </div>
-                        <div class="relative z-10">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-1">Total Saldo (Kas)</p>
-                            <h3 class="text-3xl font-black text-gray-900 leading-tight">
-                                {{ formatCurrency(stats.total_balance) }}
-                            </h3>
-                            <div class="mt-4 flex items-center text-xs text-indigo-600 font-bold">
-                                <span>Dana siap pakai saat ini</span>
-                            </div>
-                        </div>
+        <div class="py-4 sm:py-6">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <!-- Compact Summary Row -->
+                <div class="grid grid-cols-3 gap-3 mb-4">
+                    <div class="bg-card p-3 sm:p-4 rounded-xl border">
+                        <p class="text-[10px] font-bold uppercase text-muted-foreground">Saldo</p>
+                        <p class="text-base sm:text-lg font-bold text-foreground">{{ formatCurrency(stats.total_balance) }}</p>
                     </div>
-
-                    <!-- Total Pemasukan -->
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all">
-                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <svg class="w-16 h-16 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a8 8 0 1016 0V6a2 2 0 00-2-2H4zm2 3a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm2 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clip-rule="evenodd" />
-                            </svg>
-                        </div>
-                        <div class="relative z-10">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-green-400 mb-1">Total Pemasukan</p>
-                            <h3 class="text-3xl font-black text-green-700 leading-tight">
-                                {{ formatCurrency(stats.total_income) }}
-                            </h3>
-                            <div class="mt-4 flex items-center text-xs text-green-600 font-bold">
-                                <span>Kumulatif dana masuk</span>
-                            </div>
-                        </div>
+                    <div class="bg-card p-3 sm:p-4 rounded-xl border">
+                        <p class="text-[10px] font-bold uppercase text-muted-foreground">Masuk</p>
+                        <p class="text-base sm:text-lg font-bold text-success-700">{{ formatCurrency(stats.total_income) }}</p>
                     </div>
-
-                    <!-- Total Pengeluaran -->
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all">
-                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <svg class="w-16 h-16 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-7.535 5.035a1 1 0 101.415-1.414 3 3 0 014.242 0 1 1 0 001.415 1.414 5 5 0 00-7.072 0z" clip-rule="evenodd" />
-                            </svg>
-                        </div>
-                        <div class="relative z-10">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-red-400 mb-1">Total Pengeluaran</p>
-                            <h3 class="text-3xl font-black text-red-700 leading-tight">
-                                {{ formatCurrency(stats.total_expense) }}
-                            </h3>
-                            <div class="mt-4 flex items-center text-xs text-red-600 font-bold">
-                                <span>Kumulatif dana keluar</span>
-                            </div>
-                        </div>
+                    <div class="bg-card p-3 sm:p-4 rounded-xl border">
+                        <p class="text-[10px] font-bold uppercase text-muted-foreground">Keluar</p>
+                        <p class="text-base sm:text-lg font-bold text-destructive">{{ formatCurrency(stats.total_expense) }}</p>
                     </div>
                 </div>
 
-                <hr class="my-6">
-
-                <div v-if="wallets.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div v-if="wallets.length > 0" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <div v-for="(wallet, index) in wallets" :key="wallet.id" class="group relative perspective-1000">
                         <!-- Credit Card Container -->
                         <Link :href="route('wallets.show', wallet.id)" class="block relative w-full aspect-[1.586/1] rounded-2xl shadow-xl transition-all duration-500 transform group-hover:scale-[1.02] overflow-hidden text-white cursor-pointer"
                              :class="[
                                 wallet.is_active 
                                     ? 'bg-gradient-to-br from-cyan-500 via-blue-600 to-blue-800' 
-                                    : 'bg-gradient-to-br from-gray-600 via-gray-700 to-gray-800 grayscale'
+                                    : 'bg-gradient-to-br from-muted-foreground via-muted-foreground to-foreground/90 grayscale'
                              ]">
                             
                             <!-- Detailed background patterns for realism -->
                             <div class="absolute inset-0 opacity-10" 
                                  style="background-image: radial-gradient(circle at 50% -20%, rgba(255,255,255,0.8), transparent 50%);">
                             </div>
-                            <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white opacity-5 blur-3xl"></div>
+                            <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-card opacity-5 blur-3xl"></div>
                             <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 rounded-full bg-black opacity-10 blur-3xl"></div>
 
                             <div class="absolute inset-0 p-6 flex flex-col justify-between z-10">
@@ -181,10 +138,10 @@ const formatCurrency = (amount) => {
                                 <div class="flex items-center gap-4">
                                     <div class="w-12 h-9 bg-yellow-200 rounded-md relative overflow-hidden shadow-sm flex items-center justify-center opacity-90">
                                         <div class="absolute inset-0 border-[0.5px] border-yellow-600 opacity-40 rounded-md"></div>
-                                        <div class="w-full h-[1px] bg-yellow-600 opacity-40 absolute top-1/3"></div>
-                                        <div class="w-full h-[1px] bg-yellow-600 opacity-40 absolute bottom-1/3"></div>
-                                        <div class="h-full w-[1px] bg-yellow-600 opacity-40 absolute left-1/3"></div>
-                                        <div class="h-full w-[1px] bg-yellow-600 opacity-40 absolute right-1/3"></div>
+                                        <div class="w-full h-[1px] bg-warning-600 opacity-40 absolute top-1/3"></div>
+                                        <div class="w-full h-[1px] bg-warning-600 opacity-40 absolute bottom-1/3"></div>
+                                        <div class="h-full w-[1px] bg-warning-600 opacity-40 absolute left-1/3"></div>
+                                        <div class="h-full w-[1px] bg-warning-600 opacity-40 absolute right-1/3"></div>
                                     </div>
                                     <!-- Signal/WiFi Icon (Access Indicator) -->
                                     <svg v-if="wallet.is_active" class="w-5 h-5 opacity-60 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -213,7 +170,7 @@ const formatCurrency = (amount) => {
                                             <span class="text-xs font-mono font-bold text-green-50">+ {{ formatCurrency(wallet.total_income || 0) }}</span>
                                         </div>
                                         <div class="flex flex-col">
-                                            <span class="text-[8px] uppercase text-red-300 opacity-90 font-bold tracking-wider">KELUAR</span>
+                                            <span class="text-[8px] uppercase text-danger-300 opacity-90 font-bold tracking-wider">KELUAR</span>
                                             <span class="text-xs font-mono font-bold text-red-50">- {{ formatCurrency(wallet.total_expense || 0) }}</span>
                                         </div>
                                     </div>
@@ -224,18 +181,18 @@ const formatCurrency = (amount) => {
 
                         <!-- Action Buttons (Slide out or appear below) -->
                         <div class="absolute -bottom-4 left-0 right-0 flex justify-center opacity-0 group-hover:opacity-100 group-hover:bottom-[-2.5rem] transition-all duration-300 z-20" v-if="$page.props.auth.user.role === 'admin' || $page.props.auth.user.role === 'bendahara'">
-                            <div class="bg-white rounded-full shadow-lg p-1.5 flex gap-2 border border-gray-100 transform scale-90 group-hover:scale-100">
-                                <button @click="openModal(wallet)" class="p-2 bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-600 hover:text-white transition" title="Edit">
+                            <div class="bg-card rounded-full shadow-lg p-1.5 flex gap-2 border border transform scale-90 group-hover:scale-100">
+                                <button @click="openModal(wallet)" class="p-2 bg-primary/10 text-primary rounded-full hover:bg-primary hover:text-white transition" title="Edit">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                                 </button>
-                                <button @click="deleteWallet(wallet)" class="p-2 bg-red-50 text-red-600 rounded-full hover:bg-red-600 hover:text-white transition" title="Hapus">
+                                <button @click="deleteWallet(wallet)" class="p-2 bg-destructive/10 text-destructive rounded-full hover:bg-destructive hover:text-white transition" title="Hapus">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                 </button>
                             </div>
                         </div>
 
                         <!-- Stats below card (Visible always, subtle) -->
-                        <div class="mt-4 flex justify-between px-2 text-xs text-gray-400 font-medium opacity-60 group-hover:opacity-100 transition-opacity">
+                        <div class="mt-4 flex justify-between px-2 text-xs text-muted-foreground font-medium opacity-60 group-hover:opacity-100 transition-opacity">
                             <span>{{ wallet.finances_count }} Transaksi</span>
                             <span>{{ wallet.contributions_count }} Iuran</span>
                         </div>
@@ -243,72 +200,67 @@ const formatCurrency = (amount) => {
                     
                 </div>
 
-                <div v-else class="bg-white p-16 text-center rounded-xl shadow-sm border border-gray-100">
-                    <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div v-else class="bg-card p-16 text-center rounded-xl shadow-sm border border">
+                    <div class="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                         </svg>
                     </div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-1">Belum Ada Dompet</h3>
-                    <p class="text-gray-500 mb-6">Mulai dengan membuat dompet untuk mengelola dana organisasi.</p>
+                    <h3 class="text-lg font-bold text-foreground mb-1">Belum Ada Dompet</h3>
+                    <p class="text-muted-foreground mb-6">Mulai dengan membuat dompet untuk mengelola dana organisasi.</p>
                     
-                    <PrimaryButton @click="openModal()">
+                    <Button type="submit" @click="openModal()">
                         Buat Dompet Pertama
-                    </PrimaryButton>
+                    </Button>
                 </div>
             </div>
         </div>
 
-        <!-- Modal Create/Edit -->
-        <Modal :show="showModal" @close="showModal = false">
-            <div class="p-8">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-xl font-black text-gray-900">
+        <!-- Dialog Create/Edit -->
+        <Dialog :open="showModal" @update:open="(val) => { if (!val) showModal = false; }">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>
                         {{ isEditing ? 'Edit Data Dompet' : 'Buat Dompet Baru' }}
-                    </h2>
-                    <button @click="showModal = false" class="text-gray-400 hover:text-gray-600">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
+                    </DialogTitle>
+                </DialogHeader>
 
                 <form @submit.prevent="submit" class="space-y-6">
                     <div>
-                        <InputLabel for="name" value="Nama Dompet" class="text-xs font-bold uppercase text-gray-500" />
-                        <TextInput id="name" type="text" class="mt-1 block w-full border-gray-200" v-model="form.name" required placeholder="Contoh: Kas Utama, Dana Sosial" />
-                        <InputError class="mt-2" :message="form.errors.name" />
+                        <Label for="name" class="text-xs font-bold uppercase text-muted-foreground">Nama Dompet</Label>
+                        <Input id="name" type="text" class="mt-1 block w-full" v-model="form.name" required placeholder="Contoh: Kas Utama, Dana Sosial" />
+                        <p v-if="form.errors.name" class="mt-2 text-sm text-destructive">{{ form.errors.name }}</p>
                     </div>
 
                     <div>
-                        <InputLabel for="description" value="Deskripsi (Opsional)" class="text-xs font-bold uppercase text-gray-500" />
-                        <textarea id="description" rows="3" class="mt-1 block w-full border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg shadow-sm" v-model="form.description" placeholder="Jelaskan kegunaan dompet ini..."></textarea>
-                        <InputError class="mt-2" :message="form.errors.description" />
+                        <Label for="description" class="text-xs font-bold uppercase text-muted-foreground">Deskripsi (Opsional)</Label>
+                        <Textarea id="description" rows="3" class="mt-1 block w-full" v-model="form.description" placeholder="Jelaskan kegunaan dompet ini..." />
+                        <p v-if="form.errors.description" class="mt-2 text-sm text-destructive">{{ form.errors.description }}</p>
                     </div>
 
                     <div v-if="!isEditing">
-                        <InputLabel for="balance" value="Saldo Awal (Rp)" class="text-xs font-bold uppercase text-gray-500" />
-                        <TextInput id="balance" type="number" step="0.01" class="mt-1 block w-full border-gray-200" v-model="form.balance" />
-                        <p class="mt-1 text-xs text-gray-400 italic">* Saldo awal hanya bisa diatur saat pembuatan dompet.</p>
-                        <InputError class="mt-2" :message="form.errors.balance" />
+                        <Label for="balance" class="text-xs font-bold uppercase text-muted-foreground">Saldo Awal (Rp)</Label>
+                        <Input id="balance" type="number" step="0.01" class="mt-1 block w-full" v-model="form.balance" />
+                        <p class="mt-1 text-xs text-muted-foreground italic">* Saldo awal hanya bisa diatur saat pembuatan dompet.</p>
+                        <p v-if="form.errors.balance" class="mt-2 text-sm text-destructive">{{ form.errors.balance }}</p>
                     </div>
 
-                    <div class="flex items-center bg-gray-50 p-3 rounded-lg">
-                        <input type="checkbox" id="is_active" v-model="form.is_active" class="h-5 w-5 rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" />
+                    <div class="flex items-center space-x-2 bg-muted p-3 rounded-lg">
+                        <Checkbox id="is_active" :checked="form.is_active" @update:checked="(val) => form.is_active = val" />
                         <div class="ml-3">
-                            <label for="is_active" class="text-sm font-bold text-gray-700">Status Aktif</label>
-                            <p class="text-xs text-gray-500">Dompet nonaktif tidak akan muncul di pilihan transaksi baru.</p>
+                            <Label for="is_active" class="text-sm font-bold text-foreground">Status Aktif</Label>
+                            <p class="text-xs text-muted-foreground">Dompet nonaktif tidak akan muncul di pilihan transaksi baru.</p>
                         </div>
                     </div>
 
-                    <div class="mt-8 flex justify-end gap-3">
-                        <SecondaryButton @click="showModal = false" class="px-6"> Batal </SecondaryButton>
-                        <PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing" class="px-8 shadow-lg shadow-indigo-100">
+                    <DialogFooter>
+                        <Button variant="outline" type="button" @click="showModal = false">Batal</Button>
+                        <Button type="submit" :disabled="form.processing">
                             {{ isEditing ? 'Simpan Perubahan' : 'Konfirmasi & Buat' }}
-                        </PrimaryButton>
-                    </div>
+                        </Button>
+                    </DialogFooter>
                 </form>
-            </div>
-        </Modal>
+            </DialogContent>
+        </Dialog>
     </AuthenticatedLayout>
 </template>

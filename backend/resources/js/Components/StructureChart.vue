@@ -37,7 +37,7 @@ const toggle = (id) => {
 
 <template>
     <div class="structure-chart">
-        <div v-if="tree.length === 0" class="text-sm text-gray-500">Tidak ada data struktur.</div>
+        <div v-if="tree.length === 0" class="text-sm text-muted-foreground">Tidak ada data struktur.</div>
         <div v-else class="flex flex-col items-center">
             <div class="flex items-start justify-center gap-6">
                 <StructureNode

@@ -3,6 +3,14 @@ import { ref } from "vue";
 import { Head, Link, router } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import QuillEditor from "@/Components/QuillEditor.vue";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 
 const props = defineProps({
     announcement: Object,
@@ -44,6 +52,14 @@ const save = () => {
         },
     });
 };
+
+const toggleRole = (role, checked) => {
+    if (checked) {
+        form.value.target_roles.push(role);
+    } else {
+        form.value.target_roles = form.value.target_roles.filter(r => r !== role);
+    }
+};
 </script>
 
 <template>
@@ -51,58 +67,73 @@ const save = () => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">Edit Pengumuman</h2>
+            <h2 class="text-xl font-semibold leading-tight text-foreground">Edit Pengumuman</h2>
         </template>
 
-        <div class="py-12">
-            <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 bg-white border-b border-gray-200 space-y-4">
+        <div class="py-6 sm:py-8">
+            <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+                <Card>
+                    <CardContent class="p-6 space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Judul</label>
-                            <input v-model="form.title" type="text" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" />
+                            <Label for="title">Judul</Label>
+                            <Input id="title" v-model="form.title" type="text" class="mt-1" />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Konten</label>
+                            <Label>Konten</Label>
                             <div class="mt-1">
                                 <QuillEditor v-model="form.content" placeholder="Tulis isi pengumuman..." />
                             </div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Status</label>
-                                <select v-model="form.status" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                                    <option value="draft">Draft</option>
-                                    <option value="published">Dipublikasikan</option>
-                                </select>
+                                <Label>Status</Label>
+                                <Select v-model="form.status">
+                                    <SelectTrigger class="mt-1 w-full">
+                                        <SelectValue placeholder="Pilih status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="draft">Draft</SelectItem>
+                                        <SelectItem value="published">Dipublikasikan</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Tanggal Publish</label>
-                                <input v-model="form.publish_date" type="date" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" />
+                                <Label>Tanggal Publish</Label>
+                                <Input v-model="form.publish_date" type="date" class="mt-1" />
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Audiens</label>
-                                <select v-model="form.target_audience" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                                    <option value="all">Semua</option>
-                                    <option value="roles">Per Role</option>
-                                </select>
+                                <Label>Audiens</Label>
+                                <Select v-model="form.target_audience">
+                                    <SelectTrigger class="mt-1 w-full">
+                                        <SelectValue placeholder="Pilih audiens" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Semua</SelectItem>
+                                        <SelectItem value="roles">Per Role</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
                         <div v-if="form.target_audience === 'roles'">
-                            <label class="block text-sm font-medium text-gray-700">Pilih Role</label>
+                            <Label>Pilih Role</Label>
                             <div class="mt-2 grid grid-cols-2 md:grid-cols-3 gap-2">
-                                <label v-for="r in roleOptions" :key="r" class="inline-flex items-center">
-                                    <input type="checkbox" :value="r" v-model="form.target_roles" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" />
-                                    <span class="ml-2 capitalize">{{ r }}</span>
+                                <label v-for="r in roleOptions" :key="r" class="inline-flex items-center gap-2">
+                                    <Checkbox
+                                        :checked="form.target_roles.includes(r)"
+                                        @update:checked="toggleRole(r, $event)"
+                                    />
+                                    <span class="text-sm capitalize">{{ r }}</span>
                                 </label>
                             </div>
                         </div>
-                        <div class="flex items-center justify-end gap-2">
-                            <Link :href="route('announcements.index')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md">Batal</Link>
-                            <button @click="save" :disabled="saving || !form.title" class="px-4 py-2 bg-indigo-600 text-white rounded-md disabled:opacity-50">Simpan</button>
+                        <div class="flex items-center justify-end gap-3">
+                            <Button variant="outline" as-child>
+                                <Link :href="route('announcements.index')">Batal</Link>
+                            </Button>
+                            <Button @click="save" :disabled="saving || !form.title">Simpan</Button>
                         </div>
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
             </div>
         </div>
     </AuthenticatedLayout>

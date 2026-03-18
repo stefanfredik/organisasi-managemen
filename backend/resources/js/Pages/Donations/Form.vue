@@ -2,9 +2,9 @@
 import { Head, useForm, Link } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import TextInput from '@/Components/TextInput.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 const props = defineProps({
     donation: Object,
@@ -35,20 +35,20 @@ const submit = () => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">
+            <h2 class="text-xl font-semibold leading-tight text-foreground">
                 {{ isEdit ? 'Edit Program Donasi' : 'Buat Program Donasi' }}
             </h2>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
+        <div class="py-6 sm:py-8">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="overflow-hidden bg-card shadow-sm sm:rounded-lg">
                     <div class="p-6">
                         <form @submit.prevent="submit" class="max-w-2xl">
                             <div class="space-y-6">
                                 <div>
-                                    <InputLabel for="program_name" value="Nama Program Donasi" />
-                                    <TextInput
+                                    <Label for="program_name">Nama Program Donasi</Label>
+                                    <Input
                                         id="program_name"
                                         type="text"
                                         class="mt-1 block w-full"
@@ -61,10 +61,10 @@ const submit = () => {
                                 </div>
 
                                 <div>
-                                    <InputLabel for="description" value="Deskripsi" />
+                                    <Label for="description">Deskripsi</Label>
                                     <textarea
                                         id="description"
-                                        class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                        class="mt-1 block w-full border-input focus:border-ring focus:ring-ring rounded-md shadow-sm"
                                         v-model="form.description"
                                         rows="4"
                                         placeholder="Jelaskan tujuan dan detail penggalangan dana..."
@@ -72,10 +72,10 @@ const submit = () => {
                                     <InputError class="mt-2" :message="form.errors.description" />
                                 </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
                                     <div>
-                                        <InputLabel for="target_amount" value="Target Dana (Rp)" />
-                                        <TextInput
+                                        <Label for="target_amount">Target Dana (Rp)</Label>
+                                        <Input
                                             id="target_amount"
                                             type="number"
                                             class="mt-1 block w-full"
@@ -88,25 +88,25 @@ const submit = () => {
                                     </div>
 
                                     <div>
-                                        <InputLabel for="is_public" value="Status Publikasi" />
+                                        <Label for="is_public">Status Publikasi</Label>
                                         <div class="mt-2 flex items-center space-x-4">
                                             <label class="inline-flex items-center">
                                                 <input
                                                     type="checkbox"
-                                                    class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                                    class="rounded border-input text-primary shadow-sm focus:ring-ring"
                                                     v-model="form.is_public"
                                                 />
-                                                <span class="ml-2 text-sm text-gray-600">Terlihat di Halaman Publik</span>
+                                                <span class="ml-2 text-sm text-muted-foreground">Terlihat di Halaman Publik</span>
                                             </label>
                                         </div>
                                         <InputError class="mt-2" :message="form.errors.is_public" />
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
                                     <div>
-                                        <InputLabel for="start_date" value="Tanggal Mulai" />
-                                        <TextInput
+                                        <Label for="start_date">Tanggal Mulai</Label>
+                                        <Input
                                             id="start_date"
                                             type="date"
                                             class="mt-1 block w-full"
@@ -117,8 +117,8 @@ const submit = () => {
                                     </div>
 
                                     <div>
-                                        <InputLabel for="end_date" value="Tanggal Selesai (Opsional)" />
-                                        <TextInput
+                                        <Label for="end_date">Tanggal Selesai (Opsional)</Label>
+                                        <Input
                                             id="end_date"
                                             type="date"
                                             class="mt-1 block w-full"
@@ -129,10 +129,10 @@ const submit = () => {
                                 </div>
 
                                 <div v-if="isEdit">
-                                    <InputLabel for="status" value="Status Program" />
+                                    <Label for="status">Status Program</Label>
                                     <select
                                         id="status"
-                                        class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                        class="mt-1 block w-full border-input focus:border-ring focus:ring-ring rounded-md shadow-sm"
                                         v-model="form.status"
                                         required
                                     >
@@ -146,13 +146,13 @@ const submit = () => {
                                 <div class="flex items-center justify-end mt-8 gap-4">
                                     <Link
                                         :href="isEdit ? route('donations.show', props.donation.id) : route('donations.index')"
-                                        class="text-sm text-gray-600 hover:text-gray-900"
+                                        class="text-sm text-muted-foreground hover:text-foreground"
                                     >
                                         Batal
                                     </Link>
-                                    <PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+                                    <Button type="submit" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
                                         {{ isEdit ? 'Simpan Perubahan' : 'Buat Program Donasi' }}
-                                    </PrimaryButton>
+                                    </Button>
                                 </div>
                             </div>
                         </form>

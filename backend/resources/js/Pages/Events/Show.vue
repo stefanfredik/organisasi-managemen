@@ -2,11 +2,25 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import Modal from '@/Components/Modal.vue';
-import SecondaryButton from '@/Components/SecondaryButton.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import InputError from '@/Components/InputError.vue';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import {
+    Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog';
+import {
+    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+    AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+    Calendar, MapPin, Users, FileText, Camera, ArrowLeft, Pencil, Trash2,
+    X, ChevronLeft, ChevronRight, MoreVertical, Clock, User, Eye, Globe, UserPlus, Upload,
+} from 'lucide-vue-next';
 
 const props = defineProps({
     event: Object,
@@ -16,6 +30,16 @@ const props = defineProps({
 const showParticipantModal = ref(false);
 const showDocModal = ref(false);
 const zoomedIndex = ref(null);
+const showDeleteDialog = ref(false);
+const deleteParticipantTarget = ref(null);
+const deleteDocTarget = ref(null);
+const activeTab = ref('info');
+
+const tabs = [
+    { id: 'info', name: 'Info', icon: FileText },
+    { id: 'docs', name: 'Dokumentasi', icon: Camera },
+    { id: 'participants', name: 'Peserta', icon: Users },
+];
 
 const zoomedDoc = computed(() => {
     if (zoomedIndex.value === null) return null;
@@ -23,19 +47,13 @@ const zoomedDoc = computed(() => {
 });
 
 const prevDoc = () => {
-    if (zoomedIndex.value > 0) {
-        zoomedIndex.value--;
-    } else {
-        zoomedIndex.value = props.event.documentations.length - 1;
-    }
+    if (zoomedIndex.value > 0) zoomedIndex.value--;
+    else zoomedIndex.value = props.event.documentations.length - 1;
 };
 
 const nextDoc = () => {
-    if (zoomedIndex.value < props.event.documentations.length - 1) {
-        zoomedIndex.value++;
-    } else {
-        zoomedIndex.value = 0;
-    }
+    if (zoomedIndex.value < props.event.documentations.length - 1) zoomedIndex.value++;
+    else zoomedIndex.value = 0;
 };
 
 const handleKeyDown = (e) => {
@@ -45,89 +63,122 @@ const handleKeyDown = (e) => {
     if (e.key === 'Escape') zoomedIndex.value = null;
 };
 
-onMounted(() => {
-    window.addEventListener('keydown', handleKeyDown);
-});
+onMounted(() => window.addEventListener('keydown', handleKeyDown));
+onUnmounted(() => window.removeEventListener('keydown', handleKeyDown));
 
-onUnmounted(() => {
-    window.removeEventListener('keydown', handleKeyDown);
-});
-
-const participantForm = useForm({
-    member_id: '',
-    notes: '',
-});
-
-const docForm = useForm({
-    files: [],
-    caption: '',
-});
+const participantForm = useForm({ member_id: '', notes: '' });
+const docForm = useForm({ files: [], caption: '' });
 
 const getStatusBadge = (status) => {
-    const badges = {
-        draft: 'bg-gray-100 text-gray-800',
-        published: 'bg-blue-100 text-blue-800',
-        ongoing: 'bg-yellow-100 text-yellow-800',
-        completed: 'bg-green-100 text-green-800',
-        cancelled: 'bg-red-100 text-red-800',
+    const map = { draft: 'secondary', published: 'default', ongoing: 'warning', completed: 'success', cancelled: 'destructive' };
+    return map[status] || 'secondary';
+};
+
+const getStatusLabel = (status) => {
+    const map = { draft: 'Draft', published: 'Published', ongoing: 'Berlangsung', completed: 'Selesai', cancelled: 'Dibatalkan' };
+    return map[status] || status;
+};
+
+const getAttendanceBadgeClass = (s) => {
+    const map = {
+        registered: 'bg-primary/20 text-primary',
+        attended: 'bg-success/20 text-success-foreground',
+        absent: 'bg-destructive/20 text-destructive',
     };
-    return badges[status] || 'bg-gray-100 text-gray-800';
+    return map[s] || 'bg-muted text-foreground';
+};
+
+const getAttendanceLabel = (s) => {
+    const map = { registered: 'Terdaftar', attended: 'Hadir', absent: 'Tidak Hadir' };
+    return map[s] || s;
 };
 
 const formatDate = (date) => {
     return new Date(date).toLocaleString('id-ID', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
+        day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
     });
 };
 
+const formatDateShort = (date) => {
+    return new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
 const deleteEvent = () => {
-    if (confirm('Apakah Anda yakin ingin menghapus kegiatan ini?')) {
-        router.delete(route('events.destroy', props.event));
-    }
+    router.delete(route('events.destroy', props.event));
+    showDeleteDialog.value = false;
 };
 
 const addParticipant = () => {
     participantForm.post(route('events.participants.add', props.event), {
-        onSuccess: () => {
-            showParticipantModal.value = false;
-            participantForm.reset();
-        },
+        onSuccess: () => { showParticipantModal.value = false; participantForm.reset(); },
     });
 };
 
-const removeParticipant = (member) => {
-    if (confirm(`Hapus ${member.full_name} dari daftar peserta?`)) {
-        router.delete(route('events.participants.remove', [props.event, member]));
+const confirmRemoveParticipant = (member) => { deleteParticipantTarget.value = member; };
+const doRemoveParticipant = () => {
+    if (deleteParticipantTarget.value) {
+        router.delete(route('events.participants.remove', [props.event, deleteParticipantTarget.value]));
+        deleteParticipantTarget.value = null;
     }
 };
 
 const updateAttendance = (member, status) => {
-    router.patch(route('events.participants.update-status', [props.event, member]), {
-        attendance_status: status,
-    });
+    router.patch(route('events.participants.update-status', [props.event, member]), { attendance_status: status });
 };
 
 const uploadDoc = () => {
     docForm.post(route('events.documentations.upload', props.event), {
-        onSuccess: () => {
-            showDocModal.value = false;
-            docForm.reset();
-        },
+        forceFormData: true,
+        onSuccess: () => { showDocModal.value = false; resetDocForm(); },
     });
 };
 
-const deleteDoc = (doc) => {
-    if (confirm('Hapus dokumentasi ini?')) {
-        router.delete(route('events.documentations.destroy', [props.event, doc]));
+const confirmDeleteDoc = (doc) => { deleteDocTarget.value = doc; };
+const doDeleteDoc = () => {
+    if (deleteDocTarget.value) {
+        router.delete(route('events.documentations.destroy', [props.event, deleteDocTarget.value]));
+        deleteDocTarget.value = null;
     }
 };
 
+const docPreviews = ref([]);
+const fileInputRef = ref(null);
+const isDragging = ref(false);
+
 const handleFileSelect = (e) => {
-    docForm.files = Array.from(e.target.files);
+    addFiles(Array.from(e.target.files));
+};
+
+const handleDrop = (e) => {
+    isDragging.value = false;
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    if (files.length) addFiles(files);
+};
+
+const addFiles = (newFiles) => {
+    const combined = [...docForm.files, ...newFiles];
+    docForm.files = combined;
+    newFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => { docPreviews.value.push({ name: file.name, url: e.target.result, size: file.size }); };
+        reader.readAsDataURL(file);
+    });
+};
+
+const removeFile = (index) => {
+    docForm.files.splice(index, 1);
+    docPreviews.value.splice(index, 1);
+};
+
+const formatFileSize = (bytes) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+};
+
+const resetDocForm = () => {
+    docForm.reset();
+    docPreviews.value = [];
 };
 </script>
 
@@ -136,253 +187,341 @@ const handleFileSelect = (e) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex justify-between items-center">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                    Detail Kegiatan
-                </h2>
-                <div class="flex gap-2">
-                    <Link
-                        v-if="hasPermission('manage_events')"
-                        :href="route('events.edit', event)"
-                        class="inline-flex items-center justify-center rounded-xl border border-transparent bg-orange-600 px-4 py-3 text-xs font-bold uppercase tracking-widest text-white transition duration-200 ease-in-out hover:bg-orange-700 active:bg-orange-800 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 shadow-md shadow-orange-100"
-                    >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <Link :href="route('events.index')" class="text-muted-foreground hover:text-foreground">
+                        <ArrowLeft class="w-5 h-5" />
                     </Link>
-                    <button
-                        v-if="hasPermission('manage_events')"
-                        @click="deleteEvent"
-                        class="inline-flex items-center justify-center rounded-xl border border-transparent bg-red-600 px-4 py-3 text-xs font-bold uppercase tracking-widest text-white transition duration-200 ease-in-out hover:bg-red-700 active:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 shadow-md shadow-red-100"
-                    >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1 1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                    </button>
-                    <Link
-                        :href="route('events.index')"
-                        class="inline-flex items-center justify-center rounded-xl border border-transparent bg-gray-600 px-4 py-3 text-xs font-bold uppercase tracking-widest text-white transition duration-200 ease-in-out hover:bg-gray-700 active:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 shadow-md shadow-gray-100"
-                    >
-                        Kembali
-                    </Link>
+                    <h2 class="text-lg font-semibold text-foreground">Detail Kegiatan</h2>
+                </div>
+                <!-- Desktop actions -->
+                <div class="hidden sm:flex gap-2" v-if="hasPermission('manage_events')">
+                    <Button as-child variant="default" size="sm">
+                        <Link :href="route('events.edit', event)">
+                            <Pencil class="w-4 h-4 mr-1" /> Ubah
+                        </Link>
+                    </Button>
+                    <Button variant="destructive" size="sm" @click="showDeleteDialog = true">
+                        <Trash2 class="w-4 h-4 mr-1" /> Hapus
+                    </Button>
+                </div>
+                <!-- Mobile hamburger -->
+                <div class="sm:hidden" v-if="hasPermission('manage_events')">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger as-child>
+                            <Button variant="ghost" size="icon">
+                                <MoreVertical class="w-5 h-5" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem @click="router.visit(route('events.edit', event))">
+                                <Pencil class="h-4 w-4 mr-2" /> Ubah Kegiatan
+                            </DropdownMenuItem>
+                            <DropdownMenuItem @click="showDeleteDialog = true" class="text-destructive">
+                                <Trash2 class="h-4 w-4 mr-2" /> Hapus Kegiatan
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-6">
-                <!-- Info Utama -->
-                <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                    <div class="p-6">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h3 class="text-2xl font-bold text-gray-900">
-                                    {{ event.name }}
-                                </h3>
-                                <span
-                                    :class="getStatusBadge(event.status)"
-                                    class="inline-block mt-2 px-3 py-1 text-xs rounded-full font-semibold"
-                                >
-                                    {{ event.status.charAt(0).toUpperCase() + event.status.slice(1) }}
+        <div class="py-4 sm:py-8">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-6">
+
+                <!-- Event Header Card -->
+                <div class="bg-card border rounded-xl overflow-hidden">
+                    <!-- Mobile: Centered header -->
+                    <div class="sm:hidden p-5">
+                        <div class="flex flex-col items-center text-center">
+                            <div class="w-16 h-16 bg-primary/10 rounded-2xl flex flex-col items-center justify-center mb-4">
+                                <span class="text-primary font-bold text-lg leading-none">{{ new Date(event.start_date).getDate() }}</span>
+                                <span class="text-primary/70 text-[10px] font-semibold uppercase">{{ new Date(event.start_date).toLocaleDateString('id-ID', { month: 'short' }) }}</span>
+                            </div>
+                            <h3 class="text-xl font-bold text-foreground">{{ event.name }}</h3>
+                            <Badge :variant="getStatusBadge(event.status)" class="mt-2">{{ getStatusLabel(event.status) }}</Badge>
+
+                            <!-- Quick info pills -->
+                            <div class="flex flex-wrap justify-center gap-2 mt-4">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted rounded-lg text-xs text-muted-foreground">
+                                    <Clock class="w-3.5 h-3.5" />
+                                    {{ new Date(event.start_date).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }}
+                                </span>
+                                <span v-if="event.location" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted rounded-lg text-xs text-muted-foreground">
+                                    <MapPin class="w-3.5 h-3.5" />
+                                    {{ event.location }}
+                                </span>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted rounded-lg text-xs text-muted-foreground">
+                                    <Users class="w-3.5 h-3.5" />
+                                    {{ event.participants.length }} / {{ event.max_participants || '∞' }}
                                 </span>
                             </div>
                         </div>
+                    </div>
 
+                    <!-- Desktop: Horizontal header -->
+                    <div class="hidden sm:block p-6">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="text-2xl font-bold text-foreground">{{ event.name }}</h3>
+                                <Badge :variant="getStatusBadge(event.status)" class="mt-2">{{ getStatusLabel(event.status) }}</Badge>
+                            </div>
+                        </div>
                         <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="space-y-4">
                                 <div>
-                                    <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                        Waktu Pelaksanaan
-                                    </h4>
-                                    <p class="mt-1 text-gray-900">
+                                    <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Waktu Pelaksanaan</h4>
+                                    <p class="mt-1 text-foreground">
                                         {{ formatDate(event.start_date) }}
-                                        <span v-if="event.end_date">
-                                            - {{ formatDate(event.end_date) }}
-                                        </span>
+                                        <span v-if="event.end_date"> - {{ formatDate(event.end_date) }}</span>
                                     </p>
                                 </div>
                                 <div>
-                                    <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                        Lokasi
-                                    </h4>
-                                    <p class="mt-1 text-gray-900">
-                                        {{ event.location || '-' }}
-                                    </p>
+                                    <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Lokasi</h4>
+                                    <p class="mt-1 text-foreground">{{ event.location || '-' }}</p>
                                 </div>
                                 <div>
-                                    <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                        Penanggung Jawab (PIC)
-                                    </h4>
-                                    <p class="mt-1 text-gray-900">
-                                        {{ event.pic ? event.pic.full_name : '-' }}
-                                    </p>
+                                    <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Penanggung Jawab (PIC)</h4>
+                                    <p class="mt-1 text-foreground">{{ event.pic ? event.pic.full_name : '-' }}</p>
                                 </div>
                             </div>
                             <div class="space-y-4">
                                 <div>
-                                    <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                        Maksimal Peserta
-                                    </h4>
-                                    <p class="mt-1 text-gray-900">
-                                        {{ event.max_participants || 'Tanpa Batas' }}
-                                    </p>
+                                    <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Maksimal Peserta</h4>
+                                    <p class="mt-1 text-foreground">{{ event.max_participants || 'Tanpa Batas' }}</p>
                                 </div>
                                 <div>
-                                    <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                        Visibilitas Publik
-                                    </h4>
-                                    <p class="mt-1 text-gray-900">
-                                        {{ event.is_public ? 'Ya (Tampil di halaman depan)' : 'Tidak' }}
-                                    </p>
+                                    <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Visibilitas Publik</h4>
+                                    <p class="mt-1 text-foreground">{{ event.is_public ? 'Ya (Tampil di halaman depan)' : 'Tidak' }}</p>
                                 </div>
                                 <div>
-                                    <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                        Dibuat Oleh
-                                    </h4>
-                                    <p class="mt-1 text-gray-900 text-sm">
-                                        {{ event.creator.name }} pada {{ formatDate(event.created_at) }}
-                                    </p>
+                                    <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Dibuat Oleh</h4>
+                                    <p class="mt-1 text-foreground text-sm">{{ event.creator.name }} pada {{ formatDate(event.created_at) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-if="event.description" class="mt-8">
+                            <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Deskripsi Kegiatan</h4>
+                            <div class="mt-2 text-foreground whitespace-pre-wrap">{{ event.description }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs (mobile) / Sections (desktop) -->
+                <div class="bg-card border rounded-xl overflow-hidden">
+                    <!-- Tab Navigation - mobile only -->
+                    <div class="border-b sm:hidden">
+                        <nav class="-mb-px flex overflow-x-auto no-scrollbar">
+                            <button
+                                v-for="tab in tabs"
+                                :key="tab.id"
+                                :class="[
+                                    activeTab === tab.id
+                                        ? 'border-primary text-primary'
+                                        : 'border-transparent text-muted-foreground',
+                                    'flex-1 whitespace-nowrap py-3 px-3 border-b-2 font-medium text-sm flex items-center justify-center gap-1.5 min-h-[44px]',
+                                ]"
+                                @click="activeTab = tab.id"
+                            >
+                                <component :is="tab.icon" class="w-4 h-4" />
+                                <span>{{ tab.name }}</span>
+                                <Badge v-if="tab.id === 'participants'" variant="secondary" class="text-[10px] px-1 py-0 ml-0.5">{{ event.participants.length }}</Badge>
+                                <Badge v-if="tab.id === 'docs'" variant="secondary" class="text-[10px] px-1 py-0 ml-0.5">{{ event.documentations.length }}</Badge>
+                            </button>
+                        </nav>
+                    </div>
+
+                    <!-- Mobile Tab Content -->
+                    <div class="sm:hidden p-4">
+                        <!-- Info Tab -->
+                        <div v-if="activeTab === 'info'" class="space-y-4">
+                            <div class="space-y-1">
+                                <h4 class="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1 mb-2">Detail Kegiatan</h4>
+                                <div class="bg-muted/30 rounded-xl divide-y divide-border">
+                                    <div class="px-4 py-3">
+                                        <span class="text-sm text-muted-foreground block mb-1">Waktu Mulai</span>
+                                        <span class="text-sm font-medium text-foreground">{{ formatDate(event.start_date) }}</span>
+                                    </div>
+                                    <div v-if="event.end_date" class="px-4 py-3">
+                                        <span class="text-sm text-muted-foreground block mb-1">Waktu Selesai</span>
+                                        <span class="text-sm font-medium text-foreground">{{ formatDate(event.end_date) }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center px-4 py-3">
+                                        <span class="text-sm text-muted-foreground">Lokasi</span>
+                                        <span class="text-sm font-medium text-foreground">{{ event.location || '-' }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center px-4 py-3">
+                                        <span class="text-sm text-muted-foreground">PIC</span>
+                                        <span class="text-sm font-medium text-foreground">{{ event.pic ? event.pic.full_name : '-' }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center px-4 py-3">
+                                        <span class="text-sm text-muted-foreground">Maks. Peserta</span>
+                                        <span class="text-sm font-medium text-foreground">{{ event.max_participants || 'Tanpa Batas' }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center px-4 py-3">
+                                        <span class="text-sm text-muted-foreground">Publik</span>
+                                        <Badge :variant="event.is_public ? 'default' : 'secondary'" class="text-xs">{{ event.is_public ? 'Ya' : 'Tidak' }}</Badge>
+                                    </div>
+                                    <div class="flex justify-between items-center px-4 py-3">
+                                        <span class="text-sm text-muted-foreground">Dibuat</span>
+                                        <span class="text-sm font-medium text-foreground">{{ event.creator.name }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-if="event.description" class="space-y-1">
+                                <h4 class="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1 mb-2">Deskripsi</h4>
+                                <div class="bg-muted/30 rounded-xl px-4 py-3">
+                                    <p class="text-sm text-foreground whitespace-pre-wrap">{{ event.description }}</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="mt-8">
-                            <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                Deskripsi Kegiatan
-                            </h4>
-                            <div class="mt-2 text-gray-700 whitespace-pre-wrap">
-                                {{ event.description || 'Tidak ada deskripsi.' }}
+                        <!-- Docs Tab -->
+                        <div v-if="activeTab === 'docs'">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-bold text-muted-foreground uppercase tracking-wider">{{ event.documentations.length }} foto</span>
+                                <Button v-if="hasPermission('manage_events')" size="sm" variant="outline" @click="showDocModal = true" class="h-8 text-xs gap-1">
+                                    <Upload class="w-3.5 h-3.5" /> Upload
+                                </Button>
+                            </div>
+                            <div v-if="event.documentations.length > 0" class="grid grid-cols-3 gap-2">
+                                <div v-for="(doc, index) in event.documentations" :key="doc.id" class="relative aspect-square rounded-xl overflow-hidden group">
+                                    <img :src="doc.url" :alt="doc.caption" class="w-full h-full object-cover" @click="zoomedIndex = index" />
+                                    <button
+                                        v-if="hasPermission('manage_events')"
+                                        @click.stop="confirmDeleteDoc(doc)"
+                                        class="absolute top-1 right-1 w-6 h-6 bg-black/50 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                        <X class="w-3 h-3" />
+                                    </button>
+                                </div>
+                            </div>
+                            <div v-else class="text-center py-10">
+                                <Camera class="mx-auto h-10 w-10 text-muted-foreground/40 mb-3" />
+                                <p class="text-sm text-muted-foreground">Belum ada dokumentasi.</p>
+                            </div>
+                        </div>
+
+                        <!-- Participants Tab -->
+                        <div v-if="activeTab === 'participants'">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-bold text-muted-foreground uppercase tracking-wider">{{ event.participants.length }} / {{ event.max_participants || '∞' }} peserta</span>
+                                <Button v-if="hasPermission('manage_events')" size="sm" variant="outline" @click="showParticipantModal = true" class="h-8 text-xs gap-1">
+                                    <UserPlus class="w-3.5 h-3.5" /> Tambah
+                                </Button>
+                            </div>
+                            <div v-if="event.participants.length > 0" class="divide-y divide-border bg-muted/30 rounded-xl overflow-hidden">
+                                <div v-for="p in event.participants" :key="p.id" class="flex items-center gap-3 px-4 py-3">
+                                    <div class="shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                        <span class="text-primary font-semibold text-sm">{{ p.full_name.charAt(0).toUpperCase() }}</span>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-semibold text-foreground truncate">{{ p.full_name }}</p>
+                                        <p class="text-xs text-muted-foreground">{{ p.member_code }}</p>
+                                    </div>
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        <span class="px-2 py-0.5 text-xs rounded-full font-semibold" :class="getAttendanceBadgeClass(p.pivot.attendance_status)">
+                                            {{ getAttendanceLabel(p.pivot.attendance_status) }}
+                                        </span>
+                                        <DropdownMenu v-if="hasPermission('manage_events')">
+                                            <DropdownMenuTrigger as-child>
+                                                <button class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-muted">
+                                                    <MoreVertical class="w-3.5 h-3.5 text-muted-foreground" />
+                                                </button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem @click="updateAttendance(p, 'attended')">Hadir</DropdownMenuItem>
+                                                <DropdownMenuItem @click="updateAttendance(p, 'absent')">Tidak Hadir</DropdownMenuItem>
+                                                <DropdownMenuItem @click="updateAttendance(p, 'registered')">Terdaftar</DropdownMenuItem>
+                                                <DropdownMenuItem @click="confirmRemoveParticipant(p)" class="text-destructive">
+                                                    <Trash2 class="h-4 w-4 mr-2" /> Hapus
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else class="text-center py-10">
+                                <Users class="mx-auto h-10 w-10 text-muted-foreground/40 mb-3" />
+                                <p class="text-sm text-muted-foreground">Belum ada peserta terdaftar.</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Dokumentasi -->
-                <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg pb-6">
-                    <div class="p-6 border-b border-gray-200 flex justify-between items-center">
-                        <h3 class="text-lg font-semibold text-gray-900">
-                            Dokumentasi ({{ event.documentations.length }})
-                        </h3>
-                        <button
-                            v-if="hasPermission('manage_events')"
-                            @click="showDocModal = true"
-                            class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white hover:bg-indigo-700 transition shadow-sm"
-                        >
-                            Upload Foto
-                        </button>
+                <!-- Desktop: Documentation Section -->
+                <div class="hidden sm:block bg-card border rounded-xl overflow-hidden">
+                    <div class="p-6 border-b flex justify-between items-center">
+                        <h3 class="text-lg font-semibold text-foreground">Dokumentasi ({{ event.documentations.length }})</h3>
+                        <Button v-if="hasPermission('manage_events')" size="sm" @click="showDocModal = true">
+                            <Upload class="w-4 h-4 mr-1" /> Upload Foto
+                        </Button>
                     </div>
                     <div v-if="event.documentations.length > 0" class="p-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                         <div v-for="(doc, index) in event.documentations" :key="doc.id" class="relative group">
-                            <img
-                                :src="doc.url"
-                                :alt="doc.caption"
-                                class="w-full h-32 object-cover rounded shadow"
-                            />
-                            <div 
-                                class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded cursor-pointer"
-                                @click="zoomedIndex = index"
-                            >
-                                <button
-                                    v-if="hasPermission('manage_events')"
-                                    @click.stop="deleteDoc(doc)"
-                                    class="text-white hover:text-red-400 p-2"
-                                >
-                                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M19 4h-3.5l-1-1h-5l-1 1H5v2h14V4zM6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12z"/>
-                                    </svg>
+                            <img :src="doc.url" :alt="doc.caption" class="w-full h-32 object-cover rounded shadow cursor-pointer" @click="zoomedIndex = index" />
+                            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded">
+                                <button v-if="hasPermission('manage_events')" @click.stop="confirmDeleteDoc(doc)" class="text-white hover:text-destructive p-2">
+                                    <Trash2 class="w-5 h-5" />
                                 </button>
                             </div>
-                            <p v-if="doc.caption" class="mt-1 text-xs text-gray-500 truncate">{{ doc.caption }}</p>
+                            <p v-if="doc.caption" class="mt-1 text-xs text-muted-foreground truncate">{{ doc.caption }}</p>
                         </div>
                     </div>
-                    <div v-else class="p-12 text-center text-gray-500">
-                        Belum ada dokumentasi.
-                    </div>
+                    <div v-else class="p-12 text-center text-muted-foreground">Belum ada dokumentasi.</div>
                 </div>
 
-                <!-- Daftar Peserta -->
-                <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                    <div class="p-6 border-b border-gray-200 flex justify-between items-center">
-                        <h3 class="text-lg font-semibold text-gray-900">
-                            Daftar Peserta ({{ event.participants.length }} / {{ event.max_participants || '∞' }})
-                        </h3>
-                        <button
-                            v-if="hasPermission('manage_events')"
-                            @click="showParticipantModal = true"
-                            class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white hover:bg-indigo-700 transition shadow-sm"
-                        >
-                            Tambah Peserta
-                        </button>
+                <!-- Desktop: Participants Section -->
+                <div class="hidden sm:block bg-card border rounded-xl overflow-hidden">
+                    <div class="p-6 border-b flex justify-between items-center">
+                        <h3 class="text-lg font-semibold text-foreground">Daftar Peserta ({{ event.participants.length }} / {{ event.max_participants || '∞' }})</h3>
+                        <Button v-if="hasPermission('manage_events')" size="sm" @click="showParticipantModal = true">
+                            <UserPlus class="w-4 h-4 mr-1" /> Tambah Peserta
+                        </Button>
                     </div>
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                        <table class="min-w-full divide-y divide-border">
+                            <thead class="bg-muted">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Nama Anggota
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Tanggal Daftar
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Status Kehadiran
-                                    </th>
-                                    <th v-if="hasPermission('manage_events')" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Aksi
-                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Nama Anggota</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Tanggal Daftar</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status Kehadiran</th>
+                                    <th v-if="hasPermission('manage_events')" class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                <tr v-for="participant in event.participants" :key="participant.id">
+                            <tbody class="bg-card divide-y divide-border">
+                                <tr v-for="p in event.participants" :key="p.id">
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900">
-                                            {{ participant.full_name }}
-                                        </div>
-                                        <div class="text-xs text-gray-500">
-                                            {{ participant.member_code }}
-                                        </div>
+                                        <div class="text-sm font-medium text-foreground">{{ p.full_name }}</div>
+                                        <div class="text-xs text-muted-foreground">{{ p.member_code }}</div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">
-                                            {{ formatDate(participant.pivot.registration_date) }}
-                                        </div>
-                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">{{ formatDate(p.pivot.registration_date) }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center gap-2">
-                                            <span class="px-2 py-1 text-xs rounded-full font-semibold"
-                                                :class="{
-                                                    'bg-blue-100 text-blue-800': participant.pivot.attendance_status === 'registered',
-                                                    'bg-green-100 text-green-800': participant.pivot.attendance_status === 'attended',
-                                                    'bg-red-100 text-red-800': participant.pivot.attendance_status === 'absent',
-                                                }"
-                                            >
-                                                {{ participant.pivot.attendance_status.charAt(0).toUpperCase() + participant.pivot.attendance_status.slice(1) }}
+                                            <span class="px-2 py-1 text-xs rounded-full font-semibold" :class="getAttendanceBadgeClass(p.pivot.attendance_status)">
+                                                {{ getAttendanceLabel(p.pivot.attendance_status) }}
                                             </span>
-                                            
                                             <select
                                                 v-if="hasPermission('manage_events')"
-                                                :value="participant.pivot.attendance_status"
-                                                @change="updateAttendance(participant, $event.target.value)"
-                                                class="text-xs rounded border-gray-300 py-0"
+                                                :value="p.pivot.attendance_status"
+                                                @change="updateAttendance(p, $event.target.value)"
+                                                class="text-xs rounded border-input py-0"
                                             >
-                                                <option value="registered">Registered</option>
-                                                <option value="attended">Attended</option>
-                                                <option value="absent">Absent</option>
+                                                <option value="registered">Terdaftar</option>
+                                                <option value="attended">Hadir</option>
+                                                <option value="absent">Tidak Hadir</option>
                                             </select>
                                         </div>
                                     </td>
-                                    <td v-if="hasPermission('manage_events')" class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <button
-                                            @click="removeParticipant(participant)"
-                                            class="text-red-600 hover:text-red-900"
-                                        >
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1 1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                        </button>
+                                    <td v-if="hasPermission('manage_events')" class="px-6 py-4 whitespace-nowrap text-right">
+                                        <Button variant="ghost" size="sm" class="text-destructive h-7 px-2" @click="confirmRemoveParticipant(p)">
+                                            <Trash2 class="w-4 h-4" />
+                                        </Button>
                                     </td>
                                 </tr>
                                 <tr v-if="event.participants.length === 0">
-                                    <td
-                                        colspan="4"
-                                        class="px-6 py-12 text-center text-gray-500"
-                                    >
-                                        Belum ada peserta terdaftar.
-                                    </td>
+                                    <td colspan="4" class="px-6 py-12 text-center text-muted-foreground">Belum ada peserta terdaftar.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -391,152 +530,179 @@ const handleFileSelect = (e) => {
             </div>
         </div>
 
-        <!-- Participant Modal -->
-        <Modal :show="showParticipantModal" @close="showParticipantModal = false">
-            <div class="p-6">
-                <h2 class="text-lg font-medium text-gray-900">
-                    Tambah Peserta Kegiatan
-                </h2>
-
-                <div class="mt-4 space-y-4">
+        <!-- Add Participant Dialog -->
+        <Dialog :open="showParticipantModal" @update:open="(val) => { if (!val) showParticipantModal = false; }">
+            <DialogContent>
+                <DialogHeader><DialogTitle>Tambah Peserta Kegiatan</DialogTitle></DialogHeader>
+                <div class="space-y-4">
                     <div>
-                        <InputLabel for="member_id" value="Pilih Anggota" />
-                        <select
-                            id="member_id"
-                            v-model="participantForm.member_id"
-                            class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                        >
+                        <Label for="member_id">Pilih Anggota</Label>
+                        <select id="member_id" v-model="participantForm.member_id" class="mt-1 block w-full border-input focus:border-ring focus:ring-ring rounded-md shadow-sm">
                             <option value="">Pilih Member...</option>
-                            <option v-for="member in members" :key="member.id" :value="member.id">
-                                {{ member.full_name }} ({{ member.member_code }})
-                            </option>
+                            <option v-for="member in members" :key="member.id" :value="member.id">{{ member.full_name }} ({{ member.member_code }})</option>
                         </select>
-                        <InputError class="mt-2" :message="participantForm.errors.member_id" />
+                        <p v-if="participantForm.errors.member_id" class="mt-2 text-sm text-destructive">{{ participantForm.errors.member_id }}</p>
                     </div>
-
                     <div>
-                        <InputLabel for="notes" value="Catatan (Opsional)" />
-                        <textarea
-                            id="notes"
-                            v-model="participantForm.notes"
-                            class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                            rows="2"
-                        ></textarea>
-                        <InputError class="mt-2" :message="participantForm.errors.notes" />
+                        <Label for="notes">Catatan (Opsional)</Label>
+                        <Textarea id="notes" v-model="participantForm.notes" rows="2" />
                     </div>
                 </div>
+                <DialogFooter>
+                    <Button variant="outline" @click="showParticipantModal = false">Batal</Button>
+                    <Button :disabled="participantForm.processing" @click="addParticipant">Tambah</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
 
-                <div class="mt-6 flex justify-end">
-                    <SecondaryButton @click="showParticipantModal = false"> Batal </SecondaryButton>
-
-                    <PrimaryButton
-                        class="ml-3"
-                        :class="{ 'opacity-25': participantForm.processing }"
-                        :disabled="participantForm.processing"
-                        @click="addParticipant"
-                    >
-                        Tambah Peserta
-                    </PrimaryButton>
-                </div>
-            </div>
-        </Modal>
-
-        <!-- Documentation Modal -->
-        <Modal :show="showDocModal" @close="showDocModal = false">
-            <div class="p-6">
-                <h2 class="text-lg font-medium text-gray-900">
-                    Upload Dokumentasi (Foto)
-                </h2>
-
-                <div class="mt-4 space-y-4">
+        <!-- Upload Doc Dialog -->
+        <Dialog :open="showDocModal" @update:open="(val) => { if (!val) { showDocModal = false; resetDocForm(); } }">
+            <DialogContent class="sm:max-w-lg">
+                <DialogHeader><DialogTitle>Upload Dokumentasi</DialogTitle></DialogHeader>
+                <div class="space-y-4">
+                    <!-- Drop zone -->
                     <div>
-                        <InputLabel for="files" value="Pilih Foto" />
-                        <input
-                            type="file"
-                            id="files"
-                            multiple
-                            accept="image/*"
-                            @change="handleFileSelect"
-                            class="mt-1 block w-full border text-sm"
-                        />
-                        <InputError class="mt-2" :message="docForm.errors['files.0']" />
+                        <Label class="mb-2 block">Pilih Foto</Label>
+                        <div
+                            @dragover.prevent="isDragging = true"
+                            @dragleave.prevent="isDragging = false"
+                            @drop.prevent="handleDrop"
+                            @click="fileInputRef?.click()"
+                            class="relative border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200"
+                            :class="isDragging ? 'border-primary bg-primary/5 scale-[1.01]' : 'border-border hover:border-primary/50 hover:bg-muted/30'"
+                        >
+                            <input
+                                ref="fileInputRef"
+                                type="file"
+                                multiple
+                                accept="image/*"
+                                @change="handleFileSelect"
+                                class="hidden"
+                            />
+                            <div class="flex flex-col items-center gap-2">
+                                <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                                    <Camera class="w-6 h-6 text-primary" />
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-foreground">
+                                        <span class="text-primary">Pilih foto</span> atau seret ke sini
+                                    </p>
+                                    <p class="text-xs text-muted-foreground mt-1">PNG, JPG, WEBP &bull; Maks 5MB per file</p>
+                                </div>
+                            </div>
+                        </div>
+                        <p v-if="docForm.errors['files.0']" class="mt-2 text-sm text-destructive">{{ docForm.errors['files.0'] }}</p>
+                        <p v-if="docForm.errors.files" class="mt-2 text-sm text-destructive">{{ docForm.errors.files }}</p>
                     </div>
 
+                    <!-- File previews -->
+                    <div v-if="docPreviews.length > 0" class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <Label class="text-xs text-muted-foreground">{{ docPreviews.length }} foto dipilih</Label>
+                            <button @click="resetDocForm" class="text-xs text-destructive hover:underline">Hapus semua</button>
+                        </div>
+                        <div class="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-[200px] overflow-y-auto rounded-lg">
+                            <div
+                                v-for="(preview, index) in docPreviews"
+                                :key="index"
+                                class="relative aspect-square rounded-lg overflow-hidden group bg-muted"
+                            >
+                                <img :src="preview.url" :alt="preview.name" class="w-full h-full object-cover" />
+                                <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                                    <button
+                                        @click.stop="removeFile(index)"
+                                        class="w-7 h-7 bg-destructive text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                                    >
+                                        <X class="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                                <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent px-1.5 py-1">
+                                    <p class="text-[10px] text-white/80 truncate">{{ formatFileSize(preview.size) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Caption -->
                     <div>
-                        <InputLabel for="caption" value="Keterangan (Opsional)" />
-                        <TextInput
-                            id="caption"
-                            v-model="docForm.caption"
-                            type="text"
-                            class="mt-1 block w-full"
-                        />
-                        <InputError class="mt-2" :message="docForm.errors.caption" />
+                        <Label for="caption">Keterangan (Opsional)</Label>
+                        <Input id="caption" v-model="docForm.caption" type="text" placeholder="Tambahkan keterangan foto..." class="mt-1" />
                     </div>
                 </div>
+                <DialogFooter>
+                    <Button variant="outline" @click="showDocModal = false; resetDocForm()">Batal</Button>
+                    <Button :disabled="docForm.processing || docPreviews.length === 0" @click="uploadDoc">
+                        <Upload class="w-4 h-4 mr-1" />
+                        Upload {{ docPreviews.length > 0 ? `(${docPreviews.length})` : '' }}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
 
-                <div class="mt-6 flex justify-end">
-                    <SecondaryButton @click="showDocModal = false"> Batal </SecondaryButton>
-
-                    <PrimaryButton
-                        class="ml-3"
-                        :class="{ 'opacity-25': docForm.processing }"
-                        :disabled="docForm.processing"
-                        @click="uploadDoc"
-                    >
-                        Simpan Foto
-                    </PrimaryButton>
-                </div>
-            </div>
-        </Modal>
-
-        <!-- Documentation Zoom Modal -->
-        <Modal :show="zoomedIndex !== null" @close="zoomedIndex = null" maxWidth="4xl">
-            <div class="p-4 flex flex-col items-center relative group">
-                <div class="w-full flex justify-end mb-2">
-                    <button @click="zoomedIndex = null" class="text-gray-500 hover:text-gray-700">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+        <!-- Photo Zoom Dialog -->
+        <Dialog :open="zoomedIndex !== null" @update:open="(val) => { if (!val) zoomedIndex = null; }">
+            <DialogContent class="max-w-4xl p-2 sm:p-6">
+                <div class="flex flex-col items-center relative">
+                    <button v-if="event.documentations.length > 1" @click="prevDoc" class="absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition z-10">
+                        <ChevronLeft class="h-5 w-5 sm:h-6 sm:w-6" />
                     </button>
+                    <img v-if="zoomedDoc" :src="zoomedDoc.url" :alt="zoomedDoc.caption" class="max-w-full max-h-[70vh] rounded shadow-xl" />
+                    <button v-if="event.documentations.length > 1" @click="nextDoc" class="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition z-10">
+                        <ChevronRight class="h-5 w-5 sm:h-6 sm:w-6" />
+                    </button>
+                    <div v-if="zoomedDoc" class="mt-3 text-center">
+                        <p v-if="zoomedDoc.caption" class="text-foreground font-medium text-sm">{{ zoomedDoc.caption }}</p>
+                        <p class="text-xs text-muted-foreground mt-1">{{ zoomedIndex + 1 }} / {{ event.documentations.length }}</p>
+                    </div>
                 </div>
+            </DialogContent>
+        </Dialog>
 
-                <!-- Navigation Buttons -->
-                <button
-                    v-if="event.documentations.length > 1"
-                    @click="prevDoc"
-                    class="absolute left-6 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition opacity-0 group-hover:opacity-100 focus:opacity-100"
-                >
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                    </svg>
-                </button>
+        <!-- Delete Event -->
+        <AlertDialog :open="showDeleteDialog" @update:open="(val) => { if (!val) showDeleteDialog = false; }">
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Hapus Kegiatan</AlertDialogTitle>
+                    <AlertDialogDescription>Apakah Anda yakin ingin menghapus kegiatan <strong>{{ event.name }}</strong>? Tindakan ini tidak dapat dibatalkan.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                    <AlertDialogAction @click="deleteEvent" class="bg-destructive text-destructive-foreground hover:bg-destructive/90">Hapus</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
 
-                <button
-                    v-if="event.documentations.length > 1"
-                    @click="nextDoc"
-                    class="absolute right-6 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition opacity-0 group-hover:opacity-100 focus:opacity-100"
-                >
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                </button>
+        <!-- Delete Participant -->
+        <AlertDialog :open="!!deleteParticipantTarget" @update:open="(val) => { if (!val) deleteParticipantTarget = null; }">
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Hapus Peserta</AlertDialogTitle>
+                    <AlertDialogDescription>Hapus <strong>{{ deleteParticipantTarget?.full_name }}</strong> dari daftar peserta?</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                    <AlertDialogAction @click="doRemoveParticipant" class="bg-destructive text-destructive-foreground hover:bg-destructive/90">Hapus</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
 
-                <img
-                    v-if="zoomedDoc"
-                    :src="zoomedDoc.url"
-                    :alt="zoomedDoc.caption"
-                    class="max-w-full max-h-[85vh] rounded shadow-xl"
-                />
-                
-                <div v-if="zoomedDoc" class="mt-4 text-center">
-                    <p v-if="zoomedDoc.caption" class="text-gray-700 font-medium">
-                        {{ zoomedDoc.caption }}
-                    </p>
-                    <p class="text-xs text-gray-400 mt-1">
-                        {{ zoomedIndex + 1 }} / {{ event.documentations.length }}
-                    </p>
-                </div>
-            </div>
-        </Modal>
+        <!-- Delete Doc -->
+        <AlertDialog :open="!!deleteDocTarget" @update:open="(val) => { if (!val) deleteDocTarget = null; }">
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Hapus Dokumentasi</AlertDialogTitle>
+                    <AlertDialogDescription>Apakah Anda yakin ingin menghapus foto ini?</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                    <AlertDialogAction @click="doDeleteDoc" class="bg-destructive text-destructive-foreground hover:bg-destructive/90">Hapus</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </AuthenticatedLayout>
 </template>
+
+<style scoped>
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>

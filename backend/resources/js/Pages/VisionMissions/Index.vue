@@ -4,6 +4,14 @@ import { Head, Link, router } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import SearchBar from "@/Components/SearchBar.vue";
 import FilterDropdown from "@/Components/FilterDropdown.vue";
+import Pagination from "@/Components/Pagination.vue";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import {
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import { Plus, Eye, Pencil } from "lucide-vue-next";
 
 const props = defineProps({
     visionMissions: Object,
@@ -21,26 +29,10 @@ const statusOptions = [
 watch([search, status], ([newSearch, newStatus]) => {
     router.get(
         route("vision-missions.index"),
-        {
-            search: newSearch,
-            status: newStatus,
-        },
-        {
-            preserveState: true,
-            replace: true,
-        },
+        { search: newSearch, status: newStatus },
+        { preserveState: true, replace: true },
     );
 });
-
-const getStatusBadge = (status) => {
-    return status === "active"
-        ? "bg-green-100 text-green-800"
-        : "bg-gray-100 text-gray-800";
-};
-
-const getStatusLabel = (status) => {
-    return status === "active" ? "Aktif" : "Tidak Aktif";
-};
 </script>
 
 <template>
@@ -48,201 +40,136 @@ const getStatusLabel = (status) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex justify-between items-center">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                    Manajemen Visi & Misi
-                </h2>
-                <Link
-                    v-if="hasPermission('manage_vision_missions')"
-                    :href="route('vision-missions.create')"
-                    class="inline-flex items-center justify-center rounded-xl border border-transparent bg-indigo-600 px-4 py-3 text-xs font-bold uppercase tracking-widest text-white transition duration-200 ease-in-out hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 shadow-md shadow-indigo-100"
-                >
-                    <svg
-                        class="w-4 h-4 mr-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M12 4v16m8-8H4"
-                        />
-                    </svg>
-                    Tambah Visi & Misi
-                </Link>
+            <div class="flex items-center justify-between gap-3">
+                <h2 class="text-lg font-semibold leading-tight text-foreground">Visi & Misi</h2>
+                <Button v-if="hasPermission('manage_vision_missions')" size="sm" as-child>
+                    <Link :href="route('vision-missions.create')">
+                        <Plus class="w-4 h-4 mr-1" />
+                        <span class="hidden sm:inline">Tambah</span>
+                    </Link>
+                </Button>
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 bg-white border-b border-gray-200">
-                        <!-- Filters -->
-                        <div
-                            class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4 mb-6"
-                        >
-                            <div class="flex-1 max-w-md">
-                                <SearchBar
-                                    v-model="search"
-                                    placeholder="Cari visi..."
-                                />
+        <div class="py-4 sm:py-6">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <Card>
+                    <div class="p-3 sm:p-4">
+                        <div class="flex flex-col sm:flex-row gap-2 mb-4">
+                            <div class="flex-1">
+                                <SearchBar v-model="search" placeholder="Cari visi..." />
                             </div>
-                            <div class="flex items-center space-x-2">
-                                <FilterDropdown
-                                    v-model="status"
-                                    :options="statusOptions"
-                                    label="Status"
-                                />
-                            </div>
+                            <FilterDropdown v-model="status" :options="statusOptions" label="Status" />
                         </div>
 
-                        <!-- Table -->
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th
-                                            scope="col"
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                        >
-                                            Periode
-                                        </th>
-                                        <th
-                                            scope="col"
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                        >
-                                            Visi
-                                        </th>
-                                        <th
-                                            scope="col"
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                        >
-                                            Status
-                                        </th>
-                                        <th
-                                            scope="col"
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                        >
-                                            Dibuat Oleh
-                                        </th>
-                                        <th
-                                            scope="col"
-                                            class="relative px-6 py-3"
-                                        >
-                                            <span class="sr-only">Aksi</span>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody
-                                    class="bg-white divide-y divide-gray-200"
-                                >
-                                    <tr
-                                        v-for="item in visionMissions.data"
-                                        :key="item.id"
-                                        class="hover:bg-gray-50"
-                                    >
-                                        <td
-                                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                                        >
+                        <!-- Desktop Table -->
+                        <div class="hidden md:block">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Periode</TableHead>
+                                        <TableHead>Visi</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead>Dibuat Oleh</TableHead>
+                                        <TableHead class="text-right">Aksi</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <TableRow v-for="item in visionMissions.data" :key="item.id">
+                                        <TableCell class="whitespace-nowrap">
                                             {{ item.period_start }} - {{ item.period_end || 'Sekarang' }}
-                                        </td>
-                                        <td class="px-6 py-4 text-sm text-gray-500">
-                                            <div class="line-clamp-2">
-                                                {{ item.vision }}
-                                            </div>
-                                        </td>
-                                        <td
-                                            class="px-6 py-4 whitespace-nowrap"
-                                        >
-                                            <span
-                                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                                                :class="getStatusBadge(item.status)"
-                                            >
-                                                {{
-                                                    getStatusLabel(item.status)
-                                                }}
-                                            </span>
-                                        </td>
-                                        <td
-                                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
-                                        >
-                                            {{ item.creator?.name }}
-                                        </td>
-                                        <td
-                                            class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
-                                        >
-                                            <div
-                                                class="flex justify-end space-x-2"
-                                            >
-                                                <Link
-                                                    :href="route('vision-missions.show', item.id)"
-                                                    class="text-blue-600 hover:text-blue-900"
-                                                >
-                                                    Detail
-                                                </Link>
-                                                <Link
+                                        </TableCell>
+                                        <TableCell>
+                                            <div class="line-clamp-2">{{ item.vision }}</div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge :variant="item.status === 'active' ? 'success' : 'secondary'">
+                                                {{ item.status === 'active' ? 'Aktif' : 'Tidak Aktif' }}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell>{{ item.creator?.name }}</TableCell>
+                                        <TableCell class="text-right">
+                                            <div class="flex justify-end gap-2">
+                                                <Button variant="ghost" size="sm" as-child>
+                                                    <Link :href="route('vision-missions.show', item.id)">
+                                                        <Eye class="w-4 h-4" />
+                                                    </Link>
+                                                </Button>
+                                                <Button
                                                     v-if="hasPermission('manage_vision_missions')"
-                                                    :href="route('vision-missions.edit', item.id)"
-                                                    class="text-indigo-600 hover:text-indigo-900"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    as-child
                                                 >
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                                                </Link>
+                                                    <Link :href="route('vision-missions.edit', item.id)">
+                                                        <Pencil class="w-4 h-4" />
+                                                    </Link>
+                                                </Button>
                                             </div>
-                                        </td>
-                                    </tr>
-                                    <tr v-if="visionMissions.data.length === 0">
-                                        <td
-                                            colspan="5"
-                                            class="px-6 py-4 text-center text-sm text-gray-500"
-                                        >
+                                        </TableCell>
+                                    </TableRow>
+                                    <TableRow v-if="visionMissions.data.length === 0">
+                                        <TableCell colspan="5" class="h-24 text-center text-muted-foreground">
                                             Tidak ada data visi & misi.
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                                        </TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        </div>
+
+                        <!-- Mobile Card View -->
+                        <div class="md:hidden divide-y">
+                            <div v-for="item in visionMissions.data" :key="item.id" class="p-4 space-y-2">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <p class="text-sm font-medium text-foreground">
+                                            {{ item.period_start }} - {{ item.period_end || 'Sekarang' }}
+                                        </p>
+                                        <p class="text-sm text-muted-foreground line-clamp-2 mt-1">{{ item.vision }}</p>
+                                    </div>
+                                    <Badge :variant="item.status === 'active' ? 'success' : 'secondary'" class="shrink-0">
+                                        {{ item.status === 'active' ? 'Aktif' : 'Tidak Aktif' }}
+                                    </Badge>
+                                </div>
+                                <div class="flex justify-between items-center pt-2 border-t">
+                                    <span class="text-xs text-muted-foreground">{{ item.creator?.name }}</span>
+                                    <div class="flex gap-2">
+                                        <Button variant="ghost" size="sm" as-child>
+                                            <Link :href="route('vision-missions.show', item.id)">Detail</Link>
+                                        </Button>
+                                        <Button
+                                            v-if="hasPermission('manage_vision_missions')"
+                                            variant="ghost"
+                                            size="sm"
+                                            as-child
+                                        >
+                                            <Link :href="route('vision-missions.edit', item.id)">Edit</Link>
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="visionMissions.data.length === 0" class="px-4 py-16 text-center text-muted-foreground">
+                                Tidak ada data visi & misi.
+                            </div>
                         </div>
 
                         <!-- Pagination -->
-                        <div class="mt-4" v-if="visionMissions.links">
-                             <div class="flex items-center justify-between">
-                                <div class="flex-1 flex justify-between sm:hidden">
-                                </div>
-                                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                                    <div>
-                                        <p class="text-sm text-gray-700">
-                                            Menampilkan
-                                            <span class="font-medium">{{ visionMissions.from }}</span>
-                                            sampai
-                                            <span class="font-medium">{{ visionMissions.to }}</span>
-                                            dari
-                                            <span class="font-medium">{{ visionMissions.total }}</span>
-                                            hasil
-                                        </p>
-                                    </div>
-                                    <div>
-                                         <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                                            <Link
-                                                v-for="(link, key) in visionMissions.links"
-                                                :key="key"
-                                                :href="link.url ?? '#'"
-                                                v-html="link.label"
-                                                class="relative inline-flex items-center px-4 py-2 border text-sm font-medium"
-                                                :class="{
-                                                    'z-10 bg-indigo-50 border-indigo-500 text-indigo-600': link.active,
-                                                    'bg-white border-gray-300 text-gray-500 hover:bg-gray-50': !link.active,
-                                                    'cursor-not-allowed opacity-50': !link.url
-                                                }"
-                                                :preserve-scroll="true"
-                                            />
-                                        </nav>
-                                    </div>
-                                </div>
+                        <div v-if="visionMissions.links && visionMissions.links.length > 3" class="mt-4 pt-4 border-t">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                <p class="text-sm text-muted-foreground">
+                                    Menampilkan
+                                    <span class="font-medium">{{ visionMissions.from }}</span>
+                                    sampai
+                                    <span class="font-medium">{{ visionMissions.to }}</span>
+                                    dari
+                                    <span class="font-medium">{{ visionMissions.total }}</span>
+                                    hasil
+                                </p>
+                                <Pagination :links="visionMissions.links" />
                             </div>
                         </div>
                     </div>
-                </div>
+                </Card>
             </div>
         </div>
     </AuthenticatedLayout>

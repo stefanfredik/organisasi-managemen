@@ -8,7 +8,7 @@ const reports = [
         description: 'Laporan transaksi pemasukan dan pengeluaran',
         icon: 'cash',
         route: 'reports.financial',
-        color: 'indigo',
+        color: 'primary',
     },
     {
         name: 'Arus Kas',
@@ -53,13 +53,13 @@ const getIconPath = (icon) => {
 
 const getColorClasses = (color) => {
     const colors = {
-        indigo: 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100',
-        green: 'bg-green-50 text-green-600 hover:bg-green-100',
-        blue: 'bg-blue-50 text-blue-600 hover:bg-blue-100',
-        yellow: 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100',
+        primary: 'bg-primary/10 text-primary hover:bg-primary/20',
+        green: 'bg-success/10 text-success-600 hover:bg-success/20',
+        blue: 'bg-primary/10 text-primary hover:bg-primary/20',
+        yellow: 'bg-warning-50 text-warning-600 hover:bg-warning-100',
         purple: 'bg-purple-50 text-purple-600 hover:bg-purple-100',
     };
-    return colors[color] || colors.indigo;
+    return colors[color] || colors.primary;
 };
 </script>
 
@@ -68,43 +68,42 @@ const getColorClasses = (color) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">
+            <h2 class="text-xl font-semibold leading-tight text-foreground">
                 Laporan
             </h2>
         </template>
 
-        <div class="py-8">
+        <div class="py-4">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 
                 <!-- Header -->
-                <div class="mb-8">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-2">Pilih Jenis Laporan</h3>
-                    <p class="text-gray-600">Akses berbagai laporan keuangan dan operasional organisasi</p>
+                <div class="mb-4">
+                    <p class="text-sm text-muted-foreground">Akses berbagai laporan keuangan dan operasional organisasi</p>
                 </div>
 
                 <!-- Reports Grid -->
-                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     <Link
                         v-for="report in reports"
                         :key="report.route"
                         :href="route(report.route)"
-                        class="group relative bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200"
+                        class="group relative bg-card rounded-lg shadow-sm border border p-4 hover:shadow-md transition-all duration-200"
                     >
-                        <div class="flex items-start">
-                            <div :class="[getColorClasses(report.color), 'p-3 rounded-lg transition-colors']">
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="flex items-center">
+                            <div :class="[getColorClasses(report.color), 'p-2.5 rounded-lg transition-colors']">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getIconPath(report.icon)" />
                                 </svg>
                             </div>
-                            <div class="ml-4 flex-1">
-                                <h4 class="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">
+                            <div class="ml-3 flex-1 min-w-0">
+                                <h4 class="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
                                     {{ report.name }}
                                 </h4>
-                                <p class="mt-1 text-sm text-gray-600">
+                                <p class="text-xs text-muted-foreground truncate">
                                     {{ report.description }}
                                 </p>
                             </div>
-                            <svg class="w-5 h-5 text-gray-400 group-hover:text-indigo-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors ml-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                             </svg>
                         </div>
@@ -112,17 +111,14 @@ const getColorClasses = (color) => {
                 </div>
 
                 <!-- Info Section -->
-                <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-                    <div class="flex items-start">
-                        <svg class="w-6 h-6 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="mt-4 bg-primary/10 border border-primary-200 rounded-lg p-3">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <div class="ml-3">
-                            <h4 class="text-sm font-semibold text-blue-900">Informasi</h4>
-                            <p class="mt-1 text-sm text-blue-700">
-                                Semua laporan dapat difilter berdasarkan periode waktu. Anda juga dapat mengekspor laporan ke format PDF atau Excel untuk dokumentasi dan analisis lebih lanjut.
-                            </p>
-                        </div>
+                        <p class="text-xs text-primary">
+                            Semua laporan dapat difilter berdasarkan periode waktu dan diekspor ke PDF atau Excel.
+                        </p>
                     </div>
                 </div>
 

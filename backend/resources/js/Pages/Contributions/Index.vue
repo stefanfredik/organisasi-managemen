@@ -2,20 +2,27 @@
 import { Head, Link, useForm, router } from "@inertiajs/vue3";
 import { computed, ref, watch } from "vue";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import DataTable from "@/Components/DataTable.vue";
 import { usePage } from "@inertiajs/vue3";
-import Modal from "@/Components/Modal.vue";
-import PrimaryButton from "@/Components/PrimaryButton.vue";
-import SecondaryButton from "@/Components/SecondaryButton.vue";
-import InputLabel from "@/Components/InputLabel.vue";
-import TextInput from "@/Components/TextInput.vue";
-import InputError from "@/Components/InputError.vue";
+import {
+    Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import SearchBar from "@/Components/SearchBar.vue";
 import FilterDropdown from "@/Components/FilterDropdown.vue";
 import SearchableSelect from "@/Components/SearchableSelect.vue";
 import CurrencyInput from "@/Components/CurrencyInput.vue";
 import debounce from "lodash/debounce";
 import axios from "axios";
+import { Upload, X } from "lucide-vue-next";
 
 const props = defineProps({
     contributions: Object,
@@ -63,15 +70,15 @@ const formatDate = (value) => {
 const getStatusBadge = (status) => {
     switch (status) {
         case "paid":
-            return "bg-green-100 text-green-800";
+            return "bg-success/20 text-success-foreground";
         case "pending":
-            return "bg-amber-100 text-amber-800";
+            return "bg-warning-100 text-warning-800";
         case "partial":
-            return "bg-blue-100 text-blue-800";
+            return "bg-primary/20 text-primary";
         case "rejected":
-            return "bg-red-100 text-red-800";
+            return "bg-destructive/20 text-destructive";
         default:
-            return "bg-gray-100 text-gray-700";
+            return "bg-muted text-foreground";
     }
 };
 
@@ -217,8 +224,32 @@ watch(
     { deep: true },
 );
 
-const onReceiptChange = (e) => {
-    manualForm.receipt = e.target.files[0];
+const manualReceiptInputRef = ref(null);
+const isDraggingManualReceipt = ref(false);
+const manualReceiptPreview = ref(null);
+
+const handleManualReceiptSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) setManualReceipt(file);
+};
+
+const handleManualReceiptDrop = (e) => {
+    isDraggingManualReceipt.value = false;
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) setManualReceipt(file);
+};
+
+const setManualReceipt = (file) => {
+    manualForm.receipt = file;
+    const reader = new FileReader();
+    reader.onload = (e) => { manualReceiptPreview.value = e.target.result; };
+    reader.readAsDataURL(file);
+};
+
+const clearManualReceipt = () => {
+    manualForm.receipt = null;
+    manualReceiptPreview.value = null;
+    if (manualReceiptInputRef.value) manualReceiptInputRef.value.value = '';
 };
 
 const submitManual = () => {
@@ -503,7 +534,7 @@ const startPayment = (type) => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex justify-between items-center">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">
+                <h2 class="text-xl font-semibold leading-tight text-foreground">
                     {{
                         $page.props.auth.user.role === "anggota"
                             ? "Iuran Saya"
@@ -513,71 +544,67 @@ const startPayment = (type) => {
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <!-- Navigation -->
-
+        <div class="py-4">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
                 <!-- Active Contribution Types Cards -->
-                <div class="mb-8" v-if="types && types.length > 0">
-                    <div class="flex items-center justify-between mb-4">
-                         <h3 class="text-lg font-black text-gray-800 tracking-tight">Semua Iuran Aktif</h3>
+                <div class="mb-4" v-if="types && types.length > 0">
+                    <div class="flex items-center justify-between mb-2">
+                         <h3 class="text-sm font-bold text-foreground">Iuran Aktif</h3>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                         <div 
                             v-for="type in types" 
                             :key="type.id"
                             @click="startPayment(type)"
-                            class="group bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_10px_rgb(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:border-indigo-100 transition-all duration-300 cursor-pointer relative overflow-hidden"
+                            class="group bg-card rounded-lg p-4 border border shadow-sm hover:shadow-md hover:border-primary-100 transition-all duration-200 cursor-pointer relative overflow-hidden"
                         >
-                            <div class="absolute top-0 right-0 w-24 h-24 bg-indigo-50/50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-                            
-                            <div class="relative z-10">
-                                <div class="flex items-start justify-between mb-4">
-                                    <div class="p-3 bg-indigo-50 rounded-xl text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <div class="relative">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="p-2 bg-primary/10 rounded-lg text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                     </div>
                                     <div class="flex flex-col items-end gap-1">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-800 uppercase tracking-wide">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-success/20 text-success-foreground uppercase tracking-wide">
                                             {{ type.period === 'once' ? 'Sekali' : (type.period === 'monthly' ? 'Bulanan' : (type.period === 'weekly' ? 'Mingguan' : 'Tahunan')) }}
                                         </span>
                                         <span v-if="type.user_progress?.current_period_status" :class="{
-                                            'bg-green-100 text-green-700': type.user_progress.current_period_status === 'paid',
-                                            'bg-amber-100 text-amber-700': type.user_progress.current_period_status === 'pending',
-                                            'bg-red-100 text-red-700': type.user_progress.current_period_status === 'unpaid'
+                                            'bg-success/20 text-success-700': type.user_progress.current_period_status === 'paid',
+                                            'bg-warning-100 text-warning-700': type.user_progress.current_period_status === 'pending',
+                                            'bg-destructive/20 text-destructive': type.user_progress.current_period_status === 'unpaid'
                                         }" class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide">
                                             {{ type.user_progress.current_period_label }}: {{ type.user_progress.current_period_status === 'paid' ? 'LUNAS' : (type.user_progress.current_period_status === 'pending' ? 'PENDING' : 'BELUM') }}
                                         </span>
                                     </div>
                                 </div>
                                 
-                                <h4 class="text-lg font-bold text-gray-900 mb-1 group-hover:text-indigo-600 transition-colors line-clamp-1">{{ type.name }}</h4>
-                                <p class="text-2xl font-black text-gray-900 tracking-tight mb-1">
+                                <h4 class="text-sm font-bold text-foreground mb-1 group-hover:text-primary transition-colors line-clamp-1">{{ type.name }}</h4>
+                                <p class="text-lg font-black text-foreground tracking-tight mb-1">
                                     {{ formatCurrency(type.amount) }}
                                 </p>
                                 
                                 <div v-if="type.user_progress" class="mt-3 mb-2">
                                     <div class="flex justify-between text-xs mb-1">
-                                        <span class="font-semibold text-gray-500">Kelunasan</span>
-                                        <span class="font-bold text-indigo-600">{{ type.user_progress.percentage }}%</span>
+                                        <span class="font-semibold text-muted-foreground">Kelunasan</span>
+                                        <span class="font-bold text-primary">{{ type.user_progress.percentage }}%</span>
                                     </div>
-                                    <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                                        <div class="bg-indigo-500 h-1.5 rounded-full transition-all duration-500" :style="{ width: `${type.user_progress.percentage}%` }"></div>
+                                    <div class="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                                        <div class="bg-primary/100 h-1.5 rounded-full transition-all duration-500" :style="{ width: `${type.user_progress.percentage}%` }"></div>
                                     </div>
-                                    <p class="text-[10px] text-gray-400 mt-1 text-right">{{ type.user_progress.text }}</p>
+                                    <p class="text-[10px] text-muted-foreground mt-1 text-right">{{ type.user_progress.text }}</p>
                                 </div>
-                                <p v-else class="text-xs text-gray-400 font-medium line-clamp-2 min-h-[2.5em]">
+                                <p v-else class="text-xs text-muted-foreground font-medium line-clamp-2 min-h-[2.5em]">
                                     {{ type.description || 'Tidak ada deskripsi' }}
                                 </p>
 
-                                <div class="mt-4 pt-3 border-t border-gray-50">
-                                    <div v-if="type.user_progress?.percentage >= 100" class="w-full text-center py-2 bg-green-50 text-green-700 border border-green-100 rounded-xl font-bold text-xs uppercase tracking-wider">
+                                <div class="mt-3 pt-2 border-t border">
+                                    <div v-if="type.user_progress?.percentage >= 100" class="w-full text-center py-2 bg-success/10 text-success-700 border border-success-100 rounded-xl font-bold text-xs uppercase tracking-wider">
                                         Sudah Terbayar
                                     </div>
                                     <button 
                                         v-else
                                         @click.stop="startPayment(type)"
-                                        class="w-full inline-flex items-center justify-center px-4 py-2 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-indigo-600 hover:text-white hover:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-300 group-hover:shadow-md"
+                                        class="w-full inline-flex items-center justify-center px-3 py-1.5 bg-primary/10 text-primary border border-primary-100 rounded-md font-bold text-xs uppercase tracking-wider hover:bg-primary hover:text-white hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all duration-200"
                                     >
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a1 1 0 11-2 0 1 1 0 012 0z" /></svg>
                                         {{ $page.props.auth.user.role === 'anggota' ? 'Bayar Sekarang' : 'Input Data' }}
@@ -590,20 +617,19 @@ const startPayment = (type) => {
 
                 <!-- Main Content Card -->
                 <div
-                    class="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 overflow-hidden"
+                    class="bg-card rounded-lg shadow-sm border border overflow-hidden"
                 >
                     <div
-                        class="p-8 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                        class="px-4 py-3 border-b border flex flex-col md:flex-row md:items-center justify-between gap-3"
                     >
                         <div>
                             <h3
-                                class="text-xl font-black text-gray-900 tracking-tight"
+                                class="text-sm font-bold text-foreground"
                             >
                                 Riwayat Pembayaran
                             </h3>
-                            <p class="text-sm text-gray-400 font-medium">
-                                Lacak semua transaksi iuran dan status
-                                verifikasinya.
+                            <p class="text-xs text-muted-foreground">
+                                Lacak semua transaksi iuran dan status verifikasinya.
                             </p>
                         </div>
 
@@ -613,7 +639,7 @@ const startPayment = (type) => {
                         >
                             <PrimaryButton
                                 @click="showManualModal = true"
-                                class="!rounded-xl shadow-lg shadow-indigo-100"
+                                class="!rounded-xl shadow-lg shadow-sm"
                             >
                                 <svg
                                     class="w-4 h-4 mr-2"
@@ -634,7 +660,7 @@ const startPayment = (type) => {
                     </div>
 
                     <div class="p-0">
-                    <div class="px-8 pt-6">
+                    <div class="px-4 pt-3">
                         <div class="flex flex-col gap-4">
                             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                 <div class="flex-1 w-full">
@@ -643,13 +669,13 @@ const startPayment = (type) => {
                                 <div class="flex items-center gap-2">
                                     <button
                                         type="button"
-                                        class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-3 text-xs font-bold uppercase tracking-widest text-gray-700 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                                        class="inline-flex items-center justify-center rounded-md border border bg-card px-3 py-2 text-xs font-bold uppercase tracking-widest text-foreground transition hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                                         @click="showFiltersDropdown = !showFiltersDropdown"
                                         :aria-expanded="showFiltersDropdown ? 'true' : 'false'"
                                     >
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18M7 10h10M10 16h4" /></svg>
                                         Filter
-                                        <span v-if="activeFilterCount" class="ml-2 inline-flex items-center rounded-full bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5">{{ activeFilterCount }}</span>
+                                        <span v-if="activeFilterCount" class="ml-2 inline-flex items-center rounded-full bg-primary text-white text-[10px] font-bold px-2 py-0.5">{{ activeFilterCount }}</span>
                                     </button>
                                     <SecondaryButton @click="resetFilters">Reset</SecondaryButton>
                                 </div>
@@ -657,12 +683,12 @@ const startPayment = (type) => {
 
                             <div v-if="showFiltersDropdown" class="fixed inset-0 z-[998]" @click="showFiltersDropdown = false"></div>
                             <div v-if="showFiltersDropdown" class="fixed right-6 top-24 sm:top-28 z-[1000] w-[calc(100%-3rem)] sm:w-[28rem]">
-                                <div class="rounded-xl border border-gray-200 bg-white shadow-2xl overflow-hidden">
-                                    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-                                        <span class="text-[10px] font-bold uppercase tracking-widest text-gray-500">Filters</span>
+                                <div class="rounded-xl border border bg-card shadow-2xl overflow-hidden">
+                                    <div class="flex items-center justify-between px-4 py-3 border-b border">
+                                        <span class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Filters</span>
                                         <button
                                             type="button"
-                                            class="inline-flex items-center justify-center rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-indigo-600 hover:text-indigo-700"
+                                            class="inline-flex items-center justify-center rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary"
                                             @click="resetFilters"
                                         >
                                             Reset
@@ -670,36 +696,36 @@ const startPayment = (type) => {
                                     </div>
                                     <div class="p-4 space-y-3 max-h-80 overflow-y-auto pr-1">
                                         <div class="space-y-2">
-                                            <InputLabel value="Jenis Iuran" class="text-[10px] font-bold uppercase text-gray-500" />
-                                            <select v-model="contributionsFilters.contribution_type_id" class="mt-1 block w-full border-gray-300 rounded-md text-sm">
+                                            <InputLabel value="Jenis Iuran" class="text-[10px] font-bold uppercase text-muted-foreground" />
+                                            <select v-model="contributionsFilters.contribution_type_id" class="mt-1 block w-full border-input rounded-md text-sm">
                                                 <option value="">Semua jenis</option>
                                                 <option v-for="t in types" :key="t.id" :value="t.id">{{ t.name }}</option>
                                             </select>
                                         </div>
                                         <div class="space-y-2">
-                                            <InputLabel value="Status" class="text-[10px] font-bold uppercase text-gray-500" />
+                                            <InputLabel value="Status" class="text-[10px] font-bold uppercase text-muted-foreground" />
                                             <FilterDropdown v-model="contributionsFilters.status" :options="statusOptions" label="Semua Status" />
                                         </div>
                                         <div class="space-y-2">
-                                            <InputLabel value="Metode" class="text-[10px] font-bold uppercase text-gray-500" />
+                                            <InputLabel value="Metode" class="text-[10px] font-bold uppercase text-muted-foreground" />
                                             <FilterDropdown v-model="contributionsFilters.payment_method" :options="methodOptions" label="Semua Metode" />
                                         </div>
                                         <div class="space-y-2">
-                                            <InputLabel value="Dompet" class="text-[10px] font-bold uppercase text-gray-500" />
-                                            <select v-model="contributionsFilters.wallet_id" class="mt-1 block w-full border-gray-300 rounded-md text-sm">
+                                            <InputLabel value="Dompet" class="text-[10px] font-bold uppercase text-muted-foreground" />
+                                            <select v-model="contributionsFilters.wallet_id" class="mt-1 block w-full border-input rounded-md text-sm">
                                                 <option value="">Semua dompet</option>
                                                 <option v-for="w in wallets" :key="w.id" :value="w.id">{{ w.name }}</option>
                                             </select>
                                         </div>
                                         <div class="space-y-2">
-                                            <InputLabel value="Periode Pembayaran" class="text-[10px] font-bold uppercase text-gray-500" />
+                                            <InputLabel value="Periode Pembayaran" class="text-[10px] font-bold uppercase text-muted-foreground" />
                                             <FilterDropdown v-model="contributionsFilters.payment_period" :options="periodOptions" label="Semua Periode" />
                                         </div>
                                         <div class="space-y-2">
-                                            <InputLabel value="Rentang Tanggal" class="text-[10px] font-bold uppercase text-gray-500" />
+                                            <InputLabel value="Rentang Tanggal" class="text-[10px] font-bold uppercase text-muted-foreground" />
                                             <div class="flex items-center gap-2">
                                                 <TextInput type="date" v-model="contributionsFilters.start_date" class="block flex-1 w-full" />
-                                                <span class="text-xs text-gray-500">s.d.</span>
+                                                <span class="text-xs text-muted-foreground">s.d.</span>
                                                 <TextInput type="date" v-model="contributionsFilters.end_date" class="block flex-1 w-full" />
                                             </div>
                                         </div>
@@ -716,7 +742,7 @@ const startPayment = (type) => {
                                     v-for="f in activeFilters"
                                     :key="f.key"
                                     type="button"
-                                    class="inline-flex items-center gap-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 px-3 py-1 text-xs font-semibold"
+                                    class="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary border border-primary-200 px-3 py-1 text-xs font-semibold"
                                     @click="clearFilter(f.key)"
                                 >
                                     <span>{{ f.label }}</span>
@@ -724,7 +750,7 @@ const startPayment = (type) => {
                                 </button>
                                 <button
                                     type="button"
-                                    class="inline-flex items-center gap-1 rounded-full bg-gray-100 text-gray-700 border border-gray-200 px-3 py-1 text-xs font-semibold"
+                                    class="inline-flex items-center gap-1 rounded-full bg-muted text-foreground border border px-3 py-1 text-xs font-semibold"
                                     @click="resetFilters"
                                 >
                                     Bersihkan semua
@@ -745,7 +771,7 @@ const startPayment = (type) => {
                             <template #cell-member="{ row }">
                                 <div class="flex items-center gap-3">
                                     <div
-                                        class="h-10 w-10 flex-shrink-0 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 font-black text-xs"
+                                        class="h-10 w-10 flex-shrink-0 rounded-full bg-muted border border flex items-center justify-center text-muted-foreground font-black text-xs"
                                     >
                                         {{
                                             (row.member?.full_name || "?")
@@ -755,12 +781,12 @@ const startPayment = (type) => {
                                     </div>
                                     <div class="flex flex-col">
                                         <span
-                                            class="text-sm font-bold text-slate-700 leading-none mb-1"
+                                            class="text-sm font-bold text-foreground leading-none mb-1"
                                         >
                                             {{ row.member?.full_name || "-" }}
                                         </span>
                                         <span
-                                            class="text-[10px] font-black text-slate-400 tracking-[0.1em] uppercase"
+                                            class="text-[10px] font-black text-muted-foreground tracking-[0.1em] uppercase"
                                         >
                                             {{
                                                 row.member?.member_code ||
@@ -774,12 +800,12 @@ const startPayment = (type) => {
                             <template #cell-type="{ row }">
                                 <div class="flex flex-col">
                                     <span
-                                        class="text-sm font-bold text-slate-700 leading-none mb-1"
+                                        class="text-sm font-bold text-foreground leading-none mb-1"
                                     >
                                         {{ row.type?.name || "-" }}
                                     </span>
                                     <span
-                                        class="text-[10px] font-black text-slate-300 tracking-wider uppercase"
+                                        class="text-[10px] font-black text-muted-foreground tracking-wider uppercase"
                                     >
                                         {{
                                             row.type?.period === "once"
@@ -792,7 +818,7 @@ const startPayment = (type) => {
 
                             <template #cell-amount="{ row }">
                                 <span
-                                    class="text-sm font-black text-indigo-600 tabular-nums"
+                                    class="text-sm font-black text-primary tabular-nums"
                                 >
                                     {{ formatCurrency(row.amount) }}
                                 </span>
@@ -801,12 +827,12 @@ const startPayment = (type) => {
                             <template #cell-payment_date="{ row }">
                                 <div class="flex flex-col">
                                     <span
-                                        class="text-sm font-bold text-slate-600 leading-none mb-1"
+                                        class="text-sm font-bold text-muted-foreground leading-none mb-1"
                                     >
                                         {{ formatDate(row.payment_date) }}
                                     </span>
                                     <span
-                                        class="text-[10px] font-medium text-slate-400"
+                                        class="text-[10px] font-medium text-muted-foreground"
                                     >
                                         {{
                                             row.payment_method === "transfer"
@@ -819,10 +845,10 @@ const startPayment = (type) => {
 
                             <template #cell-payment_period="{ row }">
                                 <div
-                                    class="inline-flex items-center px-2 py-1 rounded bg-slate-50 border border-slate-100"
+                                    class="inline-flex items-center px-2 py-1 rounded bg-muted border border"
                                 >
                                     <span
-                                        class="text-[10px] font-black text-slate-500 tracking-wider uppercase shrink-0"
+                                        class="text-[10px] font-black text-muted-foreground tracking-wider uppercase shrink-0"
                                     >
                                         {{ row.payment_period || "-" }}
                                     </span>
@@ -845,7 +871,7 @@ const startPayment = (type) => {
                                     <button
                                         v-if="row.status === 'pending' && ($page.props.auth.user.role === 'admin' || $page.props.auth.user.role === 'bendahara')"
                                         type="button"
-                                        class="p-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition"
+                                        class="p-2 text-primary hover:text-primary hover:bg-primary/10 rounded-xl transition"
                                         title="Verifikasi"
                                         @click="openVerifyModal(row)"
                                     >
@@ -855,7 +881,7 @@ const startPayment = (type) => {
                                     </button>
                                     <Link
                                         :href="route('contributions.show', row)"
-                                        class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
+                                        class="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-all"
                                         title="Detail"
                                     >
                                         <svg
@@ -886,116 +912,95 @@ const startPayment = (type) => {
             </div>
         </div>
 
-        <!-- Verification Modal -->
-        <Modal
-            :show="showVerifyModal"
-            @close="closeVerifyModal"
-            maxWidth="2xl"
-        >
-            <div class="p-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">Verifikasi Pembayaran</h3>
+        <!-- Verification Dialog -->
+        <Dialog :open="showVerifyModal" @update:open="(val) => { if (!val) closeVerifyModal(); }">
+            <DialogContent class="max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Verifikasi Pembayaran</DialogTitle>
+                </DialogHeader>
                 <div v-if="selectedContribution" class="space-y-3">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Anggota</p>
-                            <p class="text-sm font-bold text-gray-900">{{ selectedContribution.member?.full_name || '-' }}</p>
-                            <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest">{{ selectedContribution.member?.member_code }}</p>
+                            <p class="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1">Anggota</p>
+                            <p class="text-sm font-bold text-foreground">{{ selectedContribution.member?.full_name || '-' }}</p>
+                            <p class="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{{ selectedContribution.member?.member_code }}</p>
                         </div>
                         <div>
-                            <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Jenis Iuran</p>
-                            <p class="text-sm font-bold text-gray-900">{{ selectedContribution.type?.name || '-' }}</p>
-                            <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest">
+                            <p class="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1">Jenis Iuran</p>
+                            <p class="text-sm font-bold text-foreground">{{ selectedContribution.type?.name || '-' }}</p>
+                            <p class="text-[10px] text-muted-foreground font-black uppercase tracking-widest">
                                 {{ selectedContribution.payment_period || '-' }}
                             </p>
                         </div>
                         <div>
-                            <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Jumlah</p>
-                            <p class="text-sm font-black text-indigo-600 tabular-nums">{{ formatCurrency(selectedContribution.amount) }}</p>
+                            <p class="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1">Jumlah</p>
+                            <p class="text-sm font-black text-primary tabular-nums">{{ formatCurrency(selectedContribution.amount) }}</p>
                         </div>
                         <div>
-                            <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Tanggal & Metode</p>
-                            <p class="text-sm font-bold text-slate-600">{{ formatDate(selectedContribution.payment_date) }}</p>
-                            <p class="text-[10px] font-medium text-slate-400">
+                            <p class="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1">Tanggal & Metode</p>
+                            <p class="text-sm font-bold text-muted-foreground">{{ formatDate(selectedContribution.payment_date) }}</p>
+                            <p class="text-[10px] font-medium text-muted-foreground">
                                 {{ selectedContribution.payment_method === 'transfer' ? 'Via Transfer' : 'Tunai' }}
                             </p>
                         </div>
                     </div>
                     <div class="mt-2">
-                        <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-2">Bukti Pembayaran</p>
-                        <div v-if="selectedContribution.receipt_path" class="bg-gray-50 border border-gray-100 rounded-lg p-3">
+                        <p class="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-2">Bukti Pembayaran</p>
+                        <div v-if="selectedContribution.receipt_path" class="bg-muted border border rounded-lg p-3">
                             <img :src="`/storage/${selectedContribution.receipt_path}`" alt="Bukti Pembayaran" class="max-h-[40vh] object-contain rounded" />
                         </div>
-                        <p v-else class="text-xs text-gray-400 italic">Tanpa bukti</p>
+                        <p v-else class="text-xs text-muted-foreground italic">Tanpa bukti</p>
                     </div>
                 </div>
-                <div class="mt-4 flex justify-end gap-2">
+                <DialogFooter class="gap-2">
                     <div class="flex-1">
-                        <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-2">Komentar Penolakan</p>
-                        <textarea
+                        <p class="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-2">Komentar Penolakan</p>
+                        <Textarea
                             v-model="rejectComment"
-                            class="block w-full border-gray-300 rounded-md text-sm"
                             rows="3"
                             placeholder="Tuliskan alasan penolakan"
-                        ></textarea>
+                        />
                     </div>
-                    <button 
-                        type="button"
-                        class="px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-xs font-bold transition-colors"
-                        :disabled="verifyProcessingId === selectedContribution?.id"
-                        @click="verifyContribution(selectedContribution.id, 'reject')"
-                    >
+                    <Button variant="outline" type="button" @click="verifyContribution(selectedContribution?.id, 'reject')" :disabled="verifyProcessingId === selectedContribution?.id">
                         Tolak
-                    </button>
-                    <PrimaryButton 
-                        :disabled="verifyProcessingId === selectedContribution?.id"
-                        @click="verifyContribution(selectedContribution.id, 'approve')"
-                    >
+                    </Button>
+                    <Button type="button" @click="verifyContribution(selectedContribution?.id, 'approve')" :disabled="verifyProcessingId === selectedContribution?.id">
                         Setujui
-                    </PrimaryButton>
-                </div>
-            </div>
-        </Modal>
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
 
-        <Modal
-            :show="showManualModal"
-            @close="showManualModal = false"
-            maxWidth="2xl"
-        >
-            <div class="bg-white">
+        <Dialog :open="showManualModal" @update:open="(val) => { if (!val) showManualModal = false; }">
+            <DialogContent class="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
                 <!-- Header Simple -->
-                <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white">
-                    <div>
-                        <h3 class="text-lg font-bold text-gray-900">
-                            {{ $page.props.auth.user.role === 'anggota' ? 'Upload Bukti Pembayaran' : 'Input Pembayaran' }}
-                        </h3>
-                        <p class="text-xs text-gray-500 mt-0.5">
-                            {{ $page.props.auth.user.role === 'anggota' ? 'Unggah bukti transfer untuk pembayaran iuran Anda' : 'Catat transaksi pembayaran iuran anggota' }}
-                        </p>
-                    </div>
-                    <div v-if="selectedType" class="text-right bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
-                        <p class="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Tarif</p>
-                        <p class="text-sm font-black text-gray-800">{{ formatCurrency(selectedType?.amount) }}</p>
-                    </div>
-                </div>
+                <DialogHeader>
+                    <DialogTitle>
+                        {{ $page.props.auth.user.role === 'anggota' ? 'Upload Bukti Pembayaran' : 'Input Pembayaran' }}
+                    </DialogTitle>
+                    <DialogDescription>
+                        {{ $page.props.auth.user.role === 'anggota' ? 'Unggah bukti transfer untuk pembayaran iuran Anda' : 'Catat transaksi pembayaran iuran anggota' }}
+                    </DialogDescription>
+                </DialogHeader>
 
-                <form @submit.prevent="submitManual" class="flex flex-col h-[calc(100vh-200px)] md:h-auto overflow-hidden">
-                    <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                <form @submit.prevent="submitManual" class="flex flex-col flex-1 overflow-hidden">
+                    <div class="flex-1 overflow-y-auto p-2">
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-                            
-                            <!-- Bagian Kiri: Form Input (7 kolom) -->
+
+                            <!-- Bagian Kiri: Form Input -->
                             <div class="md:col-span-7 space-y-3">
                                 <!-- Jenis Iuran -->
                                 <div>
-                                    <InputLabel for="contribution_type_id" value="Jenis Iuran" />
-                                    <select
-                                        id="contribution_type_id"
-                                        v-model="manualForm.contribution_type_id"
-                                        class="mt-1 block w-full border-gray-200 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white"
-                                    >
-                                        <option value="">Pilih jenis iuran...</option>
-                                        <option v-for="t in types" :key="t.id" :value="t.id">{{ t.name }}</option>
-                                    </select>
-                                    <InputError class="mt-1" :message="manualForm.errors.contribution_type_id" />
+                                    <Label for="contribution_type_id">Jenis Iuran</Label>
+                                    <Select v-model="manualForm.contribution_type_id">
+                                        <SelectTrigger class="mt-1 w-full">
+                                            <SelectValue placeholder="Pilih jenis iuran..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem v-for="t in types" :key="t.id" :value="t.id.toString()">{{ t.name }}</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <p v-if="manualForm.errors.contribution_type_id" class="mt-1 text-sm text-destructive">{{ manualForm.errors.contribution_type_id }}</p>
                                 </div>
 
                                 <!-- Anggota (Hanya tampil jika bukan role anggota) -->
@@ -1013,35 +1018,35 @@ const startPayment = (type) => {
                                 <!-- Grid Nominal & Tanggal -->
                                 <div class="grid grid-cols-2 gap-3">
                                     <div>
-                                        <InputLabel for="amount" value="Nominal" />
+                                        <Label for="amount">Nominal</Label>
                                         <div class="relative mt-1">
                                             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                                <span class="text-gray-500 sm:text-sm">Rp</span>
+                                                <span class="text-muted-foreground sm:text-sm">Rp</span>
                                             </div>
                                             <CurrencyInput
                                                 id="amount"
                                                 v-model="manualForm.amount"
-                                                class="block w-full rounded-lg border-gray-200 pl-10 text-gray-900 focus:ring-indigo-600 font-semibold"
+                                                class="block w-full rounded-lg border pl-10 text-foreground focus:ring-primary-600 font-semibold"
                                             />
                                         </div>
-                                        <InputError class="mt-1" :message="manualForm.errors.amount" />
+                                        <p v-if="manualForm.errors.amount" class="mt-1 text-sm text-destructive">{{ manualForm.errors.amount }}</p>
                                     </div>
                                     <div>
-                                        <InputLabel for="payment_date" value="Tanggal" />
-                                        <TextInput
+                                        <Label for="payment_date">Tanggal</Label>
+                                        <Input
                                             id="payment_date"
                                             type="date"
                                             v-model="manualForm.payment_date"
-                                            class="mt-1 block w-full rounded-lg border-gray-200 text-sm"
+                                            class="mt-1 block w-full rounded-lg border text-sm"
                                         />
-                                        <InputError class="mt-1" :message="manualForm.errors.payment_date" />
+                                        <p v-if="manualForm.errors.payment_date" class="mt-1 text-sm text-destructive">{{ manualForm.errors.payment_date }}</p>
                                     </div>
                                 </div>
 
                                 <!-- Grid Metode & Dompet -->
                                 <div class="grid grid-cols-2 gap-4">
                                     <div v-if="$page.props.auth.user.role !== 'anggota'">
-                                        <InputLabel value="Metode Pembayaran" />
+                                        <Label>Metode Pembayaran</Label>
                                         <div class="grid grid-cols-2 gap-3 mt-1">
                                             <label class="cursor-pointer relative">
                                                 <input
@@ -1050,7 +1055,7 @@ const startPayment = (type) => {
                                                     value="cash"
                                                     class="peer sr-only"
                                                 />
-                                                <div class="rounded-lg border border-gray-200 p-3 hover:bg-gray-50 peer-checked:border-indigo-600 peer-checked:bg-indigo-50 peer-checked:text-indigo-600 text-gray-500 transition-all flex flex-col items-center justify-center gap-1 text-center h-full">
+                                                <div class="rounded-lg border border p-3 hover:bg-muted peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:text-primary text-muted-foreground transition-all flex flex-col items-center justify-center gap-1 text-center h-full">
                                                     <svg class="w-6 h-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                                                     </svg>
@@ -1064,7 +1069,7 @@ const startPayment = (type) => {
                                                     value="transfer"
                                                     class="peer sr-only"
                                                 />
-                                                <div class="rounded-lg border border-gray-200 p-3 hover:bg-gray-50 peer-checked:border-indigo-600 peer-checked:bg-indigo-50 peer-checked:text-indigo-600 text-gray-500 transition-all flex flex-col items-center justify-center gap-1 text-center h-full">
+                                                <div class="rounded-lg border border p-3 hover:bg-muted peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:text-primary text-muted-foreground transition-all flex flex-col items-center justify-center gap-1 text-center h-full">
                                                     <svg class="w-6 h-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                                                     </svg>
@@ -1072,42 +1077,41 @@ const startPayment = (type) => {
                                                 </div>
                                             </label>
                                         </div>
-                                        <InputError class="mt-1" :message="manualForm.errors.payment_method" />
+                                        <p v-if="manualForm.errors.payment_method" class="mt-1 text-sm text-destructive">{{ manualForm.errors.payment_method }}</p>
                                     </div>
                                     <div v-else class="col-span-1">
-                                        <div class="bg-blue-50 border border-blue-100 rounded-lg p-3 flex items-center gap-3 h-full">
-                                            <div class="bg-blue-100 p-2 rounded-full text-blue-600">
+                                        <div class="bg-primary/10 border border-primary-100 rounded-lg p-3 flex items-center gap-3 h-full">
+                                            <div class="bg-primary/20 p-2 rounded-full text-primary">
                                                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                                                 </svg>
                                             </div>
                                             <div>
-                                                <p class="text-[10px] font-bold text-blue-900 uppercase tracking-wide">Metode Pembayaran</p>
-                                                <p class="text-sm font-bold text-blue-700">Transfer Bank</p>
+                                                <p class="text-[10px] font-bold text-primary-900 uppercase tracking-wide">Metode Pembayaran</p>
+                                                <p class="text-sm font-bold text-primary">Transfer Bank</p>
                                             </div>
                                         </div>
                                     </div>
                                     <div v-if="!selectedType?.wallet_id && $page.props.auth.user.role !== 'anggota'">
-                                        <InputLabel for="wallet_id" value="Dompet" />
-                                        <select
-                                            id="wallet_id"
-                                            v-model="manualForm.wallet_id"
-                                            class="mt-1 block w-full border-gray-200 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                        >
-                                            <option value="">Pilih dompet...</option>
-                                            <option v-for="w in wallets" :key="w.id" :value="w.id">{{ w.name }}</option>
-                                        </select>
-                                        <InputError class="mt-1" :message="manualForm.errors.wallet_id" />
+                                        <Label for="wallet_id">Dompet</Label>
+                                        <Select v-model="manualForm.wallet_id">
+                                            <SelectTrigger class="mt-1 w-full">
+                                                <SelectValue placeholder="Pilih dompet..." />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem v-for="w in wallets" :key="w.id" :value="w.id.toString()">{{ w.name }}</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <p v-if="manualForm.errors.wallet_id" class="mt-1 text-sm text-destructive">{{ manualForm.errors.wallet_id }}</p>
                                     </div>
                                 </div>
 
                                 <!-- Catatan -->
                                 <div>
-                                    <InputLabel for="notes" value="Catatan (Opsional)" />
-                                    <textarea
+                                    <Label for="notes">Catatan (Opsional)</Label>
+                                    <Textarea
                                         id="notes"
                                         v-model="manualForm.notes"
-                                        class="mt-1 block w-full border-gray-200 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500"
                                         rows="2"
                                         placeholder="Keterangan tambahan..."
                                     />
@@ -1115,34 +1119,51 @@ const startPayment = (type) => {
 
                                 <!-- Bukti Transfer -->
                                 <div>
-                                    <InputLabel for="receipt" :value="$page.props.auth.user.role === 'anggota' ? 'Bukti Transfer' : 'Bukti Transfer (Opsional)'" />
-                                    <input
-                                        id="receipt"
-                                        type="file"
-                                        @change="onReceiptChange"
-                                        class="mt-1 block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 transition-colors"
-                                        accept="image/*"
-                                    />
-                                    <InputError class="mt-1" :message="manualForm.errors.receipt" />
+                                    <Label>{{ $page.props.auth.user.role === 'anggota' ? 'Bukti Transfer' : 'Bukti Transfer (Opsional)' }}</Label>
+                                    <div
+                                        @dragover.prevent="isDraggingManualReceipt = true"
+                                        @dragleave.prevent="isDraggingManualReceipt = false"
+                                        @drop.prevent="handleManualReceiptDrop($event)"
+                                        @click="manualReceiptInputRef?.click()"
+                                        class="mt-1 relative border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all duration-200"
+                                        :class="isDraggingManualReceipt ? 'border-primary bg-primary/5 scale-[1.01]' : 'border-border hover:border-primary/50 hover:bg-muted/30'"
+                                    >
+                                        <input ref="manualReceiptInputRef" type="file" accept="image/*" class="hidden" @change="handleManualReceiptSelect($event)" />
+                                        <template v-if="!manualReceiptPreview">
+                                            <Upload class="mx-auto h-7 w-7 text-muted-foreground mb-1.5" />
+                                            <p class="text-xs font-medium text-primary">Upload Bukti Transfer</p>
+                                            <p class="text-[11px] text-muted-foreground mt-0.5">Drag & drop atau klik. PNG, JPG max 2MB</p>
+                                        </template>
+                                        <template v-else>
+                                            <div class="relative inline-block">
+                                                <img :src="manualReceiptPreview" class="max-h-28 rounded-lg mx-auto" />
+                                                <button type="button" @click.stop="clearManualReceipt" class="absolute -top-2 -right-2 w-5 h-5 bg-destructive text-white rounded-full flex items-center justify-center text-xs hover:bg-destructive/80">
+                                                    <X class="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                            <p class="text-[11px] text-muted-foreground mt-1.5">{{ manualForm.receipt?.name }}</p>
+                                        </template>
+                                    </div>
+                                    <p v-if="manualForm.errors.receipt" class="mt-1 text-sm text-destructive">{{ manualForm.errors.receipt }}</p>
                                 </div>
                             </div>
 
-                            <!-- Bagian Kanan: Periode (5 kolom) -->
-                            <div class="md:col-span-5 border-l border-gray-100 md:pl-6">
-                                <InputLabel value="Pilih Periode" class="mb-3" />
-                                
-                                <div class="bg-gray-50 rounded-xl p-3 h-[420px] overflow-y-auto custom-scrollbar border border-gray-100">
+                            <!-- Bagian Kanan: Periode -->
+                            <div class="md:col-span-5 border-l border md:pl-6">
+                                <Label class="mb-3">Pilih Periode</Label>
+
+                                <div class="bg-muted rounded-xl p-3 h-[350px] overflow-y-auto border border">
                                     <div v-if="manualPeriodOptions.length" class="space-y-1">
                                         <label
                                             v-for="opt in manualPeriodOptions"
                                             :key="opt.value"
-                                            class="flex items-center justify-between px-3 py-1.5 rounded-lg border bg-white cursor-pointer transition-all hover:border-indigo-300"
+                                            class="flex items-center justify-between px-3 py-1.5 rounded-lg border bg-card cursor-pointer transition-all hover:border-primary-300"
                                             :class="[
                                                 paidPeriods.includes(opt.value)
-                                                    ? 'border-gray-100 opacity-50 cursor-not-allowed bg-gray-50'
+                                                    ? 'border opacity-50 cursor-not-allowed bg-muted'
                                                     : manualForm.payment_periods.includes(opt.value)
-                                                        ? 'border-indigo-500 ring-1 ring-indigo-500 bg-indigo-50/30'
-                                                        : 'border-gray-200'
+                                                        ? 'border-primary-500 ring-1 ring-primary-500 bg-primary/10/30'
+                                                        : 'border'
                                             ]"
                                         >
                                             <div class="flex items-center gap-3">
@@ -1150,44 +1171,44 @@ const startPayment = (type) => {
                                                      <input
                                                         v-if="paidPeriods.includes(opt.value)"
                                                         type="checkbox"
-                                                        class="h-4 w-4 rounded border-gray-300 text-gray-400 focus:ring-0"
+                                                        class="h-4 w-4 rounded border-input text-muted-foreground focus:ring-0"
                                                         checked
                                                         disabled
                                                     />
                                                     <input
                                                         v-else
                                                         type="checkbox"
-                                                        class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                                        class="h-4 w-4 rounded border-input text-primary focus:ring-ring"
                                                         :value="opt.value"
                                                         v-model="manualForm.payment_periods"
                                                     />
                                                 </div>
-                                                <span class="text-xs font-bold text-gray-700">{{ opt.label }}</span>
+                                                <span class="text-xs font-bold text-foreground">{{ opt.label }}</span>
                                             </div>
-                                            
-                                            <span v-if="paidPeriods.includes(opt.value)" class="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full uppercase tracking-wider">
+
+                                            <span v-if="paidPeriods.includes(opt.value)" class="text-[10px] font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
                                                 Lunas
                                             </span>
                                         </label>
                                     </div>
                                     <div v-else class="flex flex-col items-center justify-center h-full text-center p-4">
-                                        <svg class="w-8 h-8 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                        <p class="text-xs text-gray-400">Pilih jenis iuran untuk menampilkan periode.</p>
+                                        <svg class="w-8 h-8 text-muted-foreground mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                        <p class="text-xs text-muted-foreground">Pilih jenis iuran untuk menampilkan periode.</p>
                                     </div>
                                 </div>
-                                <InputError class="mt-2" :message="manualForm.errors.payment_period" />
-                                <InputError class="mt-1" :message="manualForm.errors.periods" />
+                                <p v-if="manualForm.errors.payment_period" class="mt-2 text-sm text-destructive">{{ manualForm.errors.payment_period }}</p>
+                                <p v-if="manualForm.errors.periods" class="mt-1 text-sm text-destructive">{{ manualForm.errors.periods }}</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Footer -->
-                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                    <DialogFooter class="px-2 py-4 border-t mt-4">
                         <div>
-                            <p class="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Total Bayar</p>
+                            <p class="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Total Bayar</p>
                             <div class="flex items-baseline gap-2">
-                                <p class="text-xl font-black text-gray-800">{{ formatCurrency(manualForm.amount) }}</p>
-                                <p v-if="selectedMember" class="text-xs text-gray-500 hidden sm:inline-block">
+                                <p class="text-xl font-black text-foreground">{{ formatCurrency(manualForm.amount) }}</p>
+                                <p v-if="selectedMember" class="text-xs text-muted-foreground hidden sm:inline-block">
                                     — {{ selectedMember?.full_name }}
                                 </p>
                             </div>
@@ -1196,24 +1217,16 @@ const startPayment = (type) => {
                             <div v-if="selectedType?.period === 'once' && paidPeriods.includes('once')" class="text-xs text-green-600 font-bold mr-2">
                                 Sudah Lunas
                             </div>
-                            <button
-                                type="button"
-                                @click="showManualModal = false"
-                                class="px-4 py-2 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-200 transition-colors"
-                            >
+                            <Button variant="outline" type="button" @click="showManualModal = false">
                                 Batal
-                            </button>
-                            <button
-                                type="submit"
-                                :disabled="manualForm.processing || (selectedType?.period === 'once' && paidPeriods.includes('once'))"
-                                class="px-5 py-2 rounded-lg bg-gray-900 text-white text-xs font-bold uppercase tracking-wider hover:bg-gray-800 transition-colors shadow-sm disabled:opacity-50"
-                            >
+                            </Button>
+                            <Button type="submit" :disabled="manualForm.processing || (selectedType?.period === 'once' && paidPeriods.includes('once'))">
                                 Simpan
-                            </button>
+                            </Button>
                         </div>
-                    </div>
+                    </DialogFooter>
                 </form>
-            </div>
-        </Modal>
+            </DialogContent>
+        </Dialog>
     </AuthenticatedLayout>
 </template>

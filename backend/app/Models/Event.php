@@ -20,6 +20,8 @@ class Event extends Model
         'start_date',
         'end_date',
         'location',
+        'latitude',
+        'longitude',
         'pic_id',
         'max_participants',
         'status',
@@ -31,6 +33,8 @@ class Event extends Model
         'start_date' => 'datetime',
         'end_date' => 'datetime',
         'is_public' => 'boolean',
+        'latitude' => 'float',
+        'longitude' => 'float',
     ];
 
     public function scopePublished($query)

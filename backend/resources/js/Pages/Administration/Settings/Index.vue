@@ -134,13 +134,13 @@ const togglePermission = (role, permKey) => {
     <AuthenticatedLayout>
         <template #header>
             <div>
-                <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tight">Pengaturan Sistem</h2>
-                <p class="text-slate-500 text-sm font-medium mt-1">Konfigurasi parameter dan identitas organisasi dalam platform.</p>
+                <h2 class="text-2xl font-black text-foreground uppercase tracking-tight">Pengaturan Sistem</h2>
+                <p class="text-muted-foreground text-sm font-medium mt-1">Konfigurasi parameter dan identitas organisasi dalam platform.</p>
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="py-6 sm:py-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex flex-col lg:flex-row gap-8">
                     <!-- Sidebar Tabs -->
                     <div class="w-full lg:w-64 shrink-0 space-y-2">
@@ -150,8 +150,8 @@ const togglePermission = (role, permKey) => {
                             @click="activeTab = key"
                             class="w-full flex items-center gap-3 px-6 py-4 rounded-2xl text-sm font-bold transition-all uppercase tracking-widest border shadow-sm"
                             :class="activeTab === key 
-                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-indigo-100' 
-                                : 'bg-white text-slate-500 border-slate-100 hover:bg-slate-50'"
+                                ? 'bg-primary text-white border-primary shadow-sm' 
+                                : 'bg-card text-muted-foreground border hover:bg-muted'"
                         >
                             <span v-html="getGroupIcon(key)"></span>
                             {{ getGroupLabel(key) }}
@@ -160,11 +160,11 @@ const togglePermission = (role, permKey) => {
 
                     <!-- Main Content -->
                     <div class="flex-1">
-                        <div class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+                        <div class="bg-card rounded-[2.5rem] shadow-xl shadow-muted/50 border border overflow-hidden">
                             <form @submit.prevent="submit" class="p-8 lg:p-12">
-                                <div class="mb-10 flex items-center justify-between border-b border-slate-50 pb-6">
-                                    <h3 class="text-xl font-black text-slate-900 uppercase tracking-tight">{{ getGroupLabel(activeTab) }}</h3>
-                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Konfigurasi {{ activeTab }}</p>
+                                <div class="mb-10 flex items-center justify-between border-b border pb-6">
+                                    <h3 class="text-xl font-black text-foreground uppercase tracking-tight">{{ getGroupLabel(activeTab) }}</h3>
+                                    <p class="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Konfigurasi {{ activeTab }}</p>
                                 </div>
 
                                 <div class="space-y-8">
@@ -176,8 +176,8 @@ const togglePermission = (role, permKey) => {
                                     >
                                         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                             <div class="max-w-md">
-                                                <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 block ml-1">{{ setting.key.split('_').join(' ') }}</label>
-                                                <p class="text-xs text-slate-500 font-medium ml-1 mt-1">{{ setting.description }}</p>
+                                                <label class="text-[11px] font-black uppercase tracking-widest text-muted-foreground block ml-1">{{ setting.key.split('_').join(' ') }}</label>
+                                                <p class="text-xs text-muted-foreground font-medium ml-1 mt-1">{{ setting.description }}</p>
                                             </div>
                                             <div class="flex-1 max-w-lg">
                                                 <!-- String Input -->
@@ -185,7 +185,7 @@ const togglePermission = (role, permKey) => {
                                                     v-if="setting.type === 'string'"
                                                     v-model="setting.value"
                                                     type="text"
-                                                    class="w-full bg-slate-50 border-slate-200 rounded-2xl py-3 px-5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-medium text-slate-700"
+                                                    class="w-full bg-muted border rounded-2xl py-3 px-5 focus:ring-2 focus:ring-ring focus:border-ring transition-all font-medium text-foreground"
                                                 >
                                                 
                                                 <!-- Boolean Input -->
@@ -193,15 +193,15 @@ const togglePermission = (role, permKey) => {
                                                     <button 
                                                         type="button"
                                                         @click="setting.value = setting.value === '1' ? '0' : '1'"
-                                                        class="relative inline-flex h-7 w-14 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
-                                                        :class="setting.value === '1' ? 'bg-indigo-600' : 'bg-slate-200'"
+                                                        class="relative inline-flex h-7 w-14 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2"
+                                                        :class="setting.value === '1' ? 'bg-primary' : 'bg-muted'"
                                                     >
                                                         <span 
-                                                            class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                                                            class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-card shadow ring-0 transition duration-200 ease-in-out"
                                                             :class="setting.value === '1' ? 'translate-x-7' : 'translate-x-0'"
                                                         ></span>
                                                     </button>
-                                                    <span class="ml-3 text-sm font-bold" :class="setting.value === '1' ? 'text-indigo-600' : 'text-slate-400'">
+                                                    <span class="ml-3 text-sm font-bold" :class="setting.value === '1' ? 'text-primary' : 'text-muted-foreground'">
                                                         {{ setting.value === '1' ? 'Aktif' : 'Non-Aktif' }}
                                                     </span>
                                                 </div>
@@ -214,35 +214,35 @@ const togglePermission = (role, permKey) => {
                                         <table class="w-full text-left border-collapse">
                                             <thead>
                                                 <tr>
-                                                    <th class="p-4 border-b border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-400">Fitur / Modul</th>
-                                                    <th v-for="role in ['ketua', 'bendahara', 'sekretaris', 'anggota']" :key="role" class="p-4 border-b border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">
+                                                    <th class="p-4 border-b border text-[10px] font-black uppercase tracking-widest text-muted-foreground">Fitur / Modul</th>
+                                                    <th v-for="role in ['ketua', 'bendahara', 'sekretaris', 'anggota']" :key="role" class="p-4 border-b border text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center">
                                                         {{ role }}
                                                     </th>
                                                 </tr>
                                             </thead>
-                                            <tbody class="divide-y divide-slate-50">
+                                            <tbody class="divide-y divide-border">
                                                 <tr v-for="perm in parsePermissions()" :key="perm.key">
-                                                    <td class="p-4 font-bold text-slate-700">{{ perm.label }}</td>
+                                                    <td class="p-4 font-bold text-foreground">{{ perm.label }}</td>
                                                     <td v-for="role in ['ketua', 'bendahara', 'sekretaris', 'anggota']" :key="role" class="p-4 text-center">
                                                         <input 
                                                             type="checkbox"
                                                             :checked="hasPermission(role, perm.key)"
                                                             @change="togglePermission(role, perm.key)"
-                                                            class="rounded border-slate-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 w-5 h-5"
+                                                            class="rounded border-input text-primary shadow-sm focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50 w-5 h-5"
                                                         >
                                                     </td>
                                                 </tr>
                                             </tbody>
                                         </table>
-                                        <p class="mt-4 text-xs text-slate-400 italic text-center">Admin memiliki akses penuh ke seluruh fitur.</p>
+                                        <p class="mt-4 text-xs text-muted-foreground italic text-center">Admin memiliki akses penuh ke seluruh fitur.</p>
                                     </div>
                                 </div>
 
-                                <div class="mt-12 pt-8 border-t border-slate-50 flex justify-end">
+                                <div class="mt-12 pt-8 border-t border flex justify-end">
                                     <button
                                         type="submit"
                                         :disabled="form.processing"
-                                        class="px-10 py-4 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black rounded-2xl shadow-xl shadow-indigo-100 transition-all active:scale-95 disabled:opacity-50 uppercase tracking-[0.2em]"
+                                        class="px-10 py-4 bg-primary hover:bg-primary/90 text-white text-sm font-black rounded-2xl shadow-xl shadow-sm transition-all active:scale-95 disabled:opacity-50 uppercase tracking-[0.2em]"
                                     >
                                         Simpan Perubahan
                                     </button>

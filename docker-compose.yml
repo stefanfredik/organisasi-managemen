@@ -26,24 +26,6 @@ services:
       redis:
         condition: service_started
 
-  # Vite Development Server (Disabled for Stable Tunneling)
-  # vite:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   container_name: organisasi_vite
-  #   restart: unless-stopped
-  #   working_dir: /var/www/html
-  #   volumes:
-  #     - ./backend:/var/www/html
-  #   ports:
-  #     - "${VITE_PORT:-5173}:5173"
-  #   command: npm run dev
-  #   networks:
-  #     - organisasi_network
-  #   depends_on:
-  #     - app
-
   # Nginx Web Server
   nginx:
     image: nginx:alpine
@@ -111,12 +93,11 @@ services:
     depends_on:
       - mysql
 
-  # Cloudflare Tunnel (Full Docker - Remote Managed)
+  # Cloudflare Tunnel
   tunnel:
     image: cloudflare/cloudflared:latest
     container_name: organisasi_tunnel
     restart: unless-stopped
-    # Menggunakan perintah yang terbukti berhasil di terminal Anda
     command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
     networks:
       - organisasi_network

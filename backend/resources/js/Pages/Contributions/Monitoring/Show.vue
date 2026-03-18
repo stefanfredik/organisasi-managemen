@@ -1,8 +1,8 @@
 <script setup>
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import SecondaryButton from '@/Components/SecondaryButton.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
+
+import { Button } from '@/components/ui/button';
 import ChartWidget from '@/Components/ChartWidget.vue';
 import { ref, watch } from 'vue';
 
@@ -27,7 +27,6 @@ const applyFilter = () => {
         preserveScroll: true,
     });
 };
-
 </script>
 
 <template>
@@ -36,134 +35,123 @@ const applyFilter = () => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center">
-                 <Link :href="route('contributions.monitoring.index')" class="mr-3 text-gray-400 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                 <Link :href="route('contributions.monitoring.index')" class="mr-3 text-muted-foreground hover:text-foreground">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                 </Link>
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">
+                <h2 class="text-xl font-semibold leading-tight text-foreground">
                     Monitoring: {{ type.name }}
                 </h2>
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8 flex flex-col md:flex-row gap-6">
+        <div class="py-4">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row gap-4">
                 
                 <!-- Sidebar Navigation -->
-                <div class="w-full md:w-64 shrink-0">
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden sticky top-6">
-                        <div class="p-4 bg-gray-50 border-b border-gray-100">
-                            <h3 class="font-bold text-gray-700">Menu</h3>
+                <div class="w-full md:w-56 shrink-0">
+                    <div class="bg-card rounded-lg shadow-sm border border overflow-hidden sticky top-4">
+                        <div class="px-3 py-2 bg-muted border-b border">
+                            <h3 class="font-bold text-foreground text-sm">Menu</h3>
                         </div>
-                        <div class="p-2 space-y-1">
+                        <div class="p-1.5 space-y-0.5">
                             <Link :href="route('contributions.monitoring.dashboard', type.id)" 
-                                class="flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-colors"
-                                :class="route().current('contributions.monitoring.dashboard') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'"
+                                class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
+                                :class="route().current('contributions.monitoring.dashboard') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'"
                             >
-                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
                                 Dashboard
                             </Link>
                             <Link :href="route('contributions.monitoring.matrix', type.id)" 
-                                class="flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-colors"
-                                :class="route().current('contributions.monitoring.matrix') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'"
+                                class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
+                                :class="route().current('contributions.monitoring.matrix') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'"
                             >
-                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7-8v8m14-8v8M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7-8v8m14-8v8M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                                 Matrix
                             </Link>
                             <Link :href="route('contributions.monitoring.history', type.id)" 
-                                class="flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-colors"
-                                :class="route().current('contributions.monitoring.history') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'"
+                                class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
+                                :class="route().current('contributions.monitoring.history') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'"
                             >
-                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                Riwayat Transaksi
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Riwayat
                             </Link>
                         </div>
                     </div>
                 </div>
 
                 <!-- Main Content -->
-                <div class="flex-1 space-y-6">
+                <div class="flex-1 space-y-4">
                     <!-- Member Status Stats -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group">
-                           <div class="absolute -right-6 -top-6 w-24 h-24 bg-green-50 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
-                            <div class="relative z-10">
-                                <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Anggota Lunas</div>
-                                <div class="text-3xl font-black text-green-600">{{ stats.member_status?.paid || 0 }}</div>
-                                <div class="mt-1 text-xs text-green-600 font-bold bg-green-50 inline-block px-2 py-1 rounded-lg">Periode Ini</div>
-                            </div>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="bg-card p-3 rounded-lg shadow-sm border border">
+                            <div class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Lunas</div>
+                            <div class="text-xl font-black text-success-600">{{ stats.member_status?.paid || 0 }}</div>
+                            <div class="text-[10px] text-success-600 font-bold">Periode Ini</div>
                         </div>
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group">
-                            <div class="absolute -right-6 -top-6 w-24 h-24 bg-gray-50 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
-                            <div class="relative z-10">
-                                <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Anggota Belum</div>
-                                <div class="text-3xl font-black text-gray-700">{{ stats.member_status?.unpaid || 0 }}</div>
-                                <div class="mt-1 text-xs text-gray-500 font-bold bg-gray-50 inline-block px-2 py-1 rounded-lg">Belum Bayar</div>
-                            </div>
+                        <div class="bg-card p-3 rounded-lg shadow-sm border border">
+                            <div class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Belum Bayar</div>
+                            <div class="text-xl font-black text-foreground">{{ stats.member_status?.unpaid || 0 }}</div>
+                            <div class="text-[10px] text-muted-foreground font-bold">Belum</div>
                         </div>
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group">
-                             <div class="absolute -right-6 -top-6 w-24 h-24 bg-red-50 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
-                            <div class="relative z-10">
-                                <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Anggota Tunggak</div>
-                                <div class="text-3xl font-black text-red-600">{{ stats.member_status?.arrears || 0 }}</div>
-                                <div class="mt-1 text-xs text-red-600 font-bold bg-red-50 inline-block px-2 py-1 rounded-lg">Menunggak</div>
-                            </div>
+                        <div class="bg-card p-3 rounded-lg shadow-sm border border">
+                            <div class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Tunggak</div>
+                            <div class="text-xl font-black text-destructive">{{ stats.member_status?.arrears || 0 }}</div>
+                            <div class="text-[10px] text-destructive font-bold">Menunggak</div>
                         </div>
                     </div>
 
                     <!-- Financial Stats -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                            <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Total Terkumpul</div>
-                            <div class="text-2xl font-black text-indigo-600">{{ formatCurrency(stats.total_collected) }}</div>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="bg-card p-3 rounded-lg shadow-sm border border">
+                            <div class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Terkumpul</div>
+                            <div class="text-lg font-black text-primary">{{ formatCurrency(stats.total_collected) }}</div>
                         </div>
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                            <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Menunggu Verifikasi</div>
-                            <div class="text-2xl font-black text-amber-500">{{ stats.total_pending }} <span class="text-sm text-gray-400 font-bold">Transaksi</span></div>
+                        <div class="bg-card p-3 rounded-lg shadow-sm border border">
+                            <div class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Pending</div>
+                            <div class="text-lg font-black text-warning-500">{{ stats.total_pending }} <span class="text-xs text-muted-foreground font-bold">Trx</span></div>
                         </div>
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                            <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Total Transaksi</div>
-                            <div class="text-2xl font-black text-gray-700">{{ stats.total_transactions }}</div>
+                        <div class="bg-card p-3 rounded-lg shadow-sm border border">
+                            <div class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Total Trx</div>
+                            <div class="text-lg font-black text-foreground">{{ stats.total_transactions }}</div>
                         </div>
                     </div>
 
                     <!-- Filters -->
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                            <div class="col-span-1" v-if="['monthly', 'yearly', 'weekly'].includes(type.period)">
-                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Periode Status</label>
-                                <input v-if="type.period === 'monthly'" type="month" v-model="form.period_filter" class="w-full rounded-xl border-gray-200 text-sm font-bold text-gray-700 focus:ring-indigo-500 focus:border-indigo-500">
-                                <input v-else-if="type.period === 'weekly'" type="week" v-model="form.period_filter" class="w-full rounded-xl border-gray-200 text-sm font-bold text-gray-700 focus:ring-indigo-500 focus:border-indigo-500">
-                                <input v-else-if="type.period === 'yearly'" type="number" placeholder="YYYY" v-model="form.period_filter" class="w-full rounded-xl border-gray-200 text-sm font-bold text-gray-700 focus:ring-indigo-500 focus:border-indigo-500">
+                    <div class="bg-card p-3 rounded-lg shadow-sm border border">
+                        <div class="flex flex-wrap items-end gap-3">
+                            <div v-if="['monthly', 'yearly', 'weekly'].includes(type.period)">
+                                <label class="block text-xs font-medium text-muted-foreground mb-1">Periode</label>
+                                <input v-if="type.period === 'monthly'" type="month" v-model="form.period_filter" class="text-sm rounded-md border-input focus:ring-ring focus:border-ring">
+                                <input v-else-if="type.period === 'weekly'" type="week" v-model="form.period_filter" class="text-sm rounded-md border-input focus:ring-ring focus:border-ring">
+                                <input v-else-if="type.period === 'yearly'" type="number" placeholder="YYYY" v-model="form.period_filter" class="w-24 text-sm rounded-md border-input focus:ring-ring focus:border-ring">
                             </div>
-                            <div class="col-span-1">
-                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Dari Tanggal</label>
-                                <input type="date" v-model="form.start_date" class="w-full rounded-xl border-gray-200 text-sm font-bold text-gray-700 focus:ring-indigo-500 focus:border-indigo-500">
+                            <div>
+                                <label class="block text-xs font-medium text-muted-foreground mb-1">Dari</label>
+                                <input type="date" v-model="form.start_date" class="text-sm rounded-md border-input focus:ring-ring focus:border-ring">
                             </div>
-                            <div class="col-span-1">
-                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Sampai Tanggal</label>
-                                <input type="date" v-model="form.end_date" class="w-full rounded-xl border-gray-200 text-sm font-bold text-gray-700 focus:ring-indigo-500 focus:border-indigo-500">
+                            <div>
+                                <label class="block text-xs font-medium text-muted-foreground mb-1">Sampai</label>
+                                <input type="date" v-model="form.end_date" class="text-sm rounded-md border-input focus:ring-ring focus:border-ring">
                             </div>
-                             <div class="col-span-1">
-                                <PrimaryButton @click="applyFilter" class="w-full justify-center h-[42px]">Filter</PrimaryButton>
-                            </div>
+                            <Button size="sm" @click="applyFilter">Filter</Button>
                         </div>
                     </div>
 
                     <!-- Charts -->
-                    <div v-if="charts" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div v-if="charts" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <ChartWidget 
                             title="Tren Pembayaran (Per Bulan)" 
                             :data="charts.monthly" 
                             type="line" 
-                            color="indigo" 
-                            height="300px" 
+                            color="primary" 
+                            height="250px" 
                         />
                         <ChartWidget 
                             v-if="charts.status_distribution"
-                            title="Distribusi Status Anggota"
+                            title="Distribusi Status"
                             :data="charts.status_distribution"
                             type="doughnut"
-                            height="300px"
+                            height="250px"
                         />
                     </div>
                 </div>

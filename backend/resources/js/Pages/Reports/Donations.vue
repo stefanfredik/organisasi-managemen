@@ -12,29 +12,20 @@ const props = defineProps({
 const status = ref(props.filters.status || '');
 
 const applyFilters = () => {
-    router.get(route('reports.donations'), {
-        status: status.value,
-    }, {
-        preserveState: true,
-        preserveScroll: true,
-    });
+    router.get(route('reports.donations'), { status: status.value }, { preserveState: true, preserveScroll: true });
 };
 
 const formatCurrency = (value) => {
-    return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        minimumFractionDigits: 0,
-    }).format(value);
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value);
 };
 
 const getStatusColor = (status) => {
     const colors = {
-        active: 'text-green-600 bg-green-50',
-        completed: 'text-blue-600 bg-blue-50',
-        cancelled: 'text-red-600 bg-red-50',
+        active: 'text-success-600 bg-success/10',
+        completed: 'text-primary bg-primary/10',
+        cancelled: 'text-destructive bg-destructive/10',
     };
-    return colors[status] || 'text-gray-600 bg-gray-50';
+    return colors[status] || 'text-muted-foreground bg-muted';
 };
 </script>
 
@@ -45,123 +36,100 @@ const getStatusColor = (status) => {
         <template #header>
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                    <Link :href="route('reports.index')" class="text-gray-500 hover:text-gray-700">
+                    <Link :href="route('reports.index')" class="text-muted-foreground hover:text-foreground">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
                     </Link>
-                    <h2 class="text-xl font-semibold text-gray-800">Laporan Donasi</h2>
+                    <h2 class="text-xl font-semibold text-foreground">Laporan Donasi</h2>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <a
-                        :href="route('reports.donations.pdf', { status: status })"
-                        target="_blank"
-                        class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 active:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                    >
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
+                    <a :href="route('reports.donations.pdf', { status: status })" target="_blank"
+                        class="inline-flex items-center px-3 py-1.5 bg-destructive rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-destructive/90 transition">
                         PDF
                     </a>
-                    <a
-                        :href="route('reports.donations.excel', { status: status })"
-                        class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                    >
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
+                    <a :href="route('reports.donations.excel', { status: status })"
+                        class="inline-flex items-center px-3 py-1.5 bg-success-600 rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-success-700 transition">
                         Excel
                     </a>
                 </div>
             </div>
         </template>
 
-        <div class="py-8">
+        <div class="py-4">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 
-                <!-- Filters -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-                    <div class="flex flex-col md:flex-row md:items-end gap-4">
-                        <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Status Donasi</label>
-                            <select 
-                                v-model="status"
-                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                            >
-                                <option value="">Semua Status</option>
+                <!-- Filters - compact inline -->
+                <div class="bg-card rounded-lg shadow-sm border border p-3 mb-4">
+                    <div class="flex items-end gap-3">
+                        <div class="min-w-[150px]">
+                            <label class="block text-xs font-medium text-muted-foreground mb-1">Status</label>
+                            <select v-model="status" class="w-full text-sm rounded-md border-input shadow-sm focus:border-ring focus:ring-ring">
+                                <option value="">Semua</option>
                                 <option value="active">Aktif</option>
                                 <option value="completed">Selesai</option>
                                 <option value="cancelled">Dibatalkan</option>
                             </select>
                         </div>
-                        <div class="flex-shrink-0">
-                            <button
-                                @click="applyFilters"
-                                class="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                            >
-                                Filter
-                            </button>
-                        </div>
+                        <button @click="applyFilters" class="px-4 py-2 text-sm bg-primary text-white rounded-md hover:bg-primary/90">
+                            Filter
+                        </button>
                     </div>
                 </div>
 
                 <!-- Summary Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <p class="text-sm text-gray-600 mb-1">Total Target</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ formatCurrency(summary.totalTarget) }}</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    <div class="bg-card rounded-lg shadow-sm border border p-3">
+                        <p class="text-xs text-muted-foreground mb-0.5">Total Target</p>
+                        <p class="text-lg font-bold text-foreground">{{ formatCurrency(summary.totalTarget) }}</p>
                     </div>
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <p class="text-sm text-gray-600 mb-1">Total Terkumpul</p>
-                        <p class="text-2xl font-bold text-green-600">{{ formatCurrency(summary.totalCollected) }}</p>
+                    <div class="bg-card rounded-lg shadow-sm border border p-3">
+                        <p class="text-xs text-muted-foreground mb-0.5">Terkumpul</p>
+                        <p class="text-lg font-bold text-success-600">{{ formatCurrency(summary.totalCollected) }}</p>
                     </div>
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <p class="text-sm text-gray-600 mb-1">Total Sisa</p>
-                        <p class="text-2xl font-bold text-red-600">{{ formatCurrency(summary.totalRemaining) }}</p>
+                    <div class="bg-card rounded-lg shadow-sm border border p-3">
+                        <p class="text-xs text-muted-foreground mb-0.5">Sisa</p>
+                        <p class="text-lg font-bold text-destructive">{{ formatCurrency(summary.totalRemaining) }}</p>
                     </div>
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <p class="text-sm text-gray-600 mb-1">Tingkat Pencapaian</p>
-                        <p class="text-2xl font-bold text-indigo-600">{{ summary.completionRate.toFixed(1) }}%</p>
+                    <div class="bg-card rounded-lg shadow-sm border border p-3">
+                        <p class="text-xs text-muted-foreground mb-0.5">Pencapaian</p>
+                        <p class="text-lg font-bold text-primary">{{ summary.completionRate.toFixed(1) }}%</p>
                     </div>
                 </div>
 
                 <!-- List -->
-                <div class="space-y-6">
-                    <div v-for="d in donations" :key="d.id" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div class="p-6">
-                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-                                <div>
-                                    <h3 class="text-lg font-bold text-gray-900">{{ d.program_name }}</h3>
-                                    <p class="text-sm text-gray-500">{{ d.description }}</p>
+                <div class="space-y-3">
+                    <div v-for="d in donations" :key="d.id" class="bg-card rounded-lg shadow-sm border border overflow-hidden">
+                        <div class="p-4">
+                            <div class="flex items-center justify-between gap-3 mb-3">
+                                <div class="min-w-0">
+                                    <h3 class="text-sm font-bold text-foreground truncate">{{ d.program_name }}</h3>
+                                    <p class="text-xs text-muted-foreground truncate">{{ d.description }}</p>
                                 </div>
-                                <span :class="[getStatusColor(d.status), 'px-3 py-1 rounded-full text-xs font-bold uppercase w-fit']">
-                                    {{ d.status === 'active' ? 'Aktif' : (d.status === 'completed' ? 'Selesai' : 'Dibatalkan') }}
+                                <span :class="[getStatusColor(d.status), 'px-2 py-0.5 rounded-full text-xs font-bold uppercase shrink-0']">
+                                    {{ d.status === 'active' ? 'Aktif' : (d.status === 'completed' ? 'Selesai' : 'Batal') }}
                                 </span>
                             </div>
 
-                            <div class="space-y-2 mb-6">
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">Progress: {{ formatCurrency(d.collected_amount) }} / {{ formatCurrency(d.target_amount) }}</span>
-                                    <span class="font-bold text-gray-900">{{ ((d.collected_amount / d.target_amount) * 100).toFixed(1) }}%</span>
+                            <div class="space-y-1.5 mb-3">
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-muted-foreground">{{ formatCurrency(d.collected_amount) }} / {{ formatCurrency(d.target_amount) }}</span>
+                                    <span class="font-bold text-foreground">{{ ((d.collected_amount / d.target_amount) * 100).toFixed(1) }}%</span>
                                 </div>
-                                <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-                                    <div 
-                                        class="bg-indigo-600 h-full rounded-full transition-all duration-500"
-                                        :style="{ width: `${(d.collected_amount / d.target_amount) * 100}%` }"
-                                    ></div>
+                                <div class="w-full bg-muted rounded-full h-2 overflow-hidden">
+                                    <div class="bg-primary h-full rounded-full transition-all duration-500" :style="{ width: `${(d.collected_amount / d.target_amount) * 100}%` }"></div>
                                 </div>
                             </div>
 
-                            <!-- Transactions Breakdown -->
                             <div v-if="d.transactions && d.transactions.length > 0">
-                                <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Transaksi Terbaru</h4>
-                                <div class="bg-gray-50 rounded-lg overflow-hidden border border-gray-100">
-                                    <table class="min-w-full divide-y divide-gray-200">
-                                        <tbody class="divide-y divide-gray-200">
+                                <h4 class="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">Transaksi Terbaru</h4>
+                                <div class="bg-muted rounded-md overflow-hidden border border">
+                                    <table class="min-w-full divide-y divide-border">
+                                        <tbody class="divide-y divide-border">
                                             <tr v-for="t in d.transactions.slice(0, 5)" :key="t.id">
-                                                <td class="px-4 py-2 text-xs text-gray-600">{{ t.transaction_date }}</td>
-                                                <td class="px-4 py-2 text-xs text-gray-900">{{ t.description || 'Donasi masuk' }}</td>
-                                                <td class="px-4 py-2 text-xs text-right font-bold text-green-600">{{ formatCurrency(t.amount) }}</td>
+                                                <td class="px-3 py-1.5 text-xs text-muted-foreground">{{ t.transaction_date }}</td>
+                                                <td class="px-3 py-1.5 text-xs text-foreground">{{ t.description || 'Donasi masuk' }}</td>
+                                                <td class="px-3 py-1.5 text-xs text-right font-bold text-success-600">{{ formatCurrency(t.amount) }}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -170,8 +138,8 @@ const getStatusColor = (status) => {
                         </div>
                     </div>
 
-                    <div v-if="donations.length === 0" class="p-12 text-center text-gray-500 bg-white rounded-xl border border-gray-200">
-                        <p>Tidak ada data donasi ditemukan.</p>
+                    <div v-if="donations.length === 0" class="p-8 text-center text-muted-foreground bg-card rounded-lg border border">
+                        <p class="text-sm">Tidak ada data donasi ditemukan.</p>
                     </div>
                 </div>
 

@@ -16,13 +16,12 @@ const props = defineProps({
     },
     color: {
         type: String,
-        default: 'indigo',
-        validator: (value) => ['indigo', 'green', 'blue', 'yellow', 'red', 'purple', 'pink'].includes(value),
+        default: 'primary',
+        validator: (value) => ['primary', 'success', 'info', 'warning', 'danger'].includes(value),
     },
     trend: {
         type: Object,
         default: null,
-        // { direction: 'up' | 'down', value: '12%', label: 'from last month' }
     },
     loading: {
         type: Boolean,
@@ -32,41 +31,11 @@ const props = defineProps({
 
 const colorClasses = computed(() => {
     const colors = {
-        indigo: {
-            bg: 'bg-indigo-50',
-            icon: 'text-indigo-600',
-            trend: 'text-indigo-600',
-        },
-        green: {
-            bg: 'bg-green-50',
-            icon: 'text-green-600',
-            trend: 'text-green-600',
-        },
-        blue: {
-            bg: 'bg-blue-50',
-            icon: 'text-blue-600',
-            trend: 'text-blue-600',
-        },
-        yellow: {
-            bg: 'bg-yellow-50',
-            icon: 'text-yellow-600',
-            trend: 'text-yellow-600',
-        },
-        red: {
-            bg: 'bg-red-50',
-            icon: 'text-red-600',
-            trend: 'text-red-600',
-        },
-        purple: {
-            bg: 'bg-purple-50',
-            icon: 'text-purple-600',
-            trend: 'text-purple-600',
-        },
-        pink: {
-            bg: 'bg-pink-50',
-            icon: 'text-pink-600',
-            trend: 'text-pink-600',
-        },
+        primary: { bg: 'bg-primary/10', icon: 'text-primary' },
+        success: { bg: 'bg-success/10', icon: 'text-success-600' },
+        info: { bg: 'bg-info-50', icon: 'text-info-600' },
+        warning: { bg: 'bg-warning-50', icon: 'text-warning-600' },
+        danger: { bg: 'bg-destructive/10', icon: 'text-destructive' },
     };
     return colors[props.color];
 });
@@ -93,20 +62,19 @@ const formatValue = computed(() => {
 </script>
 
 <template>
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-card rounded-card shadow-card border border p-6">
         <div class="flex items-center justify-between">
             <div class="flex-1">
-                <p class="text-sm font-medium text-gray-600 mb-1">{{ title }}</p>
+                <p class="text-sm font-medium text-muted-foreground mb-1">{{ title }}</p>
                 <div v-if="loading" class="animate-pulse">
-                    <div class="h-8 bg-gray-200 rounded w-24"></div>
+                    <div class="h-8 bg-muted rounded w-24"></div>
                 </div>
-                <p v-else class="text-3xl font-bold text-gray-900">{{ formatValue }}</p>
+                <p v-else class="text-2xl sm:text-3xl font-bold text-foreground">{{ formatValue }}</p>
                 
-                <!-- Trend Indicator -->
                 <div v-if="trend && !loading" class="mt-2 flex items-center text-sm">
                     <svg 
                         v-if="trend.direction === 'up'" 
-                        class="w-4 h-4 mr-1 text-green-600" 
+                        class="w-4 h-4 mr-1 text-success-600" 
                         fill="none" 
                         stroke="currentColor" 
                         viewBox="0 0 24 24"
@@ -115,22 +83,21 @@ const formatValue = computed(() => {
                     </svg>
                     <svg 
                         v-else-if="trend.direction === 'down'" 
-                        class="w-4 h-4 mr-1 text-red-600" 
+                        class="w-4 h-4 mr-1 text-destructive" 
                         fill="none" 
                         stroke="currentColor" 
                         viewBox="0 0 24 24"
                     >
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                     </svg>
-                    <span :class="trend.direction === 'up' ? 'text-green-600' : 'text-red-600'" class="font-medium">
+                    <span :class="trend.direction === 'up' ? 'text-success-600' : 'text-destructive'" class="font-medium">
                         {{ trend.value }}
                     </span>
-                    <span class="text-gray-500 ml-1">{{ trend.label }}</span>
+                    <span class="text-muted-foreground ml-1">{{ trend.label }}</span>
                 </div>
             </div>
             
-            <!-- Icon -->
-            <div :class="[colorClasses.bg, 'p-3 rounded-lg']">
+            <div :class="[colorClasses.bg, 'p-2 sm:p-3 rounded-card']">
                 <svg :class="[colorClasses.icon, 'w-8 h-8']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="iconPath" />
                 </svg>

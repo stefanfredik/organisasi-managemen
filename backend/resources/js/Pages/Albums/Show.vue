@@ -2,10 +2,16 @@
 import { ref } from "vue";
 import { Head, Link, useForm, router } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import DangerButton from "@/Components/DangerButton.vue";
-import PrimaryButton from "@/Components/PrimaryButton.vue";
-import SecondaryButton from "@/Components/SecondaryButton.vue";
-import Modal from "@/Components/Modal.vue";
+import MultipleImageUpload from "@/Components/MultipleImageUpload.vue";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+    Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
+import {
+    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const props = defineProps({
     album: Object,
@@ -42,33 +48,13 @@ const openUploadModal = () => {
     photoPreviews.value = [];
 };
 
-const handlePhotoSelect = (event) => {
-    const files = Array.from(event.target.files);
+const handlePhotosChange = (files) => {
     photoFiles.value = files;
-
-    // Create previews
-    photoPreviews.value = [];
-    files.forEach((file) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            photoPreviews.value.push({
-                url: e.target.result,
-                name: file.name,
-                description: "",
-            });
-        };
-        reader.readAsDataURL(file);
-    });
-};
-
-const removePreview = (index) => {
-    photoPreviews.value.splice(index, 1);
-    const dt = new DataTransfer();
-    photoFiles.value.forEach((file, i) => {
-        if (i !== index) dt.items.add(file);
-    });
-    photoFiles.value = Array.from(dt.files);
-    document.getElementById("photos").files = dt.files;
+    // Sync descriptions array length
+    while (photoPreviews.value.length < files.length) {
+        photoPreviews.value.push({ description: "" });
+    }
+    photoPreviews.value = photoPreviews.value.slice(0, files.length);
 };
 
 const uploadPhotos = () => {
@@ -130,30 +116,27 @@ const getCategoryLabel = (category) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex justify-between items-center">
-                <div>
-                    <h2
-                        class="text-xl font-semibold leading-tight text-gray-800"
-                    >
-                        {{ album.name }}
-                    </h2>
-                    <p class="text-sm text-gray-600 mt-1">
-                        {{ getCategoryLabel(album.category) }} •
-                        {{ album.status === "public" ? "Publik" : "Privat" }}
-                    </p>
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <Link :href="route('albums.index')" class="text-muted-foreground hover:text-foreground">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                    </Link>
+                    <h2 class="text-xl font-semibold leading-tight text-foreground">{{ album.name }}</h2>
                 </div>
                 <div class="flex gap-2">
                     <Link
                         v-if="hasPermission('manage_albums')"
                         :href="route('albums.edit', album)"
-                        class="inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white px-4 py-3 text-xs font-bold uppercase tracking-widest text-gray-700 shadow-sm transition duration-200 ease-in-out hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25"
+                        class="inline-flex items-center px-4 py-2 bg-primary border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary/90 active:bg-primary/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition ease-in-out duration-150"
                     >
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                     </Link>
                     <button
                         v-if="hasPermission('manage_albums')"
                         @click="confirmDelete"
-                        class="inline-flex items-center justify-center rounded-xl border border-transparent bg-red-600 px-4 py-3 text-xs font-bold uppercase tracking-widest text-white transition duration-200 ease-in-out hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 active:bg-red-800 shadow-md shadow-red-100"
+                        class="inline-flex items-center px-4 py-2 bg-destructive border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-destructive/90 active:bg-danger-900 focus:outline-none focus:ring-2 focus:ring-danger-500 focus:ring-offset-2 transition ease-in-out duration-150"
                     >
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1 1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                     </button>
@@ -161,10 +144,10 @@ const getCategoryLabel = (category) => {
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-6">
+        <div class="py-6 sm:py-8">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
                 <!-- Album Info -->
-                <div class="bg-white shadow-sm sm:rounded-lg p-6">
+                <div class="bg-card shadow-sm sm:rounded-lg p-6">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <!-- Cover Image -->
                         <div v-if="album.cover_image" class="md:col-span-1">
@@ -186,21 +169,21 @@ const getCategoryLabel = (category) => {
                             <dl class="space-y-4">
                                 <div v-if="album.description">
                                     <dt
-                                        class="text-sm font-medium text-gray-500"
+                                        class="text-sm font-medium text-muted-foreground"
                                     >
                                         Deskripsi
                                     </dt>
-                                    <dd class="mt-1 text-sm text-gray-900">
+                                    <dd class="mt-1 text-sm text-foreground">
                                         {{ album.description }}
                                     </dd>
                                 </div>
                                 <div v-if="album.event">
                                     <dt
-                                        class="text-sm font-medium text-gray-500"
+                                        class="text-sm font-medium text-muted-foreground"
                                     >
                                         Event Terkait
                                     </dt>
-                                    <dd class="mt-1 text-sm text-gray-900">
+                                    <dd class="mt-1 text-sm text-foreground">
                                         <Link
                                             :href="
                                                 route(
@@ -208,7 +191,7 @@ const getCategoryLabel = (category) => {
                                                     album.event,
                                                 )
                                             "
-                                            class="text-indigo-600 hover:text-indigo-900"
+                                            class="text-primary hover:text-primary/80"
                                         >
                                             {{ album.event.name }}
                                         </Link>
@@ -216,21 +199,21 @@ const getCategoryLabel = (category) => {
                                 </div>
                                 <div>
                                     <dt
-                                        class="text-sm font-medium text-gray-500"
+                                        class="text-sm font-medium text-muted-foreground"
                                     >
                                         Jumlah Foto
                                     </dt>
-                                    <dd class="mt-1 text-sm text-gray-900">
+                                    <dd class="mt-1 text-sm text-foreground">
                                         {{ album.photos.length }} foto
                                     </dd>
                                 </div>
                                 <div>
                                     <dt
-                                        class="text-sm font-medium text-gray-500"
+                                        class="text-sm font-medium text-muted-foreground"
                                     >
                                         Dibuat oleh
                                     </dt>
-                                    <dd class="mt-1 text-sm text-gray-900">
+                                    <dd class="mt-1 text-sm text-foreground">
                                         {{ album.creator.name }} pada
                                         {{ formatDate(album.created_at) }}
                                     </dd>
@@ -241,15 +224,15 @@ const getCategoryLabel = (category) => {
                 </div>
 
                 <!-- Photos Section -->
-                <div class="bg-white shadow-sm sm:rounded-lg p-6">
+                <div class="bg-card shadow-sm sm:rounded-lg p-6">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-lg font-semibold text-gray-900">
+                        <h3 class="text-lg font-semibold text-foreground">
                             Foto Album
                         </h3>
                         <button
                             v-if="hasPermission('manage_albums')"
                             @click="openUploadModal"
-                            class="inline-flex items-center justify-center rounded-xl border border-transparent bg-indigo-600 px-4 py-3 text-xs font-bold uppercase tracking-widest text-white transition duration-200 ease-in-out hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 shadow-md shadow-indigo-100"
+                            class="inline-flex items-center justify-center rounded-xl border border-transparent bg-primary px-4 py-3 text-xs font-bold uppercase tracking-widest text-white transition duration-200 ease-in-out hover:bg-primary/90 active:bg-primary/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 shadow-md shadow-sm"
                         >
                             <svg
                                 class="w-4 h-4 mr-1"
@@ -271,7 +254,7 @@ const getCategoryLabel = (category) => {
                     <!-- Photo Grid -->
                     <div
                         v-if="album.photos.length > 0"
-                        class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+                        class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
                     >
                         <div
                             v-for="photo in album.photos"
@@ -292,11 +275,11 @@ const getCategoryLabel = (category) => {
                                 >
                                     <button
                                         @click.stop="downloadPhoto(photo)"
-                                        class="p-2 bg-white rounded-full hover:bg-gray-100"
+                                        class="p-2 bg-card rounded-full hover:bg-muted"
                                         title="Download"
                                     >
                                         <svg
-                                            class="w-5 h-5 text-gray-700"
+                                            class="w-5 h-5 text-foreground"
                                             fill="none"
                                             stroke="currentColor"
                                             viewBox="0 0 24 24"
@@ -312,7 +295,7 @@ const getCategoryLabel = (category) => {
                                     <button
                                         v-if="hasPermission('manage_albums')"
                                         @click.stop="deletePhoto(photo)"
-                                        class="p-2 bg-red-500 rounded-full hover:bg-red-600"
+                                        class="p-2 bg-destructive/100 rounded-full hover:bg-destructive"
                                         title="Hapus"
                                     >
                                         <svg
@@ -337,7 +320,7 @@ const getCategoryLabel = (category) => {
                     <!-- Empty State -->
                     <div v-else class="text-center py-12">
                         <svg
-                            class="mx-auto h-12 w-12 text-gray-400"
+                            class="mx-auto h-12 w-12 text-muted-foreground"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -349,10 +332,10 @@ const getCategoryLabel = (category) => {
                                 d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                             />
                         </svg>
-                        <h3 class="mt-2 text-sm font-medium text-gray-900">
+                        <h3 class="mt-2 text-sm font-medium text-foreground">
                             Belum ada foto
                         </h3>
-                        <p class="mt-1 text-sm text-gray-500">
+                        <p class="mt-1 text-sm text-muted-foreground">
                             Mulai dengan mengupload foto pertama.
                         </p>
                     </div>
@@ -363,8 +346,8 @@ const getCategoryLabel = (category) => {
         <!-- Delete Confirmation Modal -->
         <Modal :show="showDeleteModal" @close="showDeleteModal = false">
             <div class="p-6">
-                <h2 class="text-lg font-medium text-gray-900">Hapus Album</h2>
-                <p class="mt-1 text-sm text-gray-600">
+                <h2 class="text-lg font-medium text-foreground">Hapus Album</h2>
+                <p class="mt-1 text-sm text-muted-foreground">
                     Apakah Anda yakin ingin menghapus album "{{ album.name }}"?
                     Semua foto dalam album ini juga akan dihapus. Tindakan ini
                     tidak dapat dibatalkan.
@@ -391,70 +374,37 @@ const getCategoryLabel = (category) => {
             max-width="3xl"
         >
             <div class="p-6">
-                <h2 class="text-lg font-medium text-gray-900 mb-4">
+                <h2 class="text-lg font-medium text-foreground mb-4">
                     Upload Foto
                 </h2>
 
                 <div class="space-y-4">
-                    <div>
-                        <input
-                            id="photos"
-                            type="file"
-                            accept="image/jpeg,image/jpg,image/png"
-                            multiple
-                            @change="handlePhotoSelect"
-                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
-                        />
-                        <p class="mt-1 text-xs text-gray-500">
-                            Format: JPG, JPEG, PNG. Maksimal 5MB per file. Pilih
-                            multiple files.
-                        </p>
-                    </div>
+                    <MultipleImageUpload
+                        :model-value="photoFiles"
+                        @update:model-value="handlePhotosChange"
+                        label="Upload Foto Album"
+                        hint="Format: JPG, JPEG, PNG. Maksimal 5MB per file."
+                        :max-size="5120"
+                        :max-files="20"
+                    />
 
-                    <!-- Photo Previews -->
+                    <!-- Photo Descriptions -->
                     <div
                         v-if="photoPreviews.length > 0"
-                        class="space-y-4 max-h-96 overflow-y-auto"
+                        class="space-y-3 max-h-48 overflow-y-auto"
                     >
                         <div
                             v-for="(preview, index) in photoPreviews"
                             :key="index"
-                            class="flex gap-4 p-3 border rounded-lg"
+                            class="flex items-center gap-3"
                         >
-                            <img
-                                :src="preview.url"
-                                :alt="preview.name"
-                                class="w-24 h-24 object-cover rounded"
+                            <span class="text-xs text-muted-foreground w-16 shrink-0">Foto {{ index + 1 }}</span>
+                            <input
+                                v-model="preview.description"
+                                type="text"
+                                placeholder="Deskripsi foto (opsional)"
+                                class="flex-1 text-sm border border-input rounded-md px-3 py-1.5"
                             />
-                            <div class="flex-1">
-                                <p class="text-sm font-medium text-gray-900">
-                                    {{ preview.name }}
-                                </p>
-                                <textarea
-                                    v-model="preview.description"
-                                    placeholder="Deskripsi foto (opsional)"
-                                    rows="2"
-                                    class="mt-2 w-full text-sm border-gray-300 rounded-md"
-                                ></textarea>
-                            </div>
-                            <button
-                                @click="removePreview(index)"
-                                class="text-red-600 hover:text-red-800"
-                            >
-                                <svg
-                                    class="w-5 h-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
-                                </svg>
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -489,12 +439,12 @@ const getCategoryLabel = (category) => {
                     class="w-full h-auto max-h-[70vh] object-contain rounded-lg"
                 />
                 <div v-if="selectedPhoto.description" class="mt-4">
-                    <p class="text-sm text-gray-600">
+                    <p class="text-sm text-muted-foreground">
                         {{ selectedPhoto.description }}
                     </p>
                 </div>
                 <div
-                    class="mt-4 flex justify-between items-center text-sm text-gray-500"
+                    class="mt-4 flex justify-between items-center text-sm text-muted-foreground"
                 >
                     <span>Diupload oleh {{ selectedPhoto.uploader.name }}</span>
                     <span>{{ formatDate(selectedPhoto.created_at) }}</span>

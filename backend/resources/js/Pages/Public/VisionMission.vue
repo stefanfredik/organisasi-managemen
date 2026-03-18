@@ -1,6 +1,10 @@
 <script setup>
 import { Head } from '@inertiajs/vue3';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
+import { useScrollReveal } from '@/composables/useScrollReveal';
+import { Eye, ClipboardList, Clock } from 'lucide-vue-next';
+
+useScrollReveal();
 
 defineProps({
     visionMission: Object,
@@ -21,69 +25,113 @@ const formatDate = (dateString) => {
     <Head title="Visi & Misi" />
 
     <PublicLayout>
-        <div class="bg-white">
-            <!-- Header -->
-            <div class="bg-indigo-700 py-16 px-6 sm:py-24 lg:px-8 text-center">
-                <h2 class="text-3xl font-bold tracking-tight text-white sm:text-5xl uppercase">Visi & Misi</h2>
-                <p class="mt-4 text-lg text-indigo-100 max-w-2xl mx-auto">
-                    Arah dan landasan perjuangan kami dalam mewujudkan cita-cita organisasi.
-                </p>
+        <div class="bg-card">
+            <!-- Hero Header -->
+            <div class="relative bg-gradient-to-br from-primary via-primary/90 to-primary/70 pt-24 sm:pt-32 pb-16 sm:pb-20 px-4 sm:px-6 lg:px-8 text-center overflow-hidden">
+                <div class="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(255,255,255,0.12),transparent_60%)]"></div>
+                <div class="relative z-10 max-w-3xl mx-auto" data-reveal="scale">
+                    <h1 class="text-3xl font-bold tracking-tight text-primary-foreground sm:text-5xl uppercase">Visi & Misi</h1>
+                    <p class="mt-4 text-lg text-primary-foreground/80 max-w-2xl mx-auto">
+                        Arah dan landasan perjuangan kami dalam mewujudkan cita-cita organisasi.
+                    </p>
+                </div>
             </div>
 
-            <div class="mx-auto max-w-7xl px-6 py-16 lg:px-8">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 py-16 lg:px-8">
                 <div v-if="visionMission" class="grid grid-cols-1 lg:grid-cols-2 gap-12">
                     <!-- Vision Card -->
-                    <div class="bg-white border-2 border-indigo-50 rounded-2xl p-8 shadow-sm">
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="p-3 bg-indigo-100 rounded-lg">
-                                <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                </svg>
+                    <div
+                        data-reveal="left"
+                        class="relative bg-card border-2 border-primary/20 rounded-2xl p-8 shadow-sm hover:shadow-lg hover:border-primary/40 transition-all duration-300"
+                    >
+                        <div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-2xl"></div>
+                        <div class="relative">
+                            <div class="flex items-center gap-3 mb-6">
+                                <div class="p-3 bg-primary/10 rounded-xl">
+                                    <Eye class="w-6 h-6 text-primary" />
+                                </div>
+                                <h3 class="text-2xl font-bold text-foreground">Visi Kami</h3>
                             </div>
-                            <h3 class="text-2xl font-bold text-gray-900">Visi Kami</h3>
+                            <blockquote class="text-xl italic text-foreground/90 leading-relaxed border-l-4 border-primary/30 pl-5">
+                                "{{ visionMission.vision }}"
+                            </blockquote>
                         </div>
-                        <p class="text-xl italic text-gray-700 leading-relaxed">
-                            "{{ visionMission.vision }}"
-                        </p>
                     </div>
 
                     <!-- Mission Card -->
-                    <div class="bg-white border-2 border-green-50 rounded-2xl p-8 shadow-sm">
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="p-3 bg-green-100 rounded-lg">
-                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                                </svg>
+                    <div
+                        data-reveal="right"
+                        class="relative bg-card border-2 border-emerald-500/20 rounded-2xl p-8 shadow-sm hover:shadow-lg hover:border-emerald-500/40 transition-all duration-300"
+                    >
+                        <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent rounded-2xl"></div>
+                        <div class="relative">
+                            <div class="flex items-center gap-3 mb-6">
+                                <div class="p-3 bg-emerald-500/10 rounded-xl">
+                                    <ClipboardList class="w-6 h-6 text-emerald-600" />
+                                </div>
+                                <h3 class="text-2xl font-bold text-foreground">Misi Kami</h3>
                             </div>
-                            <h3 class="text-2xl font-bold text-gray-900">Misi Kami</h3>
+                            <ul class="space-y-4">
+                                <li v-for="(mission, index) in visionMission.missions" :key="index" class="flex gap-4 items-start">
+                                    <span class="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold text-sm ring-2 ring-emerald-500/20">
+                                        {{ index + 1 }}
+                                    </span>
+                                    <p class="text-lg text-foreground pt-0.5">{{ mission }}</p>
+                                </li>
+                            </ul>
                         </div>
-                        <ul class="space-y-4 text-gray-700">
-                            <li v-for="(mission, index) in visionMission.missions" :key="index" class="flex gap-4">
-                                <span class="flex-shrink-0 w-8 h-8 rounded-full bg-green-50 text-green-600 flex items-center justify-center font-bold text-sm">
-                                    {{ index + 1 }}
-                                </span>
-                                <p class="text-lg">{{ mission }}</p>
-                            </li>
-                        </ul>
                     </div>
                 </div>
 
-                <div v-else class="text-center py-20 text-gray-500">
+                <div v-else class="text-center py-20 text-muted-foreground">
                     Data visi dan misi belum tersedia.
                 </div>
 
                 <!-- History Timeline -->
                 <div v-if="history && history.length > 1" class="mt-24">
-                    <h3 class="text-3xl font-bold text-gray-900 text-center mb-12">Sejarah Perubahan</h3>
-                    <div class="space-y-8 max-w-4xl mx-auto">
-                        <div v-for="item in history" :key="item.id" class="relative pl-8 border-l-2 border-gray-200 py-4">
-                            <div class="absolute -left-2 top-6 w-4 h-4 rounded-full" :class="item.status === 'active' ? 'bg-indigo-600 ring-4 ring-indigo-100' : 'bg-gray-300'"></div>
-                            <div>
-                                <p class="text-sm font-bold" :class="item.status === 'active' ? 'text-indigo-600' : 'text-gray-500'">
-                                    {{ formatDate(item.created_at) }} {{ item.status === 'active' ? '(Aktif)' : '' }}
-                                </p>
-                                <h4 class="text-lg font-bold text-gray-800 mt-1 line-clamp-1">{{ item.vision }}</h4>
+                    <div class="text-center mb-14" data-reveal>
+                        <div class="inline-flex items-center gap-2 mb-3">
+                            <Clock class="w-5 h-5 text-primary" />
+                            <span class="text-sm font-semibold text-primary uppercase tracking-wider">Timeline</span>
+                        </div>
+                        <h3 class="text-3xl font-bold text-foreground">Sejarah Perubahan</h3>
+                    </div>
+
+                    <div class="relative max-w-4xl mx-auto">
+                        <!-- Connecting Line -->
+                        <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary/40 via-border to-border"></div>
+
+                        <div class="space-y-8">
+                            <div
+                                v-for="(item, index) in history"
+                                :key="item.id"
+                                data-reveal="left"
+                                :data-reveal-delay="index * 100"
+                                class="relative pl-12"
+                            >
+                                <!-- Dot -->
+                                <div
+                                    class="absolute left-2 top-5 w-5 h-5 rounded-full border-2 border-background"
+                                    :class="item.status === 'active'
+                                        ? 'bg-primary ring-4 ring-primary/20'
+                                        : 'bg-muted-foreground/40'"
+                                ></div>
+
+                                <!-- Card -->
+                                <div
+                                    class="p-5 rounded-xl border transition-all duration-300"
+                                    :class="item.status === 'active'
+                                        ? 'bg-primary/5 border-primary/20 shadow-sm'
+                                        : 'bg-card border-border hover:shadow-sm'"
+                                >
+                                    <p class="text-sm font-semibold" :class="item.status === 'active' ? 'text-primary' : 'text-muted-foreground'">
+                                        {{ formatDate(item.created_at) }}
+                                        <span v-if="item.status === 'active'" class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                                            Aktif
+                                        </span>
+                                    </p>
+                                    <h4 class="text-lg font-bold text-foreground mt-1.5 line-clamp-1">{{ item.vision }}</h4>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -1,13 +1,21 @@
 <script setup>
 import { ref } from 'vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import Modal from '@/Components/Modal.vue';
-import SecondaryButton from '@/Components/SecondaryButton.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import TextInput from '@/Components/TextInput.vue';
-import InputError from '@/Components/InputError.vue';
+import DataTable from '@/Components/DataTable.vue';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog';
+import {
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Plus } from 'lucide-vue-next';
 
 const props = defineProps({
     types: Array,
@@ -86,6 +94,58 @@ const periods = {
     monthly: 'Bulanan',
     yearly: 'Tahunan',
 };
+
+const columns = [
+    {
+        key: 'name',
+        label: 'Nama Iuran',
+        sortable: true,
+        format: (value, row) => {
+            return {
+                type: 'custom',
+                main: value,
+                sub: row.description || '-'
+            };
+        },
+    },
+    {
+        key: 'wallet',
+        label: 'Dompet Tujuan',
+        sortable: true,
+        format: (value) => {
+            if (!value) return { type: 'badge', value: 'Belum diatur', props: { variant: 'destructive', class: 'italic' } };
+            return { type: 'badge', value: value.name, props: { variant: 'default', class: 'font-bold' } };
+        },
+    },
+    {
+        key: 'amount',
+        label: 'Besaran',
+        sortable: true,
+        format: (value) => formatCurrency(value),
+    },
+    {
+        key: 'period',
+        label: 'Periode',
+        sortable: true,
+        format: (value) => periods[value] || value,
+    },
+    {
+        key: 'is_active',
+        label: 'Status',
+        sortable: true,
+        type: 'badge',
+        badgeVariant: (value) => ({ variant: value ? 'success' : 'secondary' }),
+        badgeLabel: (value) => value ? 'Aktif' : 'Tidak Aktif',
+    },
+];
+
+const handleAction = ({ action, row }) => {
+    if (action === 'edit') {
+        openEditModal(row);
+    } else if (action === 'delete') {
+        deleteType(row);
+    }
+};
 </script>
 
 <template>
@@ -93,183 +153,184 @@ const periods = {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex justify-between items-center">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                    Pengaturan Jenis Iuran
-                </h2>
-                <PrimaryButton @click="openCreateModal" v-if="hasPermission('manage_contribution_types')">
-                    Tambah Jenis Iuran
-                </PrimaryButton>
+            <div class="flex items-center justify-between gap-3">
+                <h2 class="text-lg font-semibold leading-tight text-foreground">Jenis Iuran</h2>
+                <Button size="sm" @click="openCreateModal" v-if="hasPermission('manage_contribution_types')">
+                    Tambah Jenis
+                </Button>
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-sm rounded-xl">
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50 uppercase tracking-widest text-[10px] font-bold text-gray-400">
-                                <tr>
-                                    <th class="px-6 py-4 text-left">Nama Iuran</th>
-                                    <th class="px-6 py-4 text-left">Dompet Tujuan</th>
-                                    <th class="px-6 py-4 text-left">Besaran</th>
-                                    <th class="px-6 py-4 text-left">Periode</th>
-                                    <th class="px-6 py-4 text-left">Status</th>
-                                    <th class="px-6 py-4 text-right">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-100 italic">
-                                <tr v-for="type in types" :key="type.id" class="hover:bg-gray-50/50 transition font-medium">
-                                    <td class="px-6 py-4">
-                                        <div class="text-sm font-bold text-gray-900">{{ type.name }}</div>
-                                        <div class="text-xs text-gray-400">{{ type.description || '-' }}</div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <span v-if="type.wallet" class="px-2 py-1 bg-indigo-50 text-indigo-700 rounded text-xs font-bold">
-                                            {{ type.wallet.name }}
-                                        </span>
-                                        <span v-else class="text-xs text-red-500 italic">Belum diatur</span>
-                                    </td>
-                                    <td class="px-6 py-4 text-sm font-black text-indigo-600">
-                                        {{ formatCurrency(type.amount) }}
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <span class="px-2 py-1 bg-blue-50 text-blue-700 rounded text-[11px] font-bold uppercase">
-                                            {{ periods[type.period] }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <span class="px-2 py-1 rounded text-[11px] font-bold uppercase" :class="type.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'">
-                                            {{ type.is_active ? 'Aktif' : 'Nonaktif' }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 text-right">
-                                        <button v-if="hasPermission('manage_contribution_types')" @click="openEditModal(type)" class="text-indigo-600 hover:text-indigo-900 font-bold text-sm mr-4 transition">Edit</button>
-                                        <button v-if="hasPermission('manage_contribution_types')" @click="deleteType(type)" class="text-red-400 hover:text-red-600 transition p-2">
-                                            <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr v-if="types.length === 0">
-                                    <td colspan="6" class="px-6 py-12 text-center text-gray-500 italic font-medium">Belum ada jenis iuran yang dikonfigurasi.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+        <div class="py-4 sm:py-6">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="bg-card border rounded-xl overflow-hidden">
+                    <!-- ContributionTypes Table using DataTable Component -->
+                    <DataTable
+                        :data="{ data: types }"
+                        :columns="columns"
+                        :sortable="true"
+                        :show-column-filter="true"
+                        :striped="true"
+                        :searchable="false"
+                        @action="handleAction"
+                    >
+                        <template #cell-name="{ row }">
+                            <div>
+                                <div class="text-sm font-bold text-foreground">{{ row.name }}</div>
+                                <div class="text-xs text-muted-foreground">{{ row.description || '-' }}</div>
+                            </div>
+                        </template>
+
+                        <template #cell-wallet="{ row }">
+                            <span v-if="row.wallet" class="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-bold">
+                                {{ row.wallet.name }}
+                            </span>
+                            <span v-else class="text-xs text-destructive italic">Belum diatur</span>
+                        </template>
+
+                        <template #actions="{ row }">
+                            <div class="flex justify-end gap-2">
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    @click="openEditModal(row)"
+                                >
+                                    Edit
+                                </Button>
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    class="text-destructive"
+                                    @click="deleteType(row)"
+                                >
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </Button>
+                            </div>
+                        </template>
+                    </DataTable>
                 </div>
             </div>
         </div>
 
-        <!-- Modal Create/Edit -->
-        <Modal :show="showModal" @close="closeModal">
-            <div class="p-8">
-                <div class="flex items-center justify-between mb-8">
-                    <h2 class="text-xl font-black text-gray-900 uppercase tracking-tight">
+        <!-- Dialog Create/Edit -->
+        <Dialog :open="showModal" @update:open="(val) => { if (!val) closeModal(); }">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>
                         {{ editingType ? 'Edit Jenis Iuran' : 'Tambah Jenis Iuran Baru' }}
-                    </h2>
-                    <button @click="closeModal" class="text-gray-400 hover:text-gray-600 transition">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
+                    </DialogTitle>
+                </DialogHeader>
 
                 <form @submit.prevent="submit" class="space-y-6">
                     <div>
-                        <InputLabel value="Nama Iuran" class="text-[10px] font-bold uppercase text-gray-400 mb-1" />
-                        <TextInput type="text" class="w-full border-gray-100 rounded-xl font-bold" v-model="form.name" required placeholder="Contoh: Iuran Bulanan 2026" />
-                        <InputError class="mt-2" :message="form.errors.name" />
+                        <Label class="text-[10px] font-bold uppercase text-muted-foreground">Nama Iuran</Label>
+                        <Input type="text" class="w-full" v-model="form.name" required placeholder="Contoh: Iuran Bulanan 2026" />
+                        <p v-if="form.errors.name" class="mt-2 text-sm text-destructive">{{ form.errors.name }}</p>
                     </div>
 
                     <div>
-                        <InputLabel value="Dompet Tujuan" class="text-[10px] font-bold uppercase text-gray-400 mb-1" />
-                        <select v-model="form.wallet_id" class="w-full border-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl font-bold text-gray-700 shadow-sm" required>
-                            <option value="" disabled>-- Pilih Dompet --</option>
-                            <option v-for="wallet in wallets" :key="wallet.id" :value="wallet.id">
-                                {{ wallet.name }}
-                            </option>
-                        </select>
-                        <InputError class="mt-2" :message="form.errors.wallet_id" />
-                        <p class="mt-1 text-xs text-gray-500 italic">Iuran yang dibayar akan masuk ke dompet ini secara otomatis.</p>
+                        <Label class="text-[10px] font-bold uppercase text-muted-foreground">Dompet Tujuan</Label>
+                        <Select v-model="form.wallet_id" required>
+                            <SelectTrigger class="w-full">
+                                <SelectValue placeholder="Pilih Dompet" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem v-for="wallet in wallets" :key="wallet.id" :value="wallet.id.toString()">
+                                    {{ wallet.name }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <p v-if="form.errors.wallet_id" class="mt-2 text-sm text-destructive">{{ form.errors.wallet_id }}</p>
+                        <p class="mt-1 text-xs text-muted-foreground italic">Iuran yang dibayar akan masuk ke dompet ini secara otomatis.</p>
                     </div>
 
                     <div class="grid grid-cols-2 gap-6">
                         <div>
-                            <InputLabel value="Besaran (Rp)" class="text-[10px] font-bold uppercase text-gray-400 mb-1" />
-                            <TextInput type="number" class="w-full border-gray-100 rounded-xl font-black text-indigo-600" v-model="form.amount" required placeholder="0" />
-                            <InputError class="mt-2" :message="form.errors.amount" />
+                            <Label class="text-[10px] font-bold uppercase text-muted-foreground">Besaran (Rp)</Label>
+                            <Input type="number" class="w-full" v-model="form.amount" required placeholder="0" />
+                            <p v-if="form.errors.amount" class="mt-2 text-sm text-destructive">{{ form.errors.amount }}</p>
                         </div>
                         <div>
-                            <InputLabel value="Periode Pembayaran" class="text-[10px] font-bold uppercase text-gray-400 mb-1" />
-                            <select v-model="form.period" class="w-full border-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl font-bold text-gray-700 shadow-sm" required>
-                                <option v-for="(label, value) in periods" :key="value" :value="value">{{ label }}</option>
-                            </select>
-                            <InputError class="mt-2" :message="form.errors.period" />
+                            <Label class="text-[10px] font-bold uppercase text-muted-foreground">Periode Pembayaran</Label>
+                            <Select v-model="form.period" required>
+                                <SelectTrigger class="w-full">
+                                    <SelectValue placeholder="Pilih Periode" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem v-for="(label, value) in periods" :key="value" :value="value">{{ label }}</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <p v-if="form.errors.period" class="mt-2 text-sm text-destructive">{{ form.errors.period }}</p>
                         </div>
                     </div>
 
                     <div>
-                        <InputLabel value="Deskripsi (Opsional)" class="text-[10px] font-bold uppercase text-gray-400 mb-1" />
-                        <textarea v-model="form.description" rows="3" class="w-full border-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl shadow-sm font-medium" placeholder="Rincian mengenai iuran ini..."></textarea>
+                        <Label class="text-[10px] font-bold uppercase text-muted-foreground">Deskripsi (Opsional)</Label>
+                        <Textarea v-model="form.description" rows="3" placeholder="Rincian mengenai iuran ini..." />
                     </div>
 
                     <div class="grid grid-cols-2 gap-6">
                         <div>
-                             <InputLabel value="Tanggal Mulai (Opsional)" class="text-[10px] font-bold uppercase text-gray-400 mb-1" />
-                             <TextInput type="date" class="w-full border-gray-100 rounded-xl text-sm" v-model="form.start_date" />
-                             <InputError :message="form.errors.start_date" />
+                             <Label class="text-[10px] font-bold uppercase text-muted-foreground">Tanggal Mulai (Opsional)</Label>
+                             <Input type="date" class="w-full" v-model="form.start_date" />
+                             <p v-if="form.errors.start_date" class="mt-2 text-sm text-destructive">{{ form.errors.start_date }}</p>
                         </div>
                         <div>
-                             <InputLabel value="Batas Akhir (Opsional)" class="text-[10px] font-bold uppercase text-gray-400 mb-1" />
-                             <TextInput type="date" class="w-full border-gray-100 rounded-xl text-sm" v-model="form.end_date" />
-                             <InputError :message="form.errors.end_date" />
+                             <Label class="text-[10px] font-bold uppercase text-muted-foreground">Batas Akhir (Opsional)</Label>
+                             <Input type="date" class="w-full" v-model="form.end_date" />
+                             <p v-if="form.errors.end_date" class="mt-2 text-sm text-destructive">{{ form.errors.end_date }}</p>
                         </div>
                     </div>
 
                     <div v-if="form.period === 'monthly'">
-                         <InputLabel value="Tanggal Jatuh Tempo (Harian)" class="text-[10px] font-bold uppercase text-gray-400 mb-1" />
-                         <TextInput type="number" min="1" max="31" class="w-full border-gray-100 rounded-xl font-bold" v-model="form.recurring_day" placeholder="Contoh: 10 (Setiap tanggal 10)" />
-                         <InputError :message="form.errors.recurring_day" />
+                         <Label class="text-[10px] font-bold uppercase text-muted-foreground">Tanggal Jatuh Tempo (Harian)</Label>
+                         <Input type="number" min="1" max="31" class="w-full" v-model="form.recurring_day" placeholder="Contoh: 10 (Setiap tanggal 10)" />
+                         <p v-if="form.errors.recurring_day" class="mt-2 text-sm text-destructive">{{ form.errors.recurring_day }}</p>
                     </div>
 
                      <div v-if="form.period === 'weekly'">
-                         <InputLabel value="Jadwal (Hari)" class="text-[10px] font-bold uppercase text-gray-400 mb-1" />
-                         <select v-model="form.recurring_day" class="w-full border-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl font-bold text-gray-700 shadow-sm">
-                             <option value="1">Senin</option>
-                             <option value="2">Selasa</option>
-                             <option value="3">Rabu</option>
-                             <option value="4">Kamis</option>
-                             <option value="5">Jumat</option>
-                             <option value="6">Sabtu</option>
-                             <option value="7">Minggu</option>
-                         </select>
-                         <InputError :message="form.errors.recurring_day" />
+                         <Label class="text-[10px] font-bold uppercase text-muted-foreground">Jadwal (Hari)</Label>
+                         <Select v-model="form.recurring_day">
+                            <SelectTrigger class="w-full">
+                                <SelectValue placeholder="Pilih Hari" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="1">Senin</SelectItem>
+                                <SelectItem value="2">Selasa</SelectItem>
+                                <SelectItem value="3">Rabu</SelectItem>
+                                <SelectItem value="4">Kamis</SelectItem>
+                                <SelectItem value="5">Jumat</SelectItem>
+                                <SelectItem value="6">Sabtu</SelectItem>
+                                <SelectItem value="7">Minggu</SelectItem>
+                            </SelectContent>
+                         </Select>
+                         <p v-if="form.errors.recurring_day" class="mt-2 text-sm text-destructive">{{ form.errors.recurring_day }}</p>
                     </div>
 
-                    <div v-if="['once', 'yearly'].includes(form.period)">
-                         <InputLabel value="Tanggal Jatuh Tempo" class="text-[10px] font-bold uppercase text-gray-400 mb-1" />
-                         <TextInput type="date" class="w-full border-gray-100 rounded-xl text-sm" v-model="form.due_date" />
-                         <InputError :message="form.errors.due_date" />
+                     <div v-if="['once', 'yearly'].includes(form.period)">
+                         <Label class="text-[10px] font-bold uppercase text-muted-foreground">Tanggal Jatuh Tempo</Label>
+                         <Input type="date" class="w-full" v-model="form.due_date" />
+                         <p v-if="form.errors.due_date" class="mt-2 text-sm text-destructive">{{ form.errors.due_date }}</p>
                     </div>
 
-                    <div class="flex items-center bg-gray-50 p-4 rounded-xl border border-dashed border-gray-200">
-                        <input type="checkbox" id="is_active_type" v-model="form.is_active" class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                    <div class="flex items-center space-x-2 bg-muted p-4 rounded-xl border">
+                        <Checkbox id="is_active_type" :checked="form.is_active" @update:checked="(val) => form.is_active = val" />
                         <div class="ml-3">
-                            <label for="is_active_type" class="text-sm font-bold text-gray-700 uppercase tracking-tight">Status Aktif</label>
-                            <p class="text-xs text-gray-500">Iuran nonaktif tidak bisa dipilih saat mencatat pembayaran baru.</p>
+                            <Label for="is_active_type" class="text-sm font-bold text-foreground uppercase tracking-tight">Status Aktif</Label>
+                            <p class="text-xs text-muted-foreground">Iuran nonaktif tidak bisa dipilih saat mencatat pembayaran baru.</p>
                         </div>
                     </div>
 
-                    <div class="mt-8 flex justify-end gap-3 font-bold">
-                        <SecondaryButton @click="closeModal" class="px-8 py-3 rounded-xl"> Batal </SecondaryButton>
-                        <PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing" class="px-10 py-3 rounded-xl shadow-lg shadow-indigo-100 uppercase tracking-widest text-xs">
+                    <DialogFooter>
+                        <Button variant="outline" type="button" @click="closeModal">Batal</Button>
+                        <Button type="submit" :disabled="form.processing">
                             {{ editingType ? 'Simpan Perubahan' : 'Buat Jenis Iuran' }}
-                        </PrimaryButton>
-                    </div>
+                        </Button>
+                    </DialogFooter>
                 </form>
-            </div>
-        </Modal>
+            </DialogContent>
+        </Dialog>
     </AuthenticatedLayout>
 </template>

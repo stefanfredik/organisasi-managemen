@@ -34,20 +34,16 @@ const formatCurrency = (value) => {
 
 const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('id-ID', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-    });
+    return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
 const getStatusColor = (status) => {
     const colors = {
-        paid: 'text-green-600 bg-green-50',
-        pending: 'text-yellow-600 bg-yellow-50',
-        rejected: 'text-red-600 bg-red-50',
+        paid: 'text-success-600 bg-success/10',
+        pending: 'text-warning-600 bg-warning-50',
+        rejected: 'text-destructive bg-destructive/10',
     };
-    return colors[status] || 'text-gray-600 bg-gray-50';
+    return colors[status] || 'text-muted-foreground bg-muted';
 };
 </script>
 
@@ -58,147 +54,108 @@ const getStatusColor = (status) => {
         <template #header>
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                    <Link :href="route('reports.index')" class="text-gray-500 hover:text-gray-700">
+                    <Link :href="route('reports.index')" class="text-muted-foreground hover:text-foreground">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
                     </Link>
-                    <h2 class="text-xl font-semibold text-gray-800">Laporan Iuran Anggota</h2>
+                    <h2 class="text-xl font-semibold text-foreground">Laporan Iuran</h2>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <a
-                        :href="route('reports.contributions.pdf', { start_date: startDate, end_date: endDate, status: status })"
-                        target="_blank"
-                        class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 active:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                    >
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
+                    <a :href="route('reports.contributions.pdf', { start_date: startDate, end_date: endDate, status: status })" target="_blank"
+                        class="inline-flex items-center px-3 py-1.5 bg-destructive rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-destructive/90 transition">
                         PDF
                     </a>
-                    <a
-                        :href="route('reports.contributions.excel', { start_date: startDate, end_date: endDate, status: status })"
-                        class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                    >
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
+                    <a :href="route('reports.contributions.excel', { start_date: startDate, end_date: endDate, status: status })"
+                        class="inline-flex items-center px-3 py-1.5 bg-success-600 rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-success-700 transition">
                         Excel
                     </a>
                 </div>
             </div>
         </template>
 
-        <div class="py-8">
+        <div class="py-4">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 
-                <!-- Filters -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Filter Periode & Status</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
-                            <input 
-                                type="date" 
-                                v-model="startDate"
-                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                            />
+                <!-- Filters - compact inline -->
+                <div class="bg-card rounded-lg shadow-sm border border p-3 mb-4">
+                    <div class="flex flex-wrap items-end gap-3">
+                        <div class="min-w-[130px]">
+                            <label class="block text-xs font-medium text-muted-foreground mb-1">Dari</label>
+                            <input type="date" v-model="startDate" class="w-full text-sm rounded-md border-input shadow-sm focus:border-ring focus:ring-ring" />
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Akhir</label>
-                            <input 
-                                type="date" 
-                                v-model="endDate"
-                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                            />
+                        <div class="min-w-[130px]">
+                            <label class="block text-xs font-medium text-muted-foreground mb-1">Sampai</label>
+                            <input type="date" v-model="endDate" class="w-full text-sm rounded-md border-input shadow-sm focus:border-ring focus:ring-ring" />
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                            <select 
-                                v-model="status"
-                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                            >
-                                <option value="">Semua Status</option>
+                        <div class="min-w-[120px]">
+                            <label class="block text-xs font-medium text-muted-foreground mb-1">Status</label>
+                            <select v-model="status" class="w-full text-sm rounded-md border-input shadow-sm focus:border-ring focus:ring-ring">
+                                <option value="">Semua</option>
                                 <option value="paid">Dibayar</option>
                                 <option value="pending">Pending</option>
                                 <option value="rejected">Ditolak</option>
                             </select>
                         </div>
-                        <div class="flex items-end">
-                            <button
-                                @click="applyFilters"
-                                class="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                            >
-                                Terapkan
-                            </button>
-                        </div>
+                        <button @click="applyFilters" class="px-4 py-2 text-sm bg-primary text-white rounded-md hover:bg-primary/90">
+                            Terapkan
+                        </button>
                     </div>
                 </div>
 
                 <!-- Summary Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <p class="text-sm text-gray-600 mb-1">Total Dibayar</p>
-                        <p class="text-2xl font-bold text-green-600">{{ formatCurrency(summary.totalPaid) }}</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    <div class="bg-card rounded-lg shadow-sm border border p-3">
+                        <p class="text-xs text-muted-foreground mb-0.5">Total Dibayar</p>
+                        <p class="text-lg font-bold text-success-600">{{ formatCurrency(summary.totalPaid) }}</p>
                     </div>
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <p class="text-sm text-gray-600 mb-1">Total Pending</p>
-                        <p class="text-2xl font-bold text-yellow-600">{{ formatCurrency(summary.totalPending) }}</p>
+                    <div class="bg-card rounded-lg shadow-sm border border p-3">
+                        <p class="text-xs text-muted-foreground mb-0.5">Total Pending</p>
+                        <p class="text-lg font-bold text-warning-600">{{ formatCurrency(summary.totalPending) }}</p>
                     </div>
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <p class="text-sm text-gray-600 mb-1">Total Ditolak</p>
-                        <p class="text-2xl font-bold text-red-600">{{ formatCurrency(summary.totalRejected) }}</p>
+                    <div class="bg-card rounded-lg shadow-sm border border p-3">
+                        <p class="text-xs text-muted-foreground mb-0.5">Total Ditolak</p>
+                        <p class="text-lg font-bold text-destructive">{{ formatCurrency(summary.totalRejected) }}</p>
                     </div>
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <p class="text-sm text-gray-600 mb-1">Total Penagihan</p>
-                        <p class="text-2xl font-bold text-indigo-600">{{ formatCurrency(summary.total) }}</p>
+                    <div class="bg-card rounded-lg shadow-sm border border p-3">
+                        <p class="text-xs text-muted-foreground mb-0.5">Total Penagihan</p>
+                        <p class="text-lg font-bold text-primary">{{ formatCurrency(summary.total) }}</p>
                     </div>
                 </div>
 
-                <!-- List Table -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="p-6 border-b border-gray-200">
-                        <h3 class="text-lg font-semibold text-gray-900">Detail Iuran</h3>
-                    </div>
-                    
+                <!-- Table -->
+                <div class="bg-card rounded-lg shadow-sm border border overflow-hidden">
                     <div v-if="contributions && contributions.length > 0" class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                        <table class="min-w-full divide-y divide-border">
+                            <thead class="bg-muted">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Anggota</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis Iuran</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
+                                    <th class="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Anggota</th>
+                                    <th class="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Jenis</th>
+                                    <th class="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Tanggal</th>
+                                    <th class="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                                    <th class="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Jumlah</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                <tr v-for="c in contributions" :key="c.id" class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900">{{ c.member?.full_name }}</div>
-                                        <div class="text-xs text-gray-500">{{ c.member?.member_number }}</div>
+                            <tbody class="bg-card divide-y divide-border">
+                                <tr v-for="c in contributions" :key="c.id" class="hover:bg-muted">
+                                    <td class="px-4 py-2.5 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-foreground">{{ c.member?.full_name }}</div>
+                                        <div class="text-xs text-muted-foreground">{{ c.member?.member_number }}</div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ c.type?.name }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                        {{ formatDate(c.payment_date) }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span :class="[getStatusColor(c.status), 'px-2 py-1 text-xs font-bold rounded-full uppercase']">
+                                    <td class="px-4 py-2.5 whitespace-nowrap text-sm text-foreground">{{ c.type?.name }}</td>
+                                    <td class="px-4 py-2.5 whitespace-nowrap text-sm text-muted-foreground">{{ formatDate(c.payment_date) }}</td>
+                                    <td class="px-4 py-2.5 whitespace-nowrap">
+                                        <span :class="[getStatusColor(c.status), 'px-2 py-0.5 text-xs font-bold rounded-full uppercase']">
                                             {{ c.status === 'paid' ? 'Dibayar' : (c.status === 'pending' ? 'Pending' : 'Ditolak') }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-gray-900">
-                                        {{ formatCurrency(c.amount) }}
-                                    </td>
+                                    <td class="px-4 py-2.5 whitespace-nowrap text-sm text-right font-bold text-foreground">{{ formatCurrency(c.amount) }}</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    
-                    <div v-else class="p-12 text-center text-gray-500">
-                        <p>Tidak ada data iuran ditemukan untuk filter ini.</p>
+                    <div v-else class="p-8 text-center text-muted-foreground">
+                        <p class="text-sm">Tidak ada data iuran ditemukan.</p>
                     </div>
                 </div>
 

@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import DataTable from '@/Components/DataTable.vue';
+import { Button } from '@/components/ui/button';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import debounce from 'lodash/debounce';
@@ -53,10 +54,10 @@ const resetPassword = (id) => {
 const getRoleBadgeClass = (role) => {
     switch (role) {
         case 'admin': return 'bg-purple-100 text-purple-700 border-purple-200';
-        case 'ketua': return 'bg-blue-100 text-blue-700 border-blue-200';
-        case 'bendahara': return 'bg-green-100 text-green-700 border-green-200';
+        case 'ketua': return 'bg-primary-100 text-primary border-primary-200';
+        case 'bendahara': return 'bg-success/20 text-success-700 border-success-200';
         case 'sekretaris': return 'bg-orange-100 text-orange-700 border-orange-200';
-        default: return 'bg-gray-100 text-gray-700 border-gray-200';
+        default: return 'bg-muted text-foreground border';
     }
 };
 </script>
@@ -66,50 +67,38 @@ const getRoleBadgeClass = (role) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tight">Manajemen User</h2>
-                    <p class="text-slate-500 text-sm font-medium mt-1">Kelola hak akses dan status pengguna sistem.</p>
-                </div>
-                <Link
-                    :href="route('users.create')"
-                    class="inline-flex items-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-indigo-200 transition-all active:scale-95 uppercase tracking-widest"
-                >
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    Tambah User
-                </Link>
+            <div class="flex items-center justify-between gap-3">
+                <h2 class="text-lg font-semibold leading-tight text-foreground">Manajemen User</h2>
+                <Button size="sm" as-child>
+                    <Link :href="route('users.create')">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        <span class="hidden sm:inline">Tambah User</span>
+                    </Link>
+                </Button>
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-                <!-- Filters -->
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-4">
+        <div class="py-4 sm:py-6">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+                <!-- Compact Filters -->
+                <div class="bg-card p-3 sm:p-4 rounded-xl border flex flex-col sm:flex-row gap-2">
                     <div class="flex-1 relative">
-                        <input
-                            v-model="search"
-                            type="text"
-                            placeholder="Cari nama atau email..."
-                            class="w-full bg-slate-50 border-slate-200 rounded-2xl py-3 pl-11 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-                        >
-                        <svg class="absolute left-4 top-3.5 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <input v-model="search" type="text" placeholder="Cari nama atau email..."
+                            class="w-full bg-muted border rounded-lg py-2 pl-9 text-sm focus:ring-2 focus:ring-ring focus:border-ring transition-all" />
+                        <svg class="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </div>
-                    <div class="w-full md:w-48">
-                        <select v-model="role" class="w-full bg-slate-50 border-slate-200 rounded-2xl py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
-                            <option value="">Semua Role</option>
-                            <option v-for="(label, value) in roles" :key="value" :value="value">{{ label }}</option>
-                        </select>
-                    </div>
-                    <div class="w-full md:w-48">
-                        <select v-model="status" class="w-full bg-slate-50 border-slate-200 rounded-2xl py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
-                            <option value="">Semua Status</option>
-                            <option v-for="(label, value) in statuses" :key="value" :value="value">{{ label }}</option>
-                        </select>
-                    </div>
+                    <select v-model="role" class="bg-muted border rounded-lg py-2 px-3 text-sm focus:ring-2 focus:ring-ring sm:w-auto">
+                        <option value="">Semua Role</option>
+                        <option v-for="(label, value) in roles" :key="value" :value="value">{{ label }}</option>
+                    </select>
+                    <select v-model="status" class="bg-muted border rounded-lg py-2 px-3 text-sm focus:ring-2 focus:ring-ring sm:w-auto">
+                        <option value="">Semua Status</option>
+                        <option v-for="(label, value) in statuses" :key="value" :value="value">{{ label }}</option>
+                    </select>
                 </div>
 
                 <!-- DataTable -->
@@ -120,12 +109,12 @@ const getRoleBadgeClass = (role) => {
                 >
                     <template #cell-name="{ row: user }">
                         <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold uppercase ring-4 ring-white shadow-sm">
+                            <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold uppercase ring-4 ring-white shadow-sm">
                                 {{ user.name.charAt(0) }}
                             </div>
                             <div>
-                                <div class="font-bold text-slate-900">{{ user.name }}</div>
-                                <div class="text-xs text-slate-400">{{ user.email }}</div>
+                                <div class="font-bold text-foreground">{{ user.name }}</div>
+                                <div class="text-xs text-muted-foreground">{{ user.email }}</div>
                             </div>
                         </div>
                     </template>
@@ -144,7 +133,7 @@ const getRoleBadgeClass = (role) => {
                             @click="toggleStatus(user.id)"
                             class="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border transition-all active:scale-95"
                             :class="user.status === 'active' 
-                                ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100' 
+                                ? 'bg-success/10 text-success-600 border-success-100 hover:bg-success/20' 
                                 : 'bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100'"
                         >
                             {{ statuses[user.status] }}
@@ -156,7 +145,7 @@ const getRoleBadgeClass = (role) => {
                              <button 
                                 @click="resetPassword(user.id)"
                                 title="Reset Password"
-                                class="p-2 text-amber-500 hover:bg-amber-50 rounded-xl transition-colors"
+                                class="p-2 text-warning-500 hover:bg-warning-50 rounded-xl transition-colors"
                             >
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
@@ -164,7 +153,7 @@ const getRoleBadgeClass = (role) => {
                             </button>
                             <Link 
                                 :href="route('users.edit', user.id)"
-                                class="p-2 text-indigo-500 hover:bg-indigo-50 rounded-xl transition-colors"
+                                class="p-2 text-primary-500 hover:bg-primary/10 rounded-xl transition-colors"
                             >
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />

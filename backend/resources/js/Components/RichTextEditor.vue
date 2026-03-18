@@ -69,17 +69,17 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="border rounded-md shadow-sm bg-white">
-        <div class="px-2 py-1 border-b bg-gray-50 flex items-center gap-2">
-            <button type="button" class="px-2 py-1 text-xs rounded hover:bg-gray-100" @mousedown.prevent="exec('bold')">B</button>
-            <button type="button" class="px-2 py-1 text-xs italic rounded hover:bg-gray-100" @mousedown.prevent="exec('italic')">I</button>
-            <button type="button" class="px-2 py-1 text-xs underline rounded hover:bg-gray-100" @mousedown.prevent="exec('underline')">U</button>
-            <span class="w-px h-4 bg-gray-200 mx-1"></span>
-            <button type="button" class="px-2 py-1 text-xs rounded hover:bg-gray-100" @mousedown.prevent="exec('insertUnorderedList')">• List</button>
-            <button type="button" class="px-2 py-1 text-xs rounded hover:bg-gray-100" @mousedown.prevent="exec('insertOrderedList')">1. List</button>
-            <span class="w-px h-4 bg-gray-200 mx-1"></span>
-            <button type="button" class="px-2 py-1 text-xs rounded hover:bg-gray-100" @mousedown.prevent="insertLink">Link</button>
-            <button type="button" class="px-2 py-1 text-xs rounded hover:bg-gray-100" @mousedown.prevent="clearFormat">Clear</button>
+    <div class="border rounded-md shadow-sm bg-card">
+        <div class="px-2 py-1 border-b bg-muted flex items-center gap-2">
+            <button type="button" class="px-2 py-1 text-xs rounded hover:bg-muted" @mousedown.prevent="exec('bold')">B</button>
+            <button type="button" class="px-2 py-1 text-xs italic rounded hover:bg-muted" @mousedown.prevent="exec('italic')">I</button>
+            <button type="button" class="px-2 py-1 text-xs underline rounded hover:bg-muted" @mousedown.prevent="exec('underline')">U</button>
+            <span class="w-px h-4 bg-muted mx-1"></span>
+            <button type="button" class="px-2 py-1 text-xs rounded hover:bg-muted" @mousedown.prevent="exec('insertUnorderedList')">• List</button>
+            <button type="button" class="px-2 py-1 text-xs rounded hover:bg-muted" @mousedown.prevent="exec('insertOrderedList')">1. List</button>
+            <span class="w-px h-4 bg-muted mx-1"></span>
+            <button type="button" class="px-2 py-1 text-xs rounded hover:bg-muted" @mousedown.prevent="insertLink">Link</button>
+            <button type="button" class="px-2 py-1 text-xs rounded hover:bg-muted" @mousedown.prevent="clearFormat">Clear</button>
         </div>
         <div
             ref="editorRef"

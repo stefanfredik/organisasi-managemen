@@ -1,10 +1,11 @@
 <script setup>
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import DangerButton from '@/Components/DangerButton.vue';
-import Modal from '@/Components/Modal.vue';
-import SecondaryButton from '@/Components/SecondaryButton.vue';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 import { ref } from 'vue';
 
 const props = defineProps({
@@ -12,7 +13,7 @@ const props = defineProps({
 });
 
 const formatCurrency = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(val);
-const formatDate = (date) => new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+const formatDate = (date) => new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 const showingProofModal = ref(false);
 const selectedProofUrl = ref(null);
@@ -29,12 +30,9 @@ const closeProofModal = () => {
 };
 
 const verifyTransaction = (id, action) => {
-    if (!confirm(`Apakah Anda yakin ingin ${action === 'approve' ? 'menyewtujui' : 'menolak'} transaksi ini?`)) return;
-
+    if (!confirm(`Apakah Anda yakin ingin ${action === 'approve' ? 'menyetujui' : 'menolak'} transaksi ini?`)) return;
     processingId.value = id;
-    router.post(route('contributions.verify-action', id), {
-        action: action
-    }, {
+    router.post(route('contributions.verify-action', id), { action }, {
         onFinish: () => processingId.value = null,
         preserveScroll: true,
     });
@@ -46,91 +44,83 @@ const verifyTransaction = (id, action) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">
+            <h2 class="text-xl font-semibold leading-tight text-foreground">
                 Verifikasi Pembayaran
             </h2>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-6">
+        <div class="py-4">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-4">
                 
                 <!-- Navigation Tabs -->
-                <div class="flex space-x-2 border-b border-gray-200 pb-2 overflow-x-auto">
-                    <Link :href="route('contributions.monitoring.index')" class="px-4 py-2 text-sm font-bold rounded-lg text-gray-600 hover:bg-gray-50">
+                <div class="flex space-x-1 border-b border pb-1 overflow-x-auto">
+                    <Link :href="route('contributions.monitoring.index')" class="px-3 py-1.5 text-xs font-bold rounded-md text-muted-foreground hover:bg-muted">
                         Jenis Iuran Aktif
                     </Link>
-                    <Link :href="route('contributions.verification')" class="px-4 py-2 text-sm font-bold rounded-lg bg-indigo-50 text-indigo-700">
+                    <Link :href="route('contributions.verification')" class="px-3 py-1.5 text-xs font-bold rounded-md bg-primary/10 text-primary">
                         Verifikasi
                     </Link>
-                     <Link :href="route('contributions.index')" class="px-4 py-2 text-sm font-bold rounded-lg text-gray-600 hover:bg-gray-50">
+                    <Link :href="route('contributions.index')" class="px-3 py-1.5 text-xs font-bold rounded-md text-muted-foreground hover:bg-muted">
                         Riwayat Transaksi
                     </Link>
                 </div>
 
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div class="p-6 border-b border-gray-100 flex justify-between items-center">
-                        <h3 class="text-lg font-bold text-gray-800">Menunggu Verifikasi</h3>
-                        <span class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full">
+                <div class="bg-card rounded-lg shadow-sm border border overflow-hidden">
+                    <div class="px-4 py-3 border-b border flex justify-between items-center">
+                        <h3 class="text-sm font-bold text-foreground">Menunggu Verifikasi</h3>
+                        <span class="bg-warning-100 text-warning-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
                             {{ pendingTransactions.total }} Permintaan
                         </span>
                     </div>
 
-                    <div v-if="pendingTransactions.data.length === 0" class="p-12 text-center">
-                        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
-                            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    <div v-if="pendingTransactions.data.length === 0" class="p-8 text-center">
+                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-success/20 mb-3">
+                            <svg class="w-6 h-6 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                         </div>
-                        <h3 class="text-lg font-bold text-gray-900">Semua Bersih!</h3>
-                        <p class="text-gray-500 mt-1">Tidak ada pembayaran yang menunggu verifikasi saat ini.</p>
+                        <h3 class="text-sm font-bold text-foreground">Semua Bersih!</h3>
+                        <p class="text-xs text-muted-foreground mt-1">Tidak ada pembayaran menunggu verifikasi.</p>
                     </div>
 
                     <div v-else class="overflow-x-auto">
-                        <table class="w-full text-left text-sm text-gray-600">
-                            <thead class="bg-gray-50 text-xs uppercase font-bold text-gray-400">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-muted text-xs uppercase font-bold text-muted-foreground">
                                 <tr>
-                                    <th class="px-6 py-4">Tanggal</th>
-                                    <th class="px-6 py-4">Anggota</th>
-                                    <th class="px-6 py-4">Jenis Iuran</th>
-                                    <th class="px-6 py-4">Periode</th>
-                                    <th class="px-6 py-4">Jumlah</th>
-                                    <th class="px-6 py-4">Bukti</th>
-                                    <th class="px-6 py-4 text-right">Aksi</th>
+                                    <th class="px-4 py-2.5">Tanggal</th>
+                                    <th class="px-4 py-2.5">Anggota</th>
+                                    <th class="px-4 py-2.5">Jenis</th>
+                                    <th class="px-4 py-2.5">Periode</th>
+                                    <th class="px-4 py-2.5">Jumlah</th>
+                                    <th class="px-4 py-2.5">Bukti</th>
+                                    <th class="px-4 py-2.5 text-right">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100">
-                                <tr v-for="trx in pendingTransactions.data" :key="trx.id" class="hover:bg-gray-50 transition-colors">
-                                    <td class="px-6 py-4 bg-white font-medium text-gray-900">{{ formatDate(trx.created_at) }}</td>
-                                    <td class="px-6 py-4 bg-white">
-                                        <div class="font-bold text-gray-900">{{ trx.member?.full_name || 'Unknown' }}</div>
-                                        <div class="text-xs text-gray-400">{{ trx.member?.member_code }}</div>
+                            <tbody class="divide-y divide-border">
+                                <tr v-for="trx in pendingTransactions.data" :key="trx.id" class="hover:bg-muted transition-colors">
+                                    <td class="px-4 py-2.5 font-medium text-foreground text-xs">{{ formatDate(trx.created_at) }}</td>
+                                    <td class="px-4 py-2.5">
+                                        <div class="text-sm font-bold text-foreground">{{ trx.member?.full_name || 'Unknown' }}</div>
+                                        <div class="text-[10px] text-muted-foreground">{{ trx.member?.member_code }}</div>
                                     </td>
-                                    <td class="px-6 py-4 bg-white">
-                                        {{ trx.type?.name }}
+                                    <td class="px-4 py-2.5 text-sm">{{ trx.type?.name }}</td>
+                                    <td class="px-4 py-2.5">
+                                        <span class="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground">{{ trx.payment_period || '-' }}</span>
                                     </td>
-                                    <td class="px-6 py-4 bg-white">
-                                        <span class="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">
-                                            {{ trx.payment_period || '-' }}
-                                        </span>
+                                    <td class="px-4 py-2.5 font-bold text-foreground text-sm">{{ formatCurrency(trx.amount) }}</td>
+                                    <td class="px-4 py-2.5">
+                                        <button v-if="trx.receipt_path" @click="showProof('/storage/' + trx.receipt_path)" class="text-primary hover:text-primary font-bold text-xs underline">Lihat</button>
+                                        <span v-else class="text-muted-foreground text-xs italic">-</span>
                                     </td>
-                                    <td class="px-6 py-4 bg-white font-bold text-gray-900">
-                                        {{ formatCurrency(trx.amount) }}
-                                    </td>
-                                    <td class="px-6 py-4 bg-white">
-                                        <button v-if="trx.receipt_path" @click="showProof('/storage/' + trx.receipt_path)" class="text-indigo-600 hover:text-indigo-800 font-bold text-xs underline">
-                                            Lihat Bukti
-                                        </button>
-                                        <span v-else class="text-gray-400 text-xs italic">Tanpa Bukti</span>
-                                    </td>
-                                    <td class="px-6 py-4 bg-white text-right space-x-2">
+                                    <td class="px-4 py-2.5 text-right space-x-1">
                                         <button 
                                             @click="verifyTransaction(trx.id, 'reject')" 
                                             :disabled="processingId === trx.id"
-                                            class="px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-xs font-bold transition-colors disabled:opacity-50">
+                                            class="px-2 py-1 rounded border border-danger-200 text-destructive hover:bg-destructive/10 text-xs font-bold transition-colors disabled:opacity-50">
                                             Tolak
                                         </button>
                                         <button 
                                             @click="verifyTransaction(trx.id, 'approve')" 
                                             :disabled="processingId === trx.id"
-                                            class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm text-xs font-bold transition-colors disabled:opacity-50">
+                                            class="px-2 py-1 rounded bg-primary text-white hover:bg-primary/90 text-xs font-bold transition-colors disabled:opacity-50">
                                             Setujui
                                         </button>
                                     </td>
@@ -142,20 +132,19 @@ const verifyTransaction = (id, action) => {
             </div>
         </div>
 
-        <!-- Proof Modal -->
-        <Modal :show="showingProofModal" @close="closeProofModal">
-            <div class="p-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">Bukti Pembayaran</h3>
-                <div class="flex justify-center bg-gray-100 rounded-lg p-4 mb-4">
-                    <img :src="selectedProofUrl" alt="Bukti Transfer" class="max-h-[70vh] object-contain rounded shadow-sm" />
+        <!-- Proof Dialog -->
+        <Dialog :open="showingProofModal" @update:open="(val) => { if (!val) closeProofModal(); }">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Bukti Pembayaran</DialogTitle>
+                </DialogHeader>
+                <div class="flex justify-center bg-muted rounded-lg p-3">
+                    <img :src="selectedProofUrl" alt="Bukti Transfer" class="max-h-[60vh] object-contain rounded shadow-sm" />
                 </div>
-                <div class="flex justify-end">
-                    <SecondaryButton @click="closeProofModal">
-                        Tutup
-                    </SecondaryButton>
-                </div>
-            </div>
-        </Modal>
-
+                <DialogFooter>
+                    <Button variant="outline" size="sm" @click="closeProofModal">Tutup</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </AuthenticatedLayout>
 </template>

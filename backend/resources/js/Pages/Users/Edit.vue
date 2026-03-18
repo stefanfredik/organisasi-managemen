@@ -27,48 +27,48 @@ const submit = () => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center gap-4">
-                <Link :href="route('users.index')" class="p-2 bg-white rounded-xl shadow-sm border border-slate-100 text-slate-400 hover:text-indigo-600 transition-colors">
+                <Link :href="route('users.index')" class="p-2 bg-card rounded-xl shadow-sm border border text-muted-foreground hover:text-primary transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                     </svg>
                 </Link>
                 <div>
-                    <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tight">Edit Pengguna</h2>
-                    <p class="text-slate-500 text-sm font-medium mt-1">Perbarui informasi akun dan hak akses: <span class="text-indigo-600 font-bold">{{ user.name }}</span></p>
+                    <h2 class="text-2xl font-black text-foreground uppercase tracking-tight">Edit Pengguna</h2>
+                    <p class="text-muted-foreground text-sm font-medium mt-1">Perbarui informasi akun dan hak akses: <span class="text-primary font-bold">{{ user.name }}</span></p>
                 </div>
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+        <div class="py-6 sm:py-8">
+            <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="bg-card rounded-[2.5rem] shadow-xl shadow-muted/50 border border overflow-hidden">
                     <form @submit.prevent="submit" class="p-8 lg:p-12 space-y-8">
                         <!-- Info Section (read-only) -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
                             <div class="col-span-2">
-                                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                                <div class="bg-muted border border rounded-2xl p-4">
                                     <div class="flex items-center justify-between">
                                         <div>
-                                            <div class="text-[11px] font-black uppercase tracking-widest text-slate-400">Nama Lengkap</div>
-                                            <div class="text-slate-900 font-bold">{{ user.name }}</div>
+                                            <div class="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Nama Lengkap</div>
+                                            <div class="text-foreground font-bold">{{ user.name }}</div>
                                         </div>
                                         <div>
-                                            <div class="text-[11px] font-black uppercase tracking-widest text-slate-400">Email</div>
-                                            <div class="text-slate-900 font-bold">{{ user.email }}</div>
+                                            <div class="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Email</div>
+                                            <div class="text-foreground font-bold">{{ user.email }}</div>
                                         </div>
                                     </div>
-                                    <p class="mt-3 text-[11px] text-slate-500">
+                                    <p class="mt-3 text-[11px] text-muted-foreground">
                                         Nama dan email dikelola dari menu Anggota. 
-                                        <Link v-if="memberId" :href="`/members/${memberId}/edit`" class="text-indigo-600 font-bold">Edit Anggota</Link>
+                                        <Link v-if="memberId" :href="`/members/${memberId}/edit`" class="text-primary font-bold">Edit Anggota</Link>
                                     </p>
                                 </div>
                             </div>
 
                             <div>
-                                <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-2 block ml-1">Role Akses</label>
+                                <label class="text-[11px] font-black uppercase tracking-widest text-muted-foreground mb-2 block ml-1">Role Akses</label>
                                 <select
                                     v-model="form.role"
-                                    class="w-full bg-slate-50 border-slate-200 rounded-2xl py-4 px-6 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-bold"
+                                    class="w-full bg-muted border rounded-2xl py-4 px-6 focus:ring-2 focus:ring-ring focus:border-ring transition-all font-bold"
                                     required
                                 >
                                     <option v-for="(label, value) in roles" :key="value" :value="value">{{ label }}</option>
@@ -78,41 +78,41 @@ const submit = () => {
 
                             <!-- Status displayed read-only -->
                             <div>
-                                <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-2 block ml-1">Status Akun</label>
-                                <div class="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 px-6 font-bold">
+                                <label class="text-[11px] font-black uppercase tracking-widest text-muted-foreground mb-2 block ml-1">Status Akun</label>
+                                <div class="w-full bg-muted border border rounded-2xl py-4 px-6 font-bold">
                                     {{ user.status }}
                                 </div>
-                                <p class="mt-2 text-[11px] text-slate-500">Status akun mengikuti status Anggota.</p>
+                                <p class="mt-2 text-[11px] text-muted-foreground">Status akun mengikuti status Anggota.</p>
                             </div>
 
                             <div class="col-span-2 pt-6">
-                                <div class="bg-amber-50 rounded-2xl p-6 border border-amber-100 mb-6">
-                                    <h4 class="text-xs font-black text-amber-700 uppercase tracking-widest mb-1 flex items-center">
+                                <div class="bg-warning-50 rounded-2xl p-6 border border-warning-100 mb-6">
+                                    <h4 class="text-xs font-black text-warning-700 uppercase tracking-widest mb-1 flex items-center">
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                                         Keamanan
                                     </h4>
-                                    <p class="text-amber-600 text-[11px] font-medium leading-relaxed">Isi bagian password di bawah ini hanya jika Anda ingin merubah password pengguna tersebut. Jika tidak, biarkan kosong.</p>
+                                    <p class="text-warning-600 text-[11px] font-medium leading-relaxed">Isi bagian password di bawah ini hanya jika Anda ingin merubah password pengguna tersebut. Jika tidak, biarkan kosong.</p>
                                 </div>
-                                <hr class="border-slate-100">
+                                <hr class="border">
                             </div>
 
                             <div>
-                                <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-2 block ml-1">Password Baru (Opsional)</label>
+                                <label class="text-[11px] font-black uppercase tracking-widest text-muted-foreground mb-2 block ml-1">Password Baru (Opsional)</label>
                                 <input
                                     v-model="form.password"
                                     type="password"
-                                    class="w-full bg-slate-50 border-slate-200 rounded-2xl py-4 px-6 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-medium"
+                                    class="w-full bg-muted border rounded-2xl py-4 px-6 focus:ring-2 focus:ring-ring focus:border-ring transition-all font-medium"
                                     placeholder="••••••••"
                                 >
                                 <div v-if="form.errors.password" class="text-rose-500 text-xs mt-2 ml-1 font-bold">{{ form.errors.password }}</div>
                             </div>
 
                             <div>
-                                <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-2 block ml-1">Konfirmasi Password Baru</label>
+                                <label class="text-[11px] font-black uppercase tracking-widest text-muted-foreground mb-2 block ml-1">Konfirmasi Password Baru</label>
                                 <input
                                     v-model="form.password_confirmation"
                                     type="password"
-                                    class="w-full bg-slate-50 border-slate-200 rounded-2xl py-4 px-6 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-medium"
+                                    class="w-full bg-muted border rounded-2xl py-4 px-6 focus:ring-2 focus:ring-ring focus:border-ring transition-all font-medium"
                                     placeholder="••••••••"
                                 >
                             </div>
@@ -121,14 +121,14 @@ const submit = () => {
                         <div class="pt-8 flex items-center justify-end gap-4">
                             <Link
                                 :href="route('users.index')"
-                                class="px-8 py-4 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest"
+                                class="px-8 py-4 text-sm font-bold text-muted-foreground hover:text-muted-foreground transition-colors uppercase tracking-widest"
                             >
                                 Batal
                             </Link>
                             <button
                                 type="submit"
                                 :disabled="form.processing"
-                                class="px-10 py-4 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black rounded-2xl shadow-xl shadow-indigo-100 transition-all active:scale-95 disabled:opacity-50 uppercase tracking-[0.2em]"
+                                class="px-10 py-4 bg-primary hover:bg-primary/90 text-white text-sm font-black rounded-2xl shadow-xl shadow-sm transition-all active:scale-95 disabled:opacity-50 uppercase tracking-[0.2em]"
                             >
                                 Simpan Perubahan
                             </button>

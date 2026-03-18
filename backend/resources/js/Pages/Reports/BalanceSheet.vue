@@ -47,119 +47,110 @@ const formatDate = (dateString) => {
         <template #header>
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                    <Link :href="route('reports.index')" class="text-gray-500 hover:text-gray-700">
+                    <Link :href="route('reports.index')" class="text-muted-foreground hover:text-foreground">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
                     </Link>
-                    <h2 class="text-xl font-semibold text-gray-800">Neraca Keuangan</h2>
+                    <h2 class="text-xl font-semibold text-foreground">Neraca Keuangan</h2>
                 </div>
-                <div class="flex items-center space-x-2">
-                    <a
-                        :href="route('reports.balance-sheet.pdf', { as_of_date: asOfDate })"
-                        target="_blank"
-                        class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 active:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                    >
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                        Export PDF
-                    </a>
-                </div>
+                <a
+                    :href="route('reports.balance-sheet.pdf', { as_of_date: asOfDate })"
+                    target="_blank"
+                    class="inline-flex items-center px-3 py-1.5 bg-destructive border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-destructive/90 transition"
+                >
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    PDF
+                </a>
             </div>
         </template>
 
-        <div class="py-8">
+        <div class="py-4">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 
-                <!-- Filters -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-                    <div class="flex flex-col md:flex-row md:items-end gap-4">
-                        <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Per Tanggal</label>
+                <!-- Filters - inline compact -->
+                <div class="bg-card rounded-lg shadow-sm border border p-3 mb-4">
+                    <div class="flex items-end gap-3">
+                        <div class="flex-1 max-w-xs">
+                            <label class="block text-xs font-medium text-muted-foreground mb-1">Per Tanggal</label>
                             <input 
                                 type="date" 
                                 v-model="asOfDate"
-                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                class="w-full text-sm rounded-md border-input shadow-sm focus:border-ring focus:ring-ring"
                             />
                         </div>
-                        <div class="flex-shrink-0">
-                            <button
-                                @click="applyFilters"
-                                class="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                            >
-                                Perbarui
-                            </button>
-                        </div>
+                        <button
+                            @click="applyFilters"
+                            class="px-4 py-2 text-sm bg-primary text-white rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring"
+                        >
+                            Perbarui
+                        </button>
                     </div>
                 </div>
 
-                <div class="text-center mb-8">
-                    <h3 class="text-2xl font-bold text-gray-900 uppercase">Neraca Keuangan</h3>
-                    <p class="text-gray-600">Per {{ formatDate(asOfDate) }}</p>
+                <div class="text-center mb-4">
+                    <h3 class="text-lg font-bold text-foreground uppercase">Neraca Keuangan</h3>
+                    <p class="text-xs text-muted-foreground">Per {{ formatDate(asOfDate) }}</p>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Assets Column -->
-                    <div class="space-y-6">
-                        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                            <div class="bg-gray-50 px-6 py-3 border-b border-gray-200">
-                                <h4 class="text-lg font-bold text-gray-900">AKTIVA (ASET)</h4>
+                    <div class="bg-card border border rounded-lg overflow-hidden">
+                        <div class="bg-muted px-4 py-2 border-b border">
+                            <h4 class="text-sm font-bold text-foreground">AKTIVA (ASET)</h4>
+                        </div>
+                        <div class="p-4 space-y-3">
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-muted-foreground">Kas dan Setara Kas</span>
+                                <span class="text-foreground font-medium">{{ formatCurrency(assets.cash) }}</span>
                             </div>
-                            <div class="p-6 space-y-4">
-                                <div class="flex justify-between items-center text-sm">
-                                    <span class="text-gray-600 uppercase">Kas dan Setara Kas</span>
-                                    <span class="text-gray-900 font-medium">{{ formatCurrency(assets.cash) }}</span>
-                                </div>
-                                <div class="flex justify-between items-center text-sm border-b border-gray-100 pb-2">
-                                    <span class="text-gray-600 uppercase">Piutang Iuran (Pending)</span>
-                                    <span class="text-gray-900 font-medium">{{ formatCurrency(assets.receivables) }}</span>
-                                </div>
-                                <div class="flex justify-between items-center pt-2">
-                                    <span class="text-lg font-bold text-gray-900">TOTAL AKTIVA</span>
-                                    <span class="text-lg font-bold text-indigo-600">{{ formatCurrency(assets.total) }}</span>
-                                </div>
+                            <div class="flex justify-between items-center text-sm border-b border pb-2">
+                                <span class="text-muted-foreground">Piutang Iuran (Pending)</span>
+                                <span class="text-foreground font-medium">{{ formatCurrency(assets.receivables) }}</span>
+                            </div>
+                            <div class="flex justify-between items-center pt-1">
+                                <span class="text-sm font-bold text-foreground">TOTAL AKTIVA</span>
+                                <span class="text-sm font-bold text-primary">{{ formatCurrency(assets.total) }}</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Liabilities and Equity Column -->
-                    <div class="space-y-6">
-                        <!-- Liabilities -->
-                        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                            <div class="bg-gray-50 px-6 py-3 border-b border-gray-200">
-                                <h4 class="text-lg font-bold text-gray-900">PASSIVA (KEWAJIBAN & EKUITAS)</h4>
+                    <div class="bg-card border border rounded-lg overflow-hidden">
+                        <div class="bg-muted px-4 py-2 border-b border">
+                            <h4 class="text-sm font-bold text-foreground">PASSIVA (KEWAJIBAN & EKUITAS)</h4>
+                        </div>
+                        <div class="p-4 space-y-4">
+                            <div>
+                                <h5 class="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Kewajiban</h5>
+                                <div class="flex justify-between items-center text-sm border-b border pb-2">
+                                    <span class="text-muted-foreground">Komitmen Donasi Aktif</span>
+                                    <span class="text-foreground font-medium">{{ formatCurrency(liabilities.donationCommitments) }}</span>
+                                </div>
+                                <div class="flex justify-between items-center mt-2">
+                                    <span class="text-sm font-bold text-foreground">Total Kewajiban</span>
+                                    <span class="text-sm font-bold text-foreground">{{ formatCurrency(liabilities.total) }}</span>
+                                </div>
                             </div>
-                            <div class="p-6 space-y-6">
-                                <div>
-                                    <h5 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Kewajiban</h5>
-                                    <div class="flex justify-between items-center text-sm border-b border-gray-100 pb-2">
-                                        <span class="text-gray-600 uppercase">Komitmen Donasi Aktif</span>
-                                        <span class="text-gray-900 font-medium">{{ formatCurrency(liabilities.donationCommitments) }}</span>
-                                    </div>
-                                    <div class="flex justify-between items-center mt-3">
-                                        <span class="text-sm font-bold text-gray-900">Total Kewajiban</span>
-                                        <span class="text-sm font-bold text-gray-900">{{ formatCurrency(liabilities.total) }}</span>
-                                    </div>
-                                </div>
 
-                                <div>
-                                    <h5 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Ekuitas</h5>
-                                    <div class="flex justify-between items-center text-sm border-b border-gray-100 pb-2">
-                                        <span class="text-gray-600 uppercase">Saldo Laba Ditahan</span>
-                                        <span class="text-gray-900 font-medium">{{ formatCurrency(equity.retainedEarnings) }}</span>
-                                    </div>
-                                    <div class="flex justify-between items-center mt-3">
-                                        <span class="text-sm font-bold text-gray-900">Total Ekuitas</span>
-                                        <span class="text-sm font-bold text-gray-900">{{ formatCurrency(equity.total) }}</span>
-                                    </div>
+                            <div>
+                                <h5 class="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Ekuitas</h5>
+                                <div class="flex justify-between items-center text-sm border-b border pb-2">
+                                    <span class="text-muted-foreground">Saldo Laba Ditahan</span>
+                                    <span class="text-foreground font-medium">{{ formatCurrency(equity.retainedEarnings) }}</span>
                                 </div>
+                                <div class="flex justify-between items-center mt-2">
+                                    <span class="text-sm font-bold text-foreground">Total Ekuitas</span>
+                                    <span class="text-sm font-bold text-foreground">{{ formatCurrency(equity.total) }}</span>
+                                </div>
+                            </div>
 
-                                <div class="pt-4 border-t border-gray-200">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-lg font-bold text-gray-900">TOTAL PASSIVA</span>
-                                        <span class="text-lg font-bold text-indigo-600">{{ formatCurrency(liabilities.total + equity.total) }}</span>
-                                    </div>
+                            <div class="pt-3 border-t border">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-bold text-foreground">TOTAL PASSIVA</span>
+                                    <span class="text-sm font-bold text-primary">{{ formatCurrency(liabilities.total + equity.total) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -167,15 +158,12 @@ const formatDate = (dateString) => {
                 </div>
 
                 <!-- Footer Note -->
-                <div class="mt-8 p-6 bg-blue-50 rounded-lg border border-blue-100">
-                    <div class="flex gap-4">
-                        <svg class="w-6 h-6 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="mt-4 p-3 bg-primary/10 rounded-lg border border-primary-100">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-primary-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <div class="text-sm text-blue-800">
-                            <p class="font-bold mb-1">Catatan Penting:</p>
-                            <p>Neraca Keuangan menunjukkan posisi keuangan organisasi pada satu titik waktu tertentu. Total Aktiva harus selalu sama dengan Total Passiva (Kewajiban + Ekuitas).</p>
-                        </div>
+                        <p class="text-xs text-primary">Total Aktiva harus selalu sama dengan Total Passiva (Kewajiban + Ekuitas).</p>
                     </div>
                 </div>
 

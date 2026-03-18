@@ -2,9 +2,15 @@
 import { useForm, Head, Link } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import { Plus, Trash2 } from 'lucide-vue-next';
 
 const form = useForm({
     vision: '',
@@ -32,21 +38,21 @@ const submit = () => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            <h2 class="font-semibold text-xl text-foreground leading-tight">
                 Tambah Visi & Misi
             </h2>
         </template>
 
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 bg-white border-b border-gray-200">
+        <div class="py-6 sm:py-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <Card>
+                    <CardContent class="p-6">
                         <form @submit.prevent="submit">
                             <!-- Period -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 mb-4">
                                 <div>
-                                    <InputLabel for="period_start" value="Tahun Mulai" />
-                                    <TextInput
+                                    <Label for="period_start">Tahun Mulai</Label>
+                                    <Input
                                         id="period_start"
                                         type="number"
                                         class="mt-1 block w-full"
@@ -56,8 +62,8 @@ const submit = () => {
                                     <InputError class="mt-2" :message="form.errors.period_start" />
                                 </div>
                                 <div>
-                                    <InputLabel for="period_end" value="Tahun Selesai (Opsional)" />
-                                    <TextInput
+                                    <Label for="period_end">Tahun Selesai (Opsional)</Label>
+                                    <Input
                                         id="period_end"
                                         type="number"
                                         class="mt-1 block w-full"
@@ -69,81 +75,78 @@ const submit = () => {
 
                             <!-- Status -->
                             <div class="mb-4">
-                                <InputLabel for="status" value="Status" />
-                                <select
-                                    id="status"
-                                    class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                                    v-model="form.status"
-                                    required
-                                >
-                                    <option value="active">Aktif</option>
-                                    <option value="inactive">Tidak Aktif</option>
-                                </select>
+                                <Label for="status">Status</Label>
+                                <Select v-model="form.status">
+                                    <SelectTrigger class="mt-1 w-full">
+                                        <SelectValue placeholder="Pilih status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="active">Aktif</SelectItem>
+                                        <SelectItem value="inactive">Tidak Aktif</SelectItem>
+                                    </SelectContent>
+                                </Select>
                                 <InputError class="mt-2" :message="form.errors.status" />
                             </div>
 
                             <!-- Vision -->
                             <div class="mb-4">
-                                <InputLabel for="vision" value="Visi" />
-                                <textarea
+                                <Label for="vision">Visi</Label>
+                                <Textarea
                                     id="vision"
-                                    class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    class="mt-1 block w-full"
                                     v-model="form.vision"
                                     rows="3"
                                     required
-                                ></textarea>
+                                />
                                 <InputError class="mt-2" :message="form.errors.vision" />
                             </div>
 
                             <!-- Missions -->
                             <div class="mb-4">
-                                <InputLabel value="Misi" />
-                                <div v-for="(mission, index) in form.missions" :key="index" class="flex items-center mt-2 space-x-2">
-                                    <TextInput
+                                <Label>Misi</Label>
+                                <div v-for="(mission, index) in form.missions" :key="index" class="flex items-center mt-2 gap-2">
+                                    <Input
                                         type="text"
                                         class="block w-full"
                                         v-model="form.missions[index]"
                                         placeholder="Masukkan butir misi..."
                                         required
                                     />
-                                    <button
+                                    <Button
                                         type="button"
+                                        variant="ghost"
+                                        size="icon"
                                         @click="removeMission(index)"
-                                        class="text-red-600 hover:text-red-800"
                                         v-if="form.missions.length > 1"
+                                        class="text-destructive hover:text-destructive shrink-0"
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
+                                        <Trash2 class="h-4 w-4" />
+                                    </Button>
                                 </div>
                                 <InputError class="mt-2" :message="form.errors.missions" />
-                                <button
+                                <Button
                                     type="button"
+                                    variant="ghost"
+                                    size="sm"
                                     @click="addMission"
-                                    class="mt-2 text-sm text-indigo-600 hover:text-indigo-900 flex items-center"
+                                    class="mt-2 text-primary"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                    </svg>
+                                    <Plus class="h-4 w-4 mr-1" />
                                     Tambah Misi
-                                </button>
+                                </Button>
                             </div>
 
-                            <div class="flex items-center justify-end mt-4">
-                                <Link
-                                    :href="route('vision-missions.index')"
-                                    class="text-sm text-gray-600 hover:text-gray-900 mr-4"
-                                >
-                                    Batal
-                                </Link>
-                                <PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+                            <div class="flex items-center justify-end mt-4 gap-4">
+                                <Button variant="ghost" as-child>
+                                    <Link :href="route('vision-missions.index')">Batal</Link>
+                                </Button>
+                                <Button type="submit" :disabled="form.processing">
                                     Simpan
-                                </PrimaryButton>
+                                </Button>
                             </div>
                         </form>
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
             </div>
         </div>
     </AuthenticatedLayout>

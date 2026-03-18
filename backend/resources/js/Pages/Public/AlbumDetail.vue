@@ -1,7 +1,12 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
+import { useScrollReveal } from '@/composables/useScrollReveal';
+import { ZoomIn, X, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-vue-next';
+
 import { ref, onMounted, onUnmounted } from 'vue';
+
+useScrollReveal();
 
 const props = defineProps({
     album: Object,
@@ -20,7 +25,6 @@ const formatDate = (dateString) => {
 };
 
 const openLightbox = (index) => {
-    currentIndex.ref = index; // This is a mistake in my thought, should be currentIndex.value
     currentIndex.value = index;
     isLightboxOpen.value = true;
     document.body.style.overflow = 'hidden';
@@ -59,34 +63,38 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
     <Head :title="album.name" />
 
     <PublicLayout>
-        <div class="bg-gray-50 min-h-screen pb-20">
+        <div class="bg-muted min-h-screen pb-20">
             <!-- Header -->
-            <div class="bg-white border-b border-gray-100">
-                <div class="max-w-7xl mx-auto px-6 py-12 lg:py-16">
-                    <nav class="flex mb-8" aria-label="Breadcrumb">
-                        <ol class="flex items-center space-x-2 text-sm text-gray-400 font-bold uppercase tracking-widest">
-                            <li><Link :href="route('public.gallery.index')" class="hover:text-indigo-600 transition-colors">Galeri</Link></li>
-                            <li><svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg></li>
-                            <li class="text-gray-900">{{ album.name }}</li>
+            <div class="bg-gradient-to-br from-primary/5 via-card to-card border-b border">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 pt-32 pb-12 sm:pt-36 lg:pt-40 lg:pb-16">
+                    <nav data-reveal="fade" class="flex mb-8" aria-label="Breadcrumb">
+                        <ol class="flex items-center space-x-2 text-sm text-muted-foreground font-bold uppercase tracking-widest">
+                            <li>
+                                <Link :href="route('public.gallery.index')" class="hover:text-primary transition-colors duration-300">Galeri</Link>
+                            </li>
+                            <li>
+                                <ChevronRight class="h-4 w-4" />
+                            </li>
+                            <li class="text-foreground">{{ album.name }}</li>
                         </ol>
                     </nav>
 
                     <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                        <div class="max-w-3xl">
-                            <span class="inline-block px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-4">
+                        <div class="max-w-3xl" data-reveal>
+                            <span class="inline-block px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-black uppercase tracking-[0.2em] mb-4">
                                 {{ album.category }}
                             </span>
-                            <h1 class="text-3xl lg:text-5xl font-black text-gray-900 mb-4 leading-tight">
+                            <h1 class="text-3xl lg:text-5xl font-black text-foreground mb-4 leading-tight">
                                 {{ album.name }}
                             </h1>
-                            <p class="text-gray-500 text-lg leading-relaxed">
+                            <p class="text-muted-foreground text-lg leading-relaxed">
                                 {{ album.description }}
                             </p>
                         </div>
-                        <div class="shrink-0 flex items-center gap-4 text-sm text-gray-400 border-l border-gray-100 pl-6">
+                        <div data-reveal="right" class="shrink-0 flex items-center gap-4 text-sm text-muted-foreground border-l border pl-6">
                             <div class="text-right">
-                                <p class="font-bold text-gray-900">{{ formatDate(album.created_at) }}</p>
-                                <p class="uppercase tracking-tighter text-[10px]">Tgl Diunggah</p>
+                                <p class="font-bold text-foreground">{{ formatDate(album.created_at) }}</p>
+                                <p class="uppercase tracking-tighter text-xs">Tgl Diunggah</p>
                             </div>
                         </div>
                     </div>
@@ -94,41 +102,41 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
             </div>
 
             <!-- Photo Grid -->
-            <div class="max-w-7xl mx-auto px-6 py-12 lg:py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 py-12 lg:py-20">
                 <div v-if="album.photos && album.photos.length > 0" class="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
-                    <div 
-                        v-for="(photo, index) in album.photos" 
-                        :key="photo.id" 
+                    <div
+                        v-for="(photo, index) in album.photos"
+                        :key="photo.id"
                         @click="openLightbox(index)"
-                        class="break-inside-avoid rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 group cursor-zoom-in relative bg-gray-100 min-h-[200px]"
+                        data-reveal
+                        :data-reveal-delay="(index % 9) * 80"
+                        class="break-inside-avoid rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 group cursor-zoom-in relative bg-muted min-h-[200px]"
                     >
-                        <img 
-                            :src="photo.url" 
+                        <img
+                            :src="photo.url"
                             :alt="album.name"
                             class="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-700"
                             loading="lazy"
                             decoding="async"
                         >
-                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-500 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                            <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                                </svg>
+                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-500 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                            <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-500">
+                                <ZoomIn class="w-6 h-6" />
                             </div>
                         </div>
-                        <div v-if="photo.description" class="p-4 bg-white border-t border-gray-50">
-                            <p class="text-sm text-gray-600 italic text-center">{{ photo.description }}</p>
+                        <div v-if="photo.description" class="p-4 bg-card border-t border">
+                            <p class="text-sm text-muted-foreground italic text-center">{{ photo.description }}</p>
                         </div>
                     </div>
                 </div>
 
-                <div v-else class="text-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
-                    <p class="text-gray-400 italic">Tidak ada foto dalam album ini.</p>
+                <div v-else data-reveal="scale" class="text-center py-20 bg-card rounded-3xl border border shadow-sm">
+                    <p class="text-muted-foreground italic">Tidak ada foto dalam album ini.</p>
                 </div>
 
-                <div class="mt-20 text-center">
-                    <Link :href="route('public.gallery.index')" class="inline-flex items-center gap-2 px-8 py-4 bg-gray-900 text-white font-bold rounded-2xl hover:bg-gray-800 transition-all shadow-xl active:scale-95 uppercase tracking-widest text-xs">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                <div data-reveal="fade" class="mt-20 text-center">
+                    <Link :href="route('public.gallery.index')" class="inline-flex items-center gap-2 px-8 py-4 bg-foreground text-background font-bold rounded-full hover:bg-foreground/90 transition-all duration-300 shadow-xl hover:shadow-2xl active:scale-95 uppercase tracking-widest text-xs">
+                        <ArrowLeft class="w-4 h-4" />
                         Kembali ke Galeri
                     </Link>
                 </div>
@@ -150,26 +158,20 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
                     <div class="text-sm font-bold uppercase tracking-widest bg-white/10 px-4 py-2 rounded-full backdrop-blur-md">
                         {{ currentIndex + 1 }} / {{ album.photos.length }}
                     </div>
-                    <button @click="closeLightbox" class="w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-md group">
-                        <svg class="w-6 h-6 group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                    <button @click="closeLightbox" class="w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all duration-300 backdrop-blur-md group">
+                        <X class="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
                     </button>
                 </div>
 
                 <!-- Slider Area -->
                 <div class="flex-1 relative flex items-center justify-center p-4 sm:p-12 overflow-hidden">
                     <!-- Navigation -->
-                    <button @click="prevPhoto" class="absolute left-4 sm:left-8 z-20 w-14 h-14 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-all active:scale-90 backdrop-blur-md">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                        </svg>
+                    <button @click="prevPhoto" class="absolute left-4 sm:left-8 z-20 w-14 h-14 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-all duration-300 active:scale-90 backdrop-blur-md">
+                        <ChevronLeft class="w-7 h-7" />
                     </button>
-                    
-                    <button @click="nextPhoto" class="absolute right-4 sm:right-8 z-20 w-14 h-14 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-all active:scale-90 backdrop-blur-md">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                        </svg>
+
+                    <button @click="nextPhoto" class="absolute right-4 sm:right-8 z-20 w-14 h-14 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-all duration-300 active:scale-90 backdrop-blur-md">
+                        <ChevronRight class="w-7 h-7" />
                     </button>
 
                     <!-- Large Image -->
@@ -183,8 +185,8 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
                         leave-to-class="opacity-0 scale-95 -translate-x-12"
                     >
                         <div :key="currentIndex" class="relative max-w-full max-h-full flex flex-col items-center">
-                            <img 
-                                :src="album.photos[currentIndex].url" 
+                            <img
+                                :src="album.photos[currentIndex].url"
                                 class="max-w-full max-h-[80vh] object-contain shadow-2xl rounded-lg"
                                 @click.stop
                             >
@@ -196,13 +198,13 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
                 </div>
 
                 <!-- Thumbnails Bar -->
-                <div class="h-24 bg-black/40 backdrop-blur-md border-t border-white/5 flex items-center justify-center px-4 overflow-x-auto gap-3">
-                    <button 
-                        v-for="(photo, index) in album.photos" 
+                <div class="h-16 sm:h-24 bg-black/40 backdrop-blur-md border-t border-white/5 flex items-center justify-center px-4 overflow-x-auto gap-2 sm:gap-3">
+                    <button
+                        v-for="(photo, index) in album.photos"
                         :key="photo.id"
                         @click="currentIndex = index"
-                        class="shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-300"
-                        :class="currentIndex === index ? 'border-indigo-500 scale-110 shadow-lg shadow-indigo-500/50' : 'border-transparent opacity-40 hover:opacity-100'"
+                        class="shrink-0 w-11 h-11 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 transition-all duration-300"
+                        :class="currentIndex === index ? 'border-primary-500 scale-110 shadow-lg shadow-primary-500/50' : 'border-transparent opacity-40 hover:opacity-100'"
                     >
                         <img :src="photo.url" class="w-full h-full object-cover">
                     </button>

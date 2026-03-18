@@ -1,7 +1,13 @@
 <script setup>
+import ActionLink from '@/Components/ActionLink.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
+import { useScrollReveal } from '@/composables/useScrollReveal';
+import { Megaphone, ChevronRight, ArrowRight, Plus, Heart, CreditCard } from 'lucide-vue-next';
+
 import { ref, onMounted, onUnmounted } from 'vue';
+
+useScrollReveal();
 
 const props = defineProps({
     upcomingEvents: Array,
@@ -61,151 +67,190 @@ const formatCurrency = (value) => {
 
     <PublicLayout>
         <!-- Hero Slider Section -->
-        <div class="relative bg-white overflow-hidden h-[600px] lg:h-[700px]">
+        <div class="relative bg-black overflow-hidden h-screen min-h-[600px] max-h-[1080px]">
             <!-- Slides -->
             <div class="absolute inset-0 z-0">
-                <TransitionGroup 
-                    enter-active-class="transition duration-1000 ease-out"
-                    enter-from-class="opacity-0 scale-105"
+                <TransitionGroup
+                    enter-active-class="transition duration-[1500ms] ease-out"
+                    enter-from-class="opacity-0 scale-110"
                     enter-to-class="opacity-100 scale-100"
-                    leave-active-class="transition duration-1000 ease-in absolute inset-0"
+                    leave-active-class="transition duration-[1500ms] ease-in absolute inset-0"
                     leave-from-class="opacity-100 scale-100"
                     leave-to-class="opacity-0 scale-95"
                 >
-                    <div 
-                        v-for="(photo, index) in latestPhotos" 
+                    <div
+                        v-for="(photo, index) in latestPhotos"
                         :key="photo.id"
                         v-show="currentSlide === index"
                         class="absolute inset-0"
                     >
-                        <img 
-                            :src="photo.url" 
+                        <img
+                            :src="photo.url"
                             class="w-full h-full object-cover"
                             loading="eager"
                         >
-                        <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
+                        <div class="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/80"></div>
+                        <div class="absolute inset-0 bg-gradient-to-r from-black/70 via-transparent to-transparent"></div>
                     </div>
 
                     <!-- Fallback Slide if no photos -->
                     <div v-if="!latestPhotos || latestPhotos.length === 0" class="absolute inset-0">
                         <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/20 to-transparent"></div>
+                        <div class="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/80"></div>
+                        <div class="absolute inset-0 bg-gradient-to-r from-black/70 via-transparent to-transparent"></div>
                     </div>
                 </TransitionGroup>
             </div>
 
+            <!-- Subtle animated grain overlay -->
+            <div class="absolute inset-0 z-[1] opacity-[0.03] pointer-events-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48ZmlsdGVyIGlkPSJhIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iLjc1IiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+PC9maWx0ZXI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI2EpIi8+PC9zdmc+')]"></div>
+
             <!-- Hero Content -->
-            <div class="relative z-10 h-full max-w-7xl mx-auto px-6 lg:px-8 flex flex-col justify-center">
-                <div class="max-w-2xl text-white">
+            <div class="relative z-10 h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-end pb-20 sm:pb-32 lg:pb-40">
+                <div class="max-w-3xl">
                     <Transition
                         appear
-                        enter-active-class="transition duration-700 delay-300 ease-out"
-                        enter-from-class="opacity-0 translate-y-8"
+                        enter-active-class="transition duration-1000 delay-300 ease-out"
+                        enter-from-class="opacity-0 translate-y-12"
                         enter-to-class="opacity-100 translate-y-0"
                     >
-                        <h1 class="text-5xl lg:text-7xl font-black tracking-tighter uppercase leading-tight">
-                            {{ $page.props.appSettings.name.split(' ')[0] }} <span class="text-indigo-400">{{ $page.props.appSettings.name.split(' ').slice(1).join(' ') }}</span>
+                        <p class="text-primary font-semibold tracking-[0.3em] uppercase text-xs sm:text-sm mb-4 sm:mb-6">
+                            Selamat Datang
+                        </p>
+                    </Transition>
+
+                    <Transition
+                        appear
+                        enter-active-class="transition duration-1000 delay-500 ease-out"
+                        enter-from-class="opacity-0 translate-y-12"
+                        enter-to-class="opacity-100 translate-y-0"
+                    >
+                        <h1 class="text-4xl sm:text-6xl lg:text-8xl font-black tracking-tighter leading-[0.9] text-white">
+                            {{ $page.props.appSettings.name.split(' ')[0] }}
+                            <span class="block text-primary/80">{{ $page.props.appSettings.name.split(' ').slice(1).join(' ') }}</span>
                         </h1>
                     </Transition>
-                    
+
                     <Transition
                         appear
-                        enter-active-class="transition duration-700 delay-500 ease-out"
-                        enter-from-class="opacity-0 translate-y-8"
+                        enter-active-class="transition duration-1000 delay-700 ease-out"
+                        enter-from-class="opacity-0 translate-y-12"
                         enter-to-class="opacity-100 translate-y-0"
                     >
-                        <p class="mt-6 text-xl text-gray-200 leading-relaxed font-medium">
+                        <p class="mt-6 sm:mt-8 text-lg sm:text-xl text-white/70 leading-relaxed max-w-xl">
                             {{ $page.props.appSettings.welcome_text }}
                         </p>
                     </Transition>
 
                     <Transition
                         appear
-                        enter-active-class="transition duration-700 delay-700 ease-out"
-                        enter-from-class="opacity-0 translate-y-8"
+                        enter-active-class="transition duration-1000 delay-[900ms] ease-out"
+                        enter-from-class="opacity-0 translate-y-12"
                         enter-to-class="opacity-100 translate-y-0"
                     >
-                        <div class="mt-10 flex gap-4">
-                            <Link :href="route('login')" class="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold shadow-xl transition-all active:scale-95 text-lg uppercase tracking-widest">
+                        <div class="mt-8 sm:mt-12 flex flex-col sm:flex-row gap-3 sm:gap-4">
+                            <ActionLink :href="route('login')" size="lg">
                                 Mulai Sekarang
-                            </Link>
-                            <Link :href="route('public.about')" class="px-8 py-4 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white rounded-2xl font-bold transition-all active:scale-95 text-lg border border-white/30 uppercase tracking-widest">
+                            </ActionLink>
+                            <ActionLink :href="route('public.about')" variant="secondary" size="lg">
                                 Tentang Kami
-                            </Link>
+                            </ActionLink>
                         </div>
                     </Transition>
                 </div>
             </div>
 
-            <!-- Slider Controls -->
-            <div v-if="latestPhotos?.length > 1" class="absolute bottom-10 right-10 z-20 flex gap-3">
-                <button 
-                    v-for="(_, index) in latestPhotos" 
+            <!-- Slider Dots -->
+            <div v-if="latestPhotos?.length > 1" class="absolute bottom-8 left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-10 sm:bottom-12 z-20 flex items-center gap-2.5">
+                <button
+                    v-for="(_, index) in latestPhotos"
                     :key="index"
                     @click="currentSlide = index; stopSlide(); startSlide();"
-                    class="h-2 rounded-full transition-all duration-500"
-                    :class="currentSlide === index ? 'w-12 bg-indigo-500' : 'w-3 bg-white/30 hover:bg-white/50'"
+                    class="relative h-2.5 rounded-full transition-all duration-500 ease-out"
+                    :class="currentSlide === index
+                        ? 'w-10 bg-primary shadow-lg shadow-primary/30'
+                        : 'w-2.5 bg-white/30 hover:bg-white/60'"
+                    :aria-label="'Slide ' + (index + 1)"
                 ></button>
+            </div>
+
+            <!-- Scroll indicator -->
+            <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 hidden sm:flex flex-col items-center gap-2 opacity-60">
+                <span class="text-white/50 text-xs tracking-[0.3em] uppercase">Scroll</span>
+                <div class="w-px h-8 bg-gradient-to-b from-white/50 to-transparent animate-pulse"></div>
             </div>
         </div>
 
         <!-- Latest Announcements Section -->
-        <div class="bg-slate-50 py-24">
-            <div class="max-w-7xl mx-auto px-6 lg:px-8">
-                <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+        <div class="bg-muted py-20 sm:py-28 lg:py-32">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-14" data-reveal>
                     <div>
-                        <h2 class="text-3xl lg:text-5xl font-black text-slate-900 uppercase tracking-tight">Kabar Terbaru</h2>
-                        <p class="mt-4 text-lg text-slate-500 font-medium">Informasi dan agenda terkini dari pengurus organisasi.</p>
+                        <p class="text-primary font-semibold tracking-[0.2em] uppercase text-xs mb-3">Pengumuman</p>
+                        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-foreground tracking-tight">Kabar Terbaru</h2>
+                        <p class="mt-4 text-lg text-muted-foreground max-w-lg">Informasi dan agenda terkini dari pengurus organisasi.</p>
                     </div>
-                    <Link :href="route('public.events.index')" class="text-indigo-600 font-bold hover:text-indigo-700 transition-colors uppercase tracking-widest text-sm flex items-center gap-2">
+                    <Link :href="route('public.events.index')" class="text-primary font-bold hover:text-primary/80 transition-colors uppercase tracking-widest text-sm flex items-center gap-2 shrink-0">
                         Lihat Semua Kegiatan
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                        <ArrowRight class="w-4 h-4" />
                     </Link>
                 </div>
 
-                <div class="grid gap-10 md:grid-cols-3">
-                    <!-- Announcements & Events Mix -->
-                    <div v-for="announcement in latestAnnouncements" :key="announcement.id" class="bg-white rounded-3xl p-8 border border-slate-100 shadow-xl shadow-slate-200/50 flex flex-col hover:-translate-y-2 transition-transform h-full group">
-                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 mb-6 group-hover:scale-110 transition-transform">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" /></svg>
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    <div
+                        v-for="(announcement, idx) in latestAnnouncements"
+                        :key="announcement.id"
+                        data-reveal
+                        :data-reveal-delay="idx * 100"
+                        class="bg-card rounded-2xl p-7 sm:p-8 border border shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col h-full group"
+                    >
+                        <div class="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-5 group-hover:scale-110 group-hover:bg-primary/20 transition-all duration-300">
+                            <Megaphone class="w-5 h-5" />
                         </div>
-                        <h3 class="text-xl font-bold text-slate-900 mb-3 leading-snug">{{ announcement.title }}</h3>
-                        <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4">{{ formatDate(announcement.created_at) }}</p>
-                        <div class="text-slate-600 line-clamp-4 mb-8 text-sm leading-relaxed overflow-hidden" v-html="announcement.content"></div>
-                        <div class="mt-auto pt-6 border-t border-slate-50">
-                            <Link :href="route('announcements.show', announcement.id)" class="text-indigo-600 font-black text-xs uppercase tracking-[0.2em] hover:text-indigo-700 flex items-center gap-2">
+                        <h3 class="text-lg font-bold text-foreground mb-2 leading-snug group-hover:text-primary transition-colors duration-300">{{ announcement.title }}</h3>
+                        <p class="text-muted-foreground text-xs font-semibold uppercase tracking-widest mb-4">{{ formatDate(announcement.created_at) }}</p>
+                        <div class="text-muted-foreground line-clamp-3 mb-6 text-sm leading-relaxed overflow-hidden" v-html="announcement.content"></div>
+                        <div class="mt-auto pt-5 border-t border">
+                            <Link :href="route('announcements.show', announcement.id)" class="text-primary font-bold text-xs uppercase tracking-[0.15em] hover:text-primary/80 transition-colors flex items-center gap-1.5">
                                 Baca Detail
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                                <ChevronRight class="w-3.5 h-3.5" />
                             </Link>
                         </div>
                     </div>
                 </div>
-                
-                <div v-if="latestAnnouncements.length === 0" class="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
-                    <p class="text-slate-400 italic">Belum ada pengumuman terbaru.</p>
+
+                <div v-if="latestAnnouncements.length === 0" class="text-center py-20 bg-card rounded-2xl border-2 border-dashed border" data-reveal="fade">
+                    <p class="text-muted-foreground italic">Belum ada pengumuman terbaru.</p>
                 </div>
             </div>
         </div>
 
         <!-- Featured Albums Slider Section -->
-        <div v-if="$page.props.appSettings.features.gallery" class="bg-white py-24 overflow-hidden">
-            <div class="max-w-7xl mx-auto px-6 lg:px-8">
-                <h2 class="text-2xl font-black text-slate-900 uppercase tracking-widest mb-12 text-center">Momen Berharga Kami</h2>
-                
-                <div class="flex gap-8 overflow-x-auto pb-8 snap-x no-scrollbar">
-                    <div v-for="album in featuredAlbums" :key="album.id" class="snap-center shrink-0 w-[400px] h-[500px] group relative rounded-[2.5rem] overflow-hidden shadow-2xl">
-                        <img 
-                            :src="album.cover_image_url || 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80'" 
-                            class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+        <div v-if="$page.props.appSettings.features.gallery" class="bg-card py-20 sm:py-28 lg:py-32 overflow-hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-14" data-reveal>
+                    <p class="text-primary font-semibold tracking-[0.2em] uppercase text-xs mb-3">Galeri</p>
+                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-foreground tracking-tight">Momen Berharga Kami</h2>
+                </div>
+
+                <div class="flex gap-5 sm:gap-8 overflow-x-auto pb-8 snap-x no-scrollbar" data-reveal="fade">
+                    <div
+                        v-for="album in featuredAlbums"
+                        :key="album.id"
+                        class="snap-center shrink-0 w-[280px] sm:w-[380px] h-[380px] sm:h-[480px] group relative rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-500"
+                    >
+                        <img
+                            :src="album.cover_image_url || 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80'"
+                            class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                         >
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
-                        <div class="absolute bottom-0 left-0 right-0 p-10">
-                            <span class="inline-block px-3 py-1 bg-white/10 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest mb-4 rounded-lg">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300"></div>
+                        <div class="absolute bottom-0 left-0 right-0 p-8 sm:p-10">
+                            <span class="inline-block px-3 py-1 bg-white/10 backdrop-blur-md text-white text-xs font-bold uppercase tracking-widest mb-3 rounded-lg border border-white/10">
                                 {{ album.category }} &bull; {{ album.photos_count }} Foto
                             </span>
-                            <h3 class="text-3xl font-black text-white mb-6 uppercase tracking-tight">{{ album.name }}</h3>
-                            <Link :href="route('public.gallery.show', album.slug)" class="w-14 h-14 rounded-full bg-white flex items-center justify-center text-indigo-600 shadow-xl hover:scale-110 transition-transform active:scale-95">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" /></svg>
+                            <h3 class="text-2xl sm:text-3xl font-black text-white mb-5 tracking-tight leading-tight">{{ album.name }}</h3>
+                            <Link :href="route('public.gallery.show', album.slug)" class="w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white shadow-xl hover:bg-primary hover:border-primary hover:scale-110 transition-all duration-300">
+                                <Plus class="w-5 h-5" />
                             </Link>
                         </div>
                     </div>
@@ -213,23 +258,33 @@ const formatCurrency = (value) => {
             </div>
         </div>
 
-        <!-- Support Section -->
-        <div class="bg-indigo-900 py-32 relative overflow-hidden">
-            <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-            <div class="max-w-4xl mx-auto text-center px-6 relative z-10">
-                <h2 class="text-4xl lg:text-6xl font-black text-white uppercase tracking-tighter mb-8 italic">Bangun Bersama Kami.</h2>
-                <p class="text-xl text-indigo-100 mb-12 leading-relaxed">Dukungan Anda dalam bentuk iuran dan donasi adalah energi utama pergerakan organisasi kami.</p>
-                <div class="flex flex-wrap justify-center gap-6">
-                    <Link 
+        <!-- Support CTA Section -->
+        <div class="relative py-28 sm:py-36 lg:py-44 overflow-hidden bg-gradient-to-br from-primary-900 via-primary-800 to-primary-950" data-reveal="scale">
+            <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent"></div>
+            <div class="absolute inset-0 opacity-[0.04] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMSIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg==')]"></div>
+            <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 relative z-10">
+                <div class="inline-flex items-center gap-2 mb-8 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/10">
+                    <Heart class="w-4 h-4 text-primary-200" />
+                    <span class="text-primary-100 text-xs font-semibold uppercase tracking-widest">Dukung Kami</span>
+                </div>
+                <h2 class="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight mb-6 leading-tight">
+                    Bangun Bersama<br class="hidden sm:block"> Masa Depan.
+                </h2>
+                <p class="text-lg sm:text-xl text-primary-100/80 mb-12 leading-relaxed max-w-2xl mx-auto">
+                    Dukungan Anda dalam bentuk iuran dan donasi adalah energi utama pergerakan organisasi kami.
+                </p>
+                <div class="flex flex-wrap justify-center gap-4 sm:gap-6">
+                    <ActionLink
                         v-if="$page.props.appSettings.features.donations"
-                        :href="route('public.donations.index')" 
-                        class="px-10 py-5 bg-white text-indigo-900 rounded-3xl font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-50 transition-all active:scale-95"
+                        :href="route('public.donations.index')"
+                        variant="secondary"
+                        size="lg"
                     >
                         Donasi Program
-                    </Link>
-                    <Link :href="route('login')" class="px-10 py-5 bg-indigo-700/50 backdrop-blur-md border border-white/20 text-white rounded-3xl font-black uppercase tracking-[0.2em] hover:bg-indigo-700 transition-all active:scale-95">
+                    </ActionLink>
+                    <ActionLink :href="route('login')" size="lg">
                         Bayar Iuran
-                    </Link>
+                    </ActionLink>
                 </div>
             </div>
         </div>
