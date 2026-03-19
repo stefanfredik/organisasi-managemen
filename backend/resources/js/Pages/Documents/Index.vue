@@ -134,20 +134,13 @@
         </div>
 
         <!-- Delete Confirmation Modal -->
-        <AlertDialog :open="showDeleteModal" @update:open="(val) => { if (!val) showDeleteModal = false; }">
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Konfirmasi Hapus</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Apakah Anda yakin ingin menghapus dokumen "{{ documentToDelete?.name }}"? Tindakan ini tidak dapat dibatalkan.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Batal</AlertDialogCancel>
-                    <AlertDialogAction @click="deleteDocument" class="bg-destructive text-destructive-foreground hover:bg-destructive/90">Hapus</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+        <DeleteConfirmDialog
+            :open="showDeleteModal"
+            title="Hapus Dokumen"
+            :description="`Apakah Anda yakin ingin menghapus dokumen '${documentToDelete?.name}'? Tindakan ini tidak dapat dibatalkan.`"
+            @confirm="deleteDocument"
+            @cancel="showDeleteModal = false; documentToDelete = null"
+        />
     </AuthenticatedLayout>
 </template>
 
@@ -156,9 +149,7 @@ import { ref, reactive } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Button } from '@/components/ui/button';
-import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import { Input } from '@/components/ui/input';
 import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -170,6 +161,9 @@ import {
 } from '@/components/ui/table';
 import Pagination from '@/Components/Pagination.vue';
 import { Plus, Download, Pencil, Trash2, FileText } from 'lucide-vue-next';
+import { useToast } from '@/composables/useToast';
+
+const toast = useToast();
 
 const props = defineProps({
     documents: Object,
@@ -212,6 +206,7 @@ const deleteDocument = () => {
             showDeleteModal.value = false;
             documentToDelete.value = null;
         },
+        onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus dokumen.'),
     });
 };
 

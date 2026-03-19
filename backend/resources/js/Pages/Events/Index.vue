@@ -9,11 +9,11 @@ import { Badge } from '@/components/ui/badge';
 import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-    AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import { Plus, Search, Calendar, MapPin, MoreVertical, Eye, Pencil, Trash2, SlidersHorizontal, Clock, User } from 'lucide-vue-next';
+import { useToast } from '@/composables/useToast';
+
+const toast = useToast();
 
 const props = defineProps({
     events: Object,
@@ -56,8 +56,10 @@ const confirmDelete = (event) => {
 
 const doDelete = () => {
     if (deleteTarget.value) {
-        router.delete(`/events/${deleteTarget.value.id}`);
-        deleteTarget.value = null;
+        router.delete(`/events/${deleteTarget.value.id}`, {
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus kegiatan.'),
+            onFinish: () => (deleteTarget.value = null),
+        });
     }
 };
 </script>
@@ -261,19 +263,12 @@ const doDelete = () => {
         </div>
 
         <!-- Delete Confirmation -->
-        <AlertDialog :open="!!deleteTarget" @update:open="(val) => { if (!val) deleteTarget = null; }">
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Hapus Kegiatan</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Apakah Anda yakin ingin menghapus kegiatan <strong>{{ deleteTarget?.name }}</strong>? Tindakan ini tidak dapat dibatalkan.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Batal</AlertDialogCancel>
-                    <AlertDialogAction @click="doDelete" class="bg-destructive text-destructive-foreground hover:bg-destructive/90">Hapus</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+        <DeleteConfirmDialog
+            :open="!!deleteTarget"
+            title="Hapus Kegiatan"
+            :description="`Apakah Anda yakin ingin menghapus kegiatan ${deleteTarget?.name}? Tindakan ini tidak dapat dibatalkan.`"
+            @confirm="doDelete"
+            @cancel="deleteTarget = null"
+        />
     </AuthenticatedLayout>
 </template>

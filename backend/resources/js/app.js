@@ -3,8 +3,9 @@ import './bootstrap';
 
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
-import { createApp, h } from 'vue';
+import { createApp, h, watch } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
+import { applyTheme } from './composables/useTheme';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -16,7 +17,11 @@ createInertiaApp({
             import.meta.glob('./Pages/**/*.vue'),
         ),
     setup({ el, App, props, plugin }) {
-        return createApp({ render: () => h(App, props) })
+        // Apply theme on initial load
+        const theme = props.initialPage?.props?.appSettings?.theme;
+        if (theme) applyTheme(theme);
+
+        const app = createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(ZiggyVue)
             .mixin({
@@ -28,8 +33,19 @@ createInertiaApp({
                         return user.permissions?.includes(permission);
                     }
                 }
-            })
-            .mount(el);
+            });
+
+        app.mount(el);
+
+        // Watch for theme changes after navigation
+        const vm = app.config.globalProperties;
+        if (vm.$page) {
+            watch(() => vm.$page.props.appSettings?.theme, (newTheme) => {
+                if (newTheme) applyTheme(newTheme);
+            });
+        }
+
+        return app;
     },
     progress: {
         color: '#4B5563',

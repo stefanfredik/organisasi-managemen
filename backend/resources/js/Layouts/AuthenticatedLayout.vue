@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted } from "vue";
 import ApplicationLogo from "@/Components/ApplicationLogo.vue";
 import { Link, usePage } from "@inertiajs/vue3";
 import FlashMessage from "@/Components/FlashMessage.vue";
+import Toaster from "@/Components/Toaster.vue";
 import NotificationPanel from "@/Components/NotificationPanel.vue";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -210,6 +211,7 @@ const isMoreActive = computed(() => {
     <TooltipProvider :delay-duration="0">
         <div class="min-h-screen bg-background flex">
             <FlashMessage />
+            <Toaster />
 
             <!-- ========================================
                  SIDEBAR — Desktop (lg+)

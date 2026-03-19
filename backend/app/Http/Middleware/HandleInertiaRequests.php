@@ -136,6 +136,7 @@ class HandleInertiaRequests extends Middleware
                     'backup_auto_enabled' => \App\Models\Setting::getValue('backup_auto_enabled', false),
                     'backup_frequency_days' => \App\Models\Setting::getValue('backup_frequency_days', 7),
                 ],
+                'theme' => \App\Models\Setting::getValue('app_theme_color', 'indigo'),
                 'locale' => app()->getLocale(),
                 'timezone' => \App\Models\Setting::getValue('app_timezone', config('app.timezone')),
             ],

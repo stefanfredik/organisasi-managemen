@@ -230,6 +230,17 @@ class ContributionController extends Controller
         ]);
     }
 
+    public function show(Contribution $contribution)
+    {
+        $contribution->load(['member' => function ($query) {
+            $query->withTrashed();
+        }, 'type', 'wallet', 'verifier']);
+
+        return Inertia::render('Contributions/Show', [
+            'contribution' => $contribution,
+        ]);
+    }
+
     public function getUnpaidMembers(Request $request)
     {
         $contributionTypeId = $request->query('contribution_type_id');

@@ -25,6 +25,12 @@ class SettingController extends Controller
      */
     public function index()
     {
+        // Ensure app_theme_color setting exists
+        Setting::firstOrCreate(
+            ['key' => 'app_theme_color'],
+            ['value' => 'indigo', 'group' => 'system', 'type' => 'string', 'description' => 'Tema warna utama aplikasi.']
+        );
+
         $settings = Setting::all()->groupBy('group');
         $roles = User::getRoles();
 

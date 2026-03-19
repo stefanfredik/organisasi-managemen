@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
+import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
     AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -24,6 +25,9 @@ import {
     ChevronLeft, ChevronRight, Mail,
 } from 'lucide-vue-next';
 import debounce from 'lodash/debounce';
+import { useToast } from '@/composables/useToast';
+
+const toast = useToast();
 
 const props = defineProps({
     users: Object,
@@ -53,6 +57,7 @@ const confirmDelete = () => {
     if (deleteTarget.value) {
         router.delete(route('users.destroy', deleteTarget.value.id), {
             preserveScroll: true,
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus user.'),
             onFinish: () => (deleteTarget.value = null),
         });
     }
@@ -313,20 +318,13 @@ const formatLastLogin = (val) => {
         </div>
 
         <!-- Delete Confirmation -->
-        <AlertDialog :open="!!deleteTarget" @update:open="val => !val && (deleteTarget = null)">
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Hapus User</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Apakah Anda yakin ingin menghapus user <strong>{{ deleteTarget?.name }}</strong>? Tindakan ini tidak dapat dibatalkan.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Batal</AlertDialogCancel>
-                    <AlertDialogAction variant="destructive" @click="confirmDelete">Hapus</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+        <DeleteConfirmDialog
+            :open="!!deleteTarget"
+            title="Hapus User"
+            :description="`Apakah Anda yakin ingin menghapus user ${deleteTarget?.name}? Tindakan ini tidak dapat dibatalkan.`"
+            @confirm="confirmDelete"
+            @cancel="deleteTarget = null"
+        />
 
         <!-- Reset Password Confirmation -->
         <AlertDialog :open="!!resetTarget" @update:open="val => !val && (resetTarget = null)">

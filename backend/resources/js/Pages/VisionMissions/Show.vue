@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue';
 import { Head, Link, router } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,10 @@ import {
     ArrowLeft, Pencil, Trash2, MoreVertical, Lightbulb, Target,
     Calendar, User, Clock, History,
 } from "lucide-vue-next";
+import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
+import { useToast } from '@/composables/useToast';
+
+const toast = useToast();
 
 const props = defineProps({
     visionMission: Object,
@@ -34,10 +39,15 @@ const formatDateTime = (date) => {
     });
 };
 
+const showDeleteModal = ref(false);
 const deleteVisionMission = () => {
-    if (confirm("Apakah Anda yakin ingin menghapus visi & misi ini?")) {
-        router.delete(route("vision-missions.destroy", props.visionMission.id));
-    }
+    showDeleteModal.value = true;
+};
+const confirmDeleteVisionMission = () => {
+    router.delete(route("vision-missions.destroy", props.visionMission.id), {
+        onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus data.'),
+        onFinish: () => (showDeleteModal.value = false),
+    });
 };
 </script>
 
@@ -198,5 +208,12 @@ const deleteVisionMission = () => {
 
             </div>
         </div>
+        <DeleteConfirmDialog
+            :open="showDeleteModal"
+            title="Hapus Visi & Misi"
+            description="Apakah Anda yakin ingin menghapus visi & misi ini? Tindakan ini tidak dapat dibatalkan."
+            @confirm="confirmDeleteVisionMission"
+            @cancel="showDeleteModal = false"
+        />
     </AuthenticatedLayout>
 </template>

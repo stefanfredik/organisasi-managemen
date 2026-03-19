@@ -19,6 +19,10 @@ import {
     Plus, Pencil, Trash2, Wallet, TrendingUp, TrendingDown, ArrowRight,
     MoreVertical, Eye, CreditCard, Save, Banknote, FileText, ToggleLeft,
 } from "lucide-vue-next";
+import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
+import { useToast } from '@/composables/useToast';
+
+const toast = useToast();
 
 const props = defineProps({
     wallets: Array,
@@ -115,9 +119,16 @@ const submit = () => {
     }
 };
 
+const deleteTarget = ref(null);
 const deleteWallet = (wallet) => {
-    if (confirm(`Apakah Anda yakin ingin menghapus dompet "${wallet.name}"?`)) {
-        form.delete(route("wallets.destroy", wallet.id));
+    deleteTarget.value = wallet;
+};
+const confirmDeleteWallet = () => {
+    if (deleteTarget.value) {
+        form.delete(route("wallets.destroy", deleteTarget.value.id), {
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus dompet.'),
+            onFinish: () => (deleteTarget.value = null),
+        });
     }
 };
 
@@ -307,6 +318,14 @@ const getGradient = (index) => cardGradients[index % cardGradients.length];
                 </div>
             </div>
         </div>
+
+        <DeleteConfirmDialog
+            :open="!!deleteTarget"
+            title="Hapus Dompet"
+            description="Apakah Anda yakin ingin menghapus dompet ini? Semua transaksi terkait juga akan dihapus. Tindakan ini tidak dapat dibatalkan."
+            @confirm="confirmDeleteWallet"
+            @cancel="deleteTarget = null"
+        />
 
         <!-- Dialog Create/Edit -->
         <Dialog v-model:open="showModal">

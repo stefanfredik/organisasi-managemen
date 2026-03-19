@@ -19,6 +19,10 @@ import {
     Plus, TrendingUp, TrendingDown, Wallet, Calendar, Camera, X,
     Search, SlidersHorizontal, MoreVertical, Eye, Trash2,
 } from 'lucide-vue-next';
+import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
+import { useToast } from '@/composables/useToast';
+
+const toast = useToast();
 
 const props = defineProps({
     finances: Object,
@@ -187,9 +191,17 @@ const submit = () => {
     });
 };
 
+const deleteFinanceTarget = ref(null);
 const deleteFinance = (finance) => {
-    if (confirm('Apakah Anda yakin ingin menghapus transaksi ini? Saldo dompet akan disesuaikan kembali.')) {
-        router.delete(route('finances.destroy', finance.id), { preserveScroll: true });
+    deleteFinanceTarget.value = finance;
+};
+const confirmDeleteFinance = () => {
+    if (deleteFinanceTarget.value) {
+        router.delete(route('finances.destroy', deleteFinanceTarget.value.id), {
+            preserveScroll: true,
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus transaksi.'),
+            onFinish: () => (deleteFinanceTarget.value = null),
+        });
     }
 };
 
@@ -494,6 +506,14 @@ watch(() => form.type, () => { form.category = ''; });
                 </div>
             </div>
         </div>
+
+        <DeleteConfirmDialog
+            :open="!!deleteFinanceTarget"
+            title="Hapus Transaksi"
+            description="Apakah Anda yakin ingin menghapus transaksi ini? Tindakan ini tidak dapat dibatalkan."
+            @confirm="confirmDeleteFinance"
+            @cancel="deleteFinanceTarget = null"
+        />
 
         <!-- Filter Sheet (Members-style) -->
         <Sheet :open="showFiltersSheet" @update:open="showFiltersSheet = $event">

@@ -406,6 +406,13 @@ class SettingSeeder extends Seeder
                 'type' => 'string',
                 'description' => 'Warna utama tema portal publik (format hex, misal: #3B82F6).',
             ],
+            [
+                'key' => 'app_theme_color',
+                'value' => 'indigo',
+                'group' => 'system',
+                'type' => 'string',
+                'description' => 'Tema warna utama aplikasi.',
+            ],
 
             // ============================================
             // SYSTEM — Konfigurasi Sistem

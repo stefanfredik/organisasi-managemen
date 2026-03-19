@@ -23,6 +23,10 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import FilterDropdown from '@/Components/FilterDropdown.vue';
 import { Plus, MoreHorizontal, MoreVertical, Eye, Pencil, Trash2, SlidersHorizontal, X, Search, Phone, ChevronRight } from 'lucide-vue-next';
+import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
+import { useToast } from '@/composables/useToast';
+
+const toast = useToast();
 
 const props = defineProps({
     members: Object,
@@ -111,9 +115,16 @@ const applyFilters = () => {
     }, { preserveState: true, replace: true });
 };
 
+const deleteTarget = ref(null);
 const deleteMember = (member) => {
-    if (confirm(`Hapus anggota ${member.full_name}?`)) {
-        router.delete(`/members/${member.id}`);
+    deleteTarget.value = member;
+};
+const confirmDeleteMember = () => {
+    if (deleteTarget.value) {
+        router.delete(`/members/${deleteTarget.value.id}`, {
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus anggota.'),
+            onFinish: () => (deleteTarget.value = null),
+        });
     }
 };
 
@@ -363,6 +374,14 @@ const formatName = (row) => {
                 </div>
             </div>
         </div>
+
+        <DeleteConfirmDialog
+            :open="!!deleteTarget"
+            title="Hapus Anggota"
+            description="Apakah Anda yakin ingin menghapus anggota ini? Tindakan ini tidak dapat dibatalkan."
+            @confirm="confirmDeleteMember"
+            @cancel="deleteTarget = null"
+        />
 
         <!-- Filter Sheet -->
         <Sheet :open="showFiltersSheet" @update:open="showFiltersSheet = $event">

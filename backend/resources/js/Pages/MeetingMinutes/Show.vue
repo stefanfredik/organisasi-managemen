@@ -4,16 +4,16 @@ import { Head, Link, router } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-    AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
     ArrowLeft, Pencil, Trash2, CalendarDays, UserCircle, Users, FileText, Download, Inbox, MoreVertical,
 } from "lucide-vue-next";
+import { useToast } from '@/composables/useToast';
+
+const toast = useToast();
 
 const props = defineProps({
     record: Object,
@@ -44,7 +44,10 @@ const formatFileSize = (bytes) => {
 
 const showDeleteDialog = ref(false);
 const confirmDelete = () => {
-    router.delete(route("meeting-minutes.destroy", props.record.id));
+    router.delete(route("meeting-minutes.destroy", props.record.id), {
+        onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus notulensi.'),
+        onFinish: () => (showDeleteDialog.value = false),
+    });
 };
 </script>
 
@@ -178,19 +181,12 @@ const confirmDelete = () => {
         </div>
 
         <!-- Delete Confirmation -->
-        <AlertDialog :open="showDeleteDialog" @update:open="val => (showDeleteDialog = val)">
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Hapus Notulensi Rapat</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Apakah Anda yakin ingin menghapus notulensi <strong>{{ record.agenda }}</strong>? Tindakan ini tidak dapat dibatalkan.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Batal</AlertDialogCancel>
-                    <AlertDialogAction variant="destructive" @click="confirmDelete">Hapus</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+        <DeleteConfirmDialog
+            :open="showDeleteDialog"
+            title="Hapus Notulensi Rapat"
+            :description="`Apakah Anda yakin ingin menghapus notulensi ${record.agenda}? Tindakan ini tidak dapat dibatalkan.`"
+            @confirm="confirmDelete"
+            @cancel="showDeleteDialog = false"
+        />
     </AuthenticatedLayout>
 </template>

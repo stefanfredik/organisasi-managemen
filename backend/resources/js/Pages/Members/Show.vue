@@ -8,10 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import {
     Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
-import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-    AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -20,6 +17,9 @@ import {
     MoreVertical, Briefcase, Heart, Shield, Clock, FileText, CreditCard,
     ChevronRight,
 } from 'lucide-vue-next';
+import { useToast } from '@/composables/useToast';
+
+const toast = useToast();
 
 const props = defineProps({
     member: Object,
@@ -40,8 +40,10 @@ const tabs = [
 ];
 
 const deleteMember = () => {
-    router.delete(`/members/${props.member.id}`);
-    showDeleteDialog.value = false;
+    router.delete(`/members/${props.member.id}`, {
+        onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus anggota.'),
+        onFinish: () => (showDeleteDialog.value = false),
+    });
 };
 
 const formatDate = (date) => {
@@ -692,20 +694,13 @@ const getStatusLabel = (status) => {
         </Dialog>
 
         <!-- Delete Confirmation -->
-        <AlertDialog :open="showDeleteDialog" @update:open="(val) => { if (!val) showDeleteDialog = false; }">
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Hapus Anggota</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Apakah Anda yakin ingin menghapus anggota <strong>{{ member.full_name }}</strong>? Tindakan ini tidak dapat dibatalkan.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Batal</AlertDialogCancel>
-                    <AlertDialogAction @click="deleteMember" class="bg-destructive text-destructive-foreground hover:bg-destructive/90">Hapus</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+        <DeleteConfirmDialog
+            :open="showDeleteDialog"
+            title="Hapus Anggota"
+            :description="`Apakah Anda yakin ingin menghapus anggota ${member.full_name}? Tindakan ini tidak dapat dibatalkan.`"
+            @confirm="deleteMember"
+            @cancel="showDeleteDialog = false"
+        />
     </AuthenticatedLayout>
 </template>
 

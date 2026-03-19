@@ -17,6 +17,10 @@ import {
     Plus, MoreVertical, Pencil, Trash2, SlidersHorizontal, X,
     Search, ChevronRight, ChevronDown, Network, Table2, Users,
 } from "lucide-vue-next";
+import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
+import { useToast } from '@/composables/useToast';
+
+const toast = useToast();
 
 const props = defineProps({
     structures: Array,
@@ -150,10 +154,16 @@ const levelColors = [
 
 const getLevelColor = (level) => levelColors[level % levelColors.length];
 
+const deleteTarget = ref(null);
 const confirmDelete = (id) => {
-    if (confirm('Hapus posisi ini?')) {
-        router.delete(route('organization-structures.destroy', id), {
+    deleteTarget.value = id;
+};
+const executeDelete = () => {
+    if (deleteTarget.value) {
+        router.delete(route('organization-structures.destroy', deleteTarget.value), {
             preserveScroll: true,
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus struktur organisasi.'),
+            onFinish: () => (deleteTarget.value = null),
         });
     }
 };
@@ -487,6 +497,14 @@ const confirmDelete = (id) => {
 
             </div>
         </div>
+
+        <DeleteConfirmDialog
+            :open="!!deleteTarget"
+            title="Hapus Posisi"
+            description="Apakah Anda yakin ingin menghapus posisi ini? Tindakan ini tidak dapat dibatalkan."
+            @confirm="executeDelete"
+            @cancel="deleteTarget = null"
+        />
 
         <!-- Mobile Filter Sheet -->
         <Sheet v-model:open="filterOpen">

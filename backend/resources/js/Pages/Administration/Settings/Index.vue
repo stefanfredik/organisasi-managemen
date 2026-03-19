@@ -8,8 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
     Building2, Coins, Hash, Globe, Settings, ShieldCheck, Loader2, Check,
-    Upload, X, Image as ImageIcon, Info,
+    Upload, X, Image as ImageIcon, Info, Palette,
 } from "lucide-vue-next";
+import { getThemes, applyTheme } from "@/composables/useTheme";
 
 const props = defineProps({
     settings: Object,
@@ -195,6 +196,7 @@ const labelMap = {
     date_format: "Format Tanggal",
     backup_auto_enabled: "Backup Otomatis",
     backup_frequency_days: "Frekuensi Backup (Hari)",
+    app_theme_color: "Tema Warna Aplikasi",
 };
 
 const formatLabel = (key) => {
@@ -230,6 +232,7 @@ const groupSections = {
         { title: "Lainnya", desc: "Footer, kontak, maps, dan warna tema", keys: ["portal_footer_text", "portal_contact_email", "portal_google_maps_embed", "portal_primary_color"] },
     ],
     system: [
+        { title: "Tema Warna", desc: "Pilih warna tema utama aplikasi", keys: ["app_theme_color"] },
         { title: "Modul Fitur", desc: "Aktifkan atau nonaktifkan modul sistem", keys: ["enable_donations", "enable_gallery", "enable_contributions", "enable_events", "enable_meeting_minutes", "enable_announcements", "enable_public_portal"] },
         { title: "Fitur Anggota", desc: "Pengaturan terkait anggota", keys: ["enable_member_self_update", "enable_member_card", "default_member_status", "allow_public_registration"] },
         { title: "Notifikasi", desc: "Pengaturan kanal notifikasi", keys: ["enable_email_notifications", "enable_whatsapp_notifications"] },
@@ -296,6 +299,19 @@ const togglePermission = (role, permKey) => {
         perms.push(permKey);
     }
     setting.value = JSON.stringify(perms);
+};
+
+// ===== Theme Color Picker =====
+const themePresets = getThemes();
+
+const themeSetting = computed(() => getSettingByKey('app_theme_color'));
+const currentTheme = computed(() => themeSetting.value?.value || 'indigo');
+
+const selectTheme = (key) => {
+    if (themeSetting.value) {
+        themeSetting.value.value = key;
+    }
+    applyTheme(key);
 };
 
 const roleLabels = { ketua: "Ketua", bendahara: "Bendahara", sekretaris: "Sekretaris", anggota: "Anggota" };
@@ -375,7 +391,40 @@ const roleColors = {
                                         <div class="space-y-4 sm:space-y-5 pl-0 sm:pl-3 border-l-0 sm:border-l-2 sm:border-primary/10">
                                             <template v-for="key in section.keys" :key="key">
                                                 <template v-if="getSettingByKey(key)">
-                                                    <div v-if="getSettingByKey(key).type === 'string'" class="sm:pl-3">
+                                                    <!-- Theme Color Picker (must be before string check) -->
+                                                    <div v-if="key === 'app_theme_color'" class="sm:pl-3">
+                                                        <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                                                            <Palette class="w-3.5 h-3.5" />
+                                                            {{ formatLabel(key) }}
+                                                        </Label>
+                                                        <p class="text-[10px] sm:text-xs text-muted-foreground mt-1 mb-3">Pilih template warna untuk tampilan aplikasi. Perubahan langsung terlihat.</p>
+                                                        <div class="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                                                            <button
+                                                                v-for="(theme, tKey) in themePresets"
+                                                                :key="tKey"
+                                                                type="button"
+                                                                @click="selectTheme(tKey)"
+                                                                class="group relative flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all duration-200 hover:shadow-md"
+                                                                :class="currentTheme === tKey
+                                                                    ? 'border-foreground bg-muted shadow-sm scale-[1.02]'
+                                                                    : 'border-transparent bg-card hover:border-muted-foreground/20 hover:bg-muted/50'"
+                                                            >
+                                                                <div
+                                                                    class="w-8 h-8 sm:w-10 sm:h-10 rounded-full shadow-inner transition-transform group-hover:scale-110"
+                                                                    :style="{ backgroundColor: theme.color }"
+                                                                />
+                                                                <span class="text-[10px] sm:text-xs font-medium text-foreground">{{ theme.label }}</span>
+                                                                <div
+                                                                    v-if="currentTheme === tKey"
+                                                                    class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-foreground text-background flex items-center justify-center"
+                                                                >
+                                                                    <Check class="w-3 h-3" />
+                                                                </div>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <div v-else-if="getSettingByKey(key).type === 'string'" class="sm:pl-3">
                                                         <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">{{ formatLabel(key) }}</Label>
                                                         <Input v-model="getSettingByKey(key).value" type="text" class="mt-1.5" :placeholder="getSettingByKey(key).description" />
                                                         <p v-if="getSettingByKey(key).description" class="text-[10px] sm:text-xs text-muted-foreground mt-1">{{ getSettingByKey(key).description }}</p>

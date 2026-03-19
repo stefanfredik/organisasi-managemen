@@ -16,16 +16,10 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
+import { useToast } from '@/composables/useToast';
+
+const toast = useToast();
 
 const props = defineProps({
     donations: Object,
@@ -92,6 +86,7 @@ const deleteTarget = ref(null);
 const confirmDelete = () => {
     if (deleteTarget.value) {
         router.delete(route('donations.destroy', deleteTarget.value), {
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus program donasi.'),
             onFinish: () => deleteTarget.value = null,
         });
     }
@@ -342,19 +337,12 @@ const confirmDelete = () => {
             </div>
         </div>
         <!-- Delete Confirmation -->
-        <AlertDialog :open="!!deleteTarget" @update:open="val => !val && (deleteTarget = null)">
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Hapus Program Donasi</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Apakah Anda yakin ingin menghapus program <strong>{{ deleteTarget?.program_name }}</strong>? Tindakan ini tidak dapat dibatalkan.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Batal</AlertDialogCancel>
-                    <AlertDialogAction variant="destructive" @click="confirmDelete">Hapus</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+        <DeleteConfirmDialog
+            :open="!!deleteTarget"
+            title="Hapus Program Donasi"
+            :description="`Apakah Anda yakin ingin menghapus program ${deleteTarget?.program_name}? Tindakan ini tidak dapat dibatalkan.`"
+            @confirm="confirmDelete"
+            @cancel="deleteTarget = null"
+        />
     </AuthenticatedLayout>
 </template>

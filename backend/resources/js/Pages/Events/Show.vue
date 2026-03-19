@@ -10,10 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import {
     Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
-import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-    AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -26,6 +23,9 @@ import 'leaflet/dist/leaflet.css';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIconImg from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import { useToast } from '@/composables/useToast';
+
+const toast = useToast();
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -183,8 +183,10 @@ const formatDateShort = (date) => {
 };
 
 const deleteEvent = () => {
-    router.delete(route('events.destroy', props.event));
-    showDeleteDialog.value = false;
+    router.delete(route('events.destroy', props.event), {
+        onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus kegiatan.'),
+        onFinish: () => (showDeleteDialog.value = false),
+    });
 };
 
 const addParticipant = () => {
@@ -196,8 +198,10 @@ const addParticipant = () => {
 const confirmRemoveParticipant = (member) => { deleteParticipantTarget.value = member; };
 const doRemoveParticipant = () => {
     if (deleteParticipantTarget.value) {
-        router.delete(route('events.participants.remove', [props.event, deleteParticipantTarget.value]));
-        deleteParticipantTarget.value = null;
+        router.delete(route('events.participants.remove', [props.event, deleteParticipantTarget.value]), {
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus peserta.'),
+            onFinish: () => (deleteParticipantTarget.value = null),
+        });
     }
 };
 
@@ -215,8 +219,10 @@ const uploadDoc = () => {
 const confirmDeleteDoc = (doc) => { deleteDocTarget.value = doc; };
 const doDeleteDoc = () => {
     if (deleteDocTarget.value) {
-        router.delete(route('events.documentations.destroy', [props.event, deleteDocTarget.value]));
-        deleteDocTarget.value = null;
+        router.delete(route('events.documentations.destroy', [props.event, deleteDocTarget.value]), {
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus dokumentasi.'),
+            onFinish: () => (deleteDocTarget.value = null),
+        });
     }
 };
 
@@ -840,46 +846,31 @@ const resetDocForm = () => {
         </Dialog>
 
         <!-- Delete Event -->
-        <AlertDialog :open="showDeleteDialog" @update:open="(val) => { if (!val) showDeleteDialog = false; }">
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Hapus Kegiatan</AlertDialogTitle>
-                    <AlertDialogDescription>Apakah Anda yakin ingin menghapus kegiatan <strong>{{ event.name }}</strong>? Tindakan ini tidak dapat dibatalkan.</AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Batal</AlertDialogCancel>
-                    <AlertDialogAction @click="deleteEvent" class="bg-destructive text-destructive-foreground hover:bg-destructive/90">Hapus</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+        <DeleteConfirmDialog
+            :open="showDeleteDialog"
+            title="Hapus Kegiatan"
+            :description="`Apakah Anda yakin ingin menghapus kegiatan ${event.name}? Tindakan ini tidak dapat dibatalkan.`"
+            @confirm="deleteEvent"
+            @cancel="showDeleteDialog = false"
+        />
 
         <!-- Delete Participant -->
-        <AlertDialog :open="!!deleteParticipantTarget" @update:open="(val) => { if (!val) deleteParticipantTarget = null; }">
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Hapus Peserta</AlertDialogTitle>
-                    <AlertDialogDescription>Hapus <strong>{{ deleteParticipantTarget?.full_name }}</strong> dari daftar peserta?</AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Batal</AlertDialogCancel>
-                    <AlertDialogAction @click="doRemoveParticipant" class="bg-destructive text-destructive-foreground hover:bg-destructive/90">Hapus</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+        <DeleteConfirmDialog
+            :open="!!deleteParticipantTarget"
+            title="Hapus Peserta"
+            :description="`Hapus ${deleteParticipantTarget?.full_name} dari daftar peserta?`"
+            @confirm="doRemoveParticipant"
+            @cancel="deleteParticipantTarget = null"
+        />
 
         <!-- Delete Doc -->
-        <AlertDialog :open="!!deleteDocTarget" @update:open="(val) => { if (!val) deleteDocTarget = null; }">
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Hapus Dokumentasi</AlertDialogTitle>
-                    <AlertDialogDescription>Apakah Anda yakin ingin menghapus foto ini?</AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Batal</AlertDialogCancel>
-                    <AlertDialogAction @click="doDeleteDoc" class="bg-destructive text-destructive-foreground hover:bg-destructive/90">Hapus</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+        <DeleteConfirmDialog
+            :open="!!deleteDocTarget"
+            title="Hapus Dokumentasi"
+            description="Apakah Anda yakin ingin menghapus foto ini?"
+            @confirm="doDeleteDoc"
+            @cancel="deleteDocTarget = null"
+        />
     </AuthenticatedLayout>
 </template>
 

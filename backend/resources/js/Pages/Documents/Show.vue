@@ -106,20 +106,13 @@
         </div>
 
         <!-- Delete Confirmation Modal -->
-        <AlertDialog :open="showDeleteModal" @update:open="(val) => { if (!val) showDeleteModal = false; }">
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Konfirmasi Hapus</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Apakah Anda yakin ingin menghapus dokumen "{{ document.name }}"? Tindakan ini tidak dapat dibatalkan.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Batal</AlertDialogCancel>
-                    <AlertDialogAction @click="deleteDocument" class="bg-destructive text-destructive-foreground hover:bg-destructive/90">Hapus</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+        <DeleteConfirmDialog
+            :open="showDeleteModal"
+            title="Hapus Dokumen"
+            :description="`Apakah Anda yakin ingin menghapus dokumen '${document.name}'? Tindakan ini tidak dapat dibatalkan.`"
+            @confirm="deleteDocument"
+            @cancel="showDeleteModal = false"
+        />
     </AuthenticatedLayout>
 </template>
 
@@ -130,10 +123,11 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import { Download, Pencil, Trash2, FileText } from 'lucide-vue-next';
+import { useToast } from '@/composables/useToast';
+
+const toast = useToast();
 
 const props = defineProps({
     document: Object,
@@ -150,6 +144,7 @@ const deleteDocument = () => {
         onSuccess: () => {
             showDeleteModal.value = false;
         },
+        onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus dokumen.'),
     });
 };
 

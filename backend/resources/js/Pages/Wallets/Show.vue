@@ -13,7 +13,11 @@ import {
     Calendar, Search, BarChart3, ArrowUpRight, ArrowDownRight, CreditCard,
     Users, Receipt,
 } from "lucide-vue-next";
+import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import { debounce } from "lodash";
+import { useToast } from '@/composables/useToast';
+
+const toast = useToast();
 
 const props = defineProps({
     wallet: Object,
@@ -79,10 +83,15 @@ const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
 };
 
+const showDeleteModal = ref(false);
 const deleteWallet = () => {
-    if (confirm("Apakah Anda yakin ingin menghapus dompet ini?")) {
-        router.delete(route("wallets.destroy", props.wallet.id));
-    }
+    showDeleteModal.value = true;
+};
+const confirmDeleteWallet = () => {
+    router.delete(route("wallets.destroy", props.wallet.id), {
+        onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus dompet.'),
+        onFinish: () => (showDeleteModal.value = false),
+    });
 };
 
 const tabs = [
@@ -478,5 +487,12 @@ const tabs = [
 
             </div>
         </div>
+        <DeleteConfirmDialog
+            :open="showDeleteModal"
+            title="Hapus Dompet"
+            description="Apakah Anda yakin ingin menghapus dompet ini? Semua transaksi terkait juga akan dihapus. Tindakan ini tidak dapat dibatalkan."
+            @confirm="confirmDeleteWallet"
+            @cancel="showDeleteModal = false"
+        />
     </AuthenticatedLayout>
 </template>

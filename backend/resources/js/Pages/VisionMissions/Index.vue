@@ -17,6 +17,10 @@ import {
     Plus, Eye, Pencil, Trash2, MoreVertical, Search, SlidersHorizontal,
     X, Lightbulb, Target, Calendar, User,
 } from "lucide-vue-next";
+import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
+import { useToast } from '@/composables/useToast';
+
+const toast = useToast();
 
 const props = defineProps({
     visionMissions: Object,
@@ -60,9 +64,17 @@ const clearStatus = () => {
     status.value = "";
 };
 
+const deleteTarget = ref(null);
 const confirmDelete = (id) => {
-    if (confirm("Hapus visi & misi ini?")) {
-        router.delete(route("vision-missions.destroy", id), { preserveScroll: true });
+    deleteTarget.value = id;
+};
+const executeDelete = () => {
+    if (deleteTarget.value) {
+        router.delete(route("vision-missions.destroy", deleteTarget.value), {
+            preserveScroll: true,
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus data.'),
+            onFinish: () => (deleteTarget.value = null),
+        });
     }
 };
 </script>
@@ -349,6 +361,7 @@ const confirmDelete = (id) => {
                 </div>
             </SheetContent>
         </Sheet>
+        <DeleteConfirmDialog :open="!!deleteTarget" title="Hapus Visi & Misi" description="Apakah Anda yakin ingin menghapus visi & misi ini? Tindakan ini tidak dapat dibatalkan." @confirm="executeDelete" @cancel="deleteTarget = null" />
     </AuthenticatedLayout>
 </template>
 

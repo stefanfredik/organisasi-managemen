@@ -9,10 +9,6 @@ import {
     Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-    AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -20,6 +16,10 @@ import {
     Calendar, User, Tag, Eye, ChevronLeft, ChevronRight, X,
     MoreVertical,
 } from "lucide-vue-next";
+import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
+import { useToast } from '@/composables/useToast';
+
+const toast = useToast();
 
 const props = defineProps({
     album: Object,
@@ -48,6 +48,7 @@ const deleteAlbum = () => {
         onSuccess: () => {
             showDeleteModal.value = false;
         },
+        onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus album.'),
     });
 };
 
@@ -103,10 +104,16 @@ const nextPhoto = () => {
     }
 };
 
+const deletePhotoTarget = ref(null);
 const deletePhoto = (photo) => {
-    if (confirm("Apakah Anda yakin ingin menghapus foto ini?")) {
-        router.delete(route("albums.photos.destroy", [props.album, photo]), {
+    deletePhotoTarget.value = photo;
+};
+const confirmDeletePhoto = () => {
+    if (deletePhotoTarget.value) {
+        router.delete(route("albums.photos.destroy", [props.album, deletePhotoTarget.value]), {
             preserveScroll: true,
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus foto.'),
+            onFinish: () => (deletePhotoTarget.value = null),
         });
     }
 };
@@ -305,27 +312,13 @@ const getCategoryVariant = (cat) => {
         </div>
 
         <!-- Delete Confirmation Dialog -->
-        <AlertDialog v-model:open="showDeleteModal">
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Hapus Album</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Apakah Anda yakin ingin menghapus album "{{ album.name }}"?
-                        Semua foto dalam album ini juga akan dihapus. Tindakan ini tidak dapat dibatalkan.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Batal</AlertDialogCancel>
-                    <AlertDialogAction
-                        @click="deleteAlbum"
-                        class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        :disabled="deleteForm.processing"
-                    >
-                        Hapus Album
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+        <DeleteConfirmDialog
+            :open="showDeleteModal"
+            title="Hapus Album"
+            description="Apakah Anda yakin ingin menghapus album ini? Semua foto dalam album juga akan dihapus. Tindakan ini tidak dapat dibatalkan."
+            @confirm="deleteAlbum"
+            @cancel="showDeleteModal = false"
+        />
 
         <!-- Upload Photos Dialog -->
         <Dialog v-model:open="showUploadModal">
@@ -452,5 +445,6 @@ const getCategoryVariant = (cat) => {
                 </div>
             </DialogContent>
         </Dialog>
+        <DeleteConfirmDialog :open="!!deletePhotoTarget" title="Hapus Foto" description="Apakah Anda yakin ingin menghapus foto ini? Tindakan ini tidak dapat dibatalkan." @confirm="confirmDeletePhoto" @cancel="deletePhotoTarget = null" />
     </AuthenticatedLayout>
 </template>

@@ -1,20 +1,36 @@
 <script setup>
+import { ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
+import { useToast } from '@/composables/useToast';
+
+const toast = useToast();
 
 const props = defineProps({
     backups: Array,
 });
 
+const showCreateConfirm = ref(false);
+const deleteTargetFile = ref(null);
+
 const createBackup = () => {
-    router.post(route('backups.create'), {}, {
-        onBefore: () => confirm('Membuat backup mungkin membutuhkan waktu beberapa saat. Lanjutkan?'),
-    });
+    showCreateConfirm.value = true;
+};
+const confirmCreateBackup = () => {
+    showCreateConfirm.value = false;
+    router.post(route('backups.create'));
 };
 
 const deleteBackup = (fileName) => {
-    if (confirm('Apakah Anda yakin ingin menghapus file backup ini?')) {
-        router.delete(route('backups.destroy', fileName));
+    deleteTargetFile.value = fileName;
+};
+const confirmDeleteBackup = () => {
+    if (deleteTargetFile.value) {
+        router.delete(route('backups.destroy', deleteTargetFile.value), {
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus backup.'),
+            onFinish: () => (deleteTargetFile.value = null),
+        });
     }
 };
 

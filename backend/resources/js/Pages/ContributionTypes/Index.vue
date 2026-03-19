@@ -17,15 +17,15 @@ import {
 import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-    AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import {
     Plus, Pencil, Trash2, MoreVertical, Settings2, Wallet,
     CalendarClock, Repeat, CircleDot, TrendingUp, Users,
     Loader2, Search, CalendarDays, Clock,
 } from 'lucide-vue-next';
+import { useToast } from '@/composables/useToast';
+
+const toast = useToast();
 
 const props = defineProps({
     types: Array,
@@ -171,7 +171,8 @@ const executeDelete = () => {
             showDeleteDialog.value = false;
             deletingType.value = null;
         },
-        onError: () => {
+        onError: (errors) => {
+            toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus jenis iuran.');
             showDeleteDialog.value = false;
             deletingType.value = null;
         },
@@ -505,27 +506,12 @@ const executeDelete = () => {
         </Dialog>
 
         <!-- Delete Confirmation -->
-        <AlertDialog :open="showDeleteDialog" @update:open="(val) => { if (!val) { showDeleteDialog = false; deletingType = null; } }">
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Hapus Jenis Iuran?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Jenis iuran <span class="font-semibold text-foreground">{{ deletingType?.name }}</span> akan dihapus.
-                        Tindakan ini tidak bisa dibatalkan.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel @click="showDeleteDialog = false; deletingType = null">Batal</AlertDialogCancel>
-                    <AlertDialogAction
-                        class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        :disabled="deleteForm.processing"
-                        @click="executeDelete"
-                    >
-                        <Loader2 v-if="deleteForm.processing" class="w-4 h-4 mr-1.5 animate-spin" />
-                        Hapus
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+        <DeleteConfirmDialog
+            :open="showDeleteDialog"
+            title="Hapus Jenis Iuran?"
+            :description="`Jenis iuran ${deletingType?.name} akan dihapus. Tindakan ini tidak bisa dibatalkan.`"
+            @confirm="executeDelete"
+            @cancel="showDeleteDialog = false; deletingType = null"
+        />
     </AuthenticatedLayout>
 </template>

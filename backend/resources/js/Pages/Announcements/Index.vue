@@ -9,10 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-    AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import {
     Plus, Eye, Pencil, Trash2, Megaphone, CalendarDays, Users, Inbox,
     ChevronLeft, ChevronRight, MoreVertical,
@@ -20,6 +17,9 @@ import {
 import {
     Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
+import { useToast } from '@/composables/useToast';
+
+const toast = useToast();
 
 const props = defineProps({
     announcements: Object,
@@ -65,6 +65,7 @@ const confirmDelete = () => {
     if (deleteTarget.value) {
         router.delete(route("announcements.destroy", deleteTarget.value.id), {
             preserveScroll: true,
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus pengumuman.'),
             onFinish: () => (deleteTarget.value = null),
         });
     }
@@ -250,20 +251,13 @@ const closeDetail = () => { showDetailSheet.value = false; detailItem.value = nu
         </div>
 
         <!-- Delete Confirmation -->
-        <AlertDialog :open="!!deleteTarget" @update:open="val => !val && (deleteTarget = null)">
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Hapus Pengumuman</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Apakah Anda yakin ingin menghapus pengumuman <strong>{{ deleteTarget?.title }}</strong>? Tindakan ini tidak dapat dibatalkan.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Batal</AlertDialogCancel>
-                    <AlertDialogAction variant="destructive" @click="confirmDelete">Hapus</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+        <DeleteConfirmDialog
+            :open="!!deleteTarget"
+            title="Hapus Pengumuman"
+            :description="`Apakah Anda yakin ingin menghapus pengumuman ${deleteTarget?.title}? Tindakan ini tidak dapat dibatalkan.`"
+            @confirm="confirmDelete"
+            @cancel="deleteTarget = null"
+        />
 
         <!-- Mobile: Detail Sheet -->
         <Sheet :open="showDetailSheet" @update:open="val => { if (!val) closeDetail(); }">

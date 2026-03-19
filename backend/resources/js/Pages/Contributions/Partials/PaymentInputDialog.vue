@@ -49,7 +49,7 @@ const manualForm = useForm({
 });
 
 const selectedType = computed(() => {
-    return props.types?.find((t) => t.id === manualForm.contribution_type_id) || null;
+    return props.types?.find((t) => String(t.id) === String(manualForm.contribution_type_id)) || null;
 });
 
 const selectedMember = computed(() => {

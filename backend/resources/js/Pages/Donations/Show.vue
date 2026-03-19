@@ -24,6 +24,10 @@ import {
 import {
     Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from '@/components/ui/sheet';
+import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
+import { useToast } from '@/composables/useToast';
+
+const toast = useToast();
 
 const props = defineProps({
     donation: Object,
@@ -229,10 +233,15 @@ const submitVerification = (action) => {
     });
 };
 
+const showDeleteDonationModal = ref(false);
 const deleteDonation = () => {
-    if (confirm('Apakah Anda yakin ingin menghapus program donasi ini?')) {
-        router.delete(route('donations.destroy', props.donation.id));
-    }
+    showDeleteDonationModal.value = true;
+};
+const confirmDeleteDonation = () => {
+    router.delete(route('donations.destroy', props.donation.id), {
+        onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus program donasi.'),
+        onFinish: () => (showDeleteDonationModal.value = false),
+    });
 };
 
 // Edit/Delete Transaction
@@ -269,9 +278,16 @@ const submitEditTransaction = () => {
     });
 };
 
+const deleteTransactionTarget = ref(null);
 const deleteTransaction = (tx) => {
-    if (confirm(`Hapus transaksi donasi dari ${tx.donor_name || 'Anonim'}?`)) {
-        router.delete(route('donations.transactions.destroy', tx.id));
+    deleteTransactionTarget.value = tx;
+};
+const confirmDeleteTransaction = () => {
+    if (deleteTransactionTarget.value) {
+        router.delete(route('donations.transactions.destroy', deleteTransactionTarget.value.id), {
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus transaksi.'),
+            onFinish: () => (deleteTransactionTarget.value = null),
+        });
     }
 };
 </script>
@@ -1126,5 +1142,21 @@ const deleteTransaction = (tx) => {
                 </template>
             </SheetContent>
         </Sheet>
+
+        <DeleteConfirmDialog
+            :open="showDeleteDonationModal"
+            title="Hapus Program Donasi"
+            description="Apakah Anda yakin ingin menghapus program donasi ini? Semua transaksi terkait juga akan dihapus. Tindakan ini tidak dapat dibatalkan."
+            @confirm="confirmDeleteDonation"
+            @cancel="showDeleteDonationModal = false"
+        />
+
+        <DeleteConfirmDialog
+            :open="!!deleteTransactionTarget"
+            title="Hapus Transaksi Donasi"
+            description="Apakah Anda yakin ingin menghapus transaksi donasi ini? Tindakan ini tidak dapat dibatalkan."
+            @confirm="confirmDeleteTransaction"
+            @cancel="deleteTransactionTarget = null"
+        />
     </AuthenticatedLayout>
 </template>

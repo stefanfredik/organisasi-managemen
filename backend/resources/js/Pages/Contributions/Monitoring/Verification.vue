@@ -30,13 +30,20 @@ const closeProofModal = () => {
     selectedProofUrl.value = null;
 };
 
+const verifyTarget = ref(null);
+const verifyAction = ref(null);
 const verifyTransaction = (id, action) => {
-    if (!confirm(`Apakah Anda yakin ingin ${action === 'approve' ? 'menyetujui' : 'menolak'} transaksi ini?`)) return;
-    processingId.value = id;
-    router.post(route('contributions.verify-action', id), { action }, {
-        onFinish: () => processingId.value = null,
-        preserveScroll: true,
-    });
+    verifyTarget.value = id;
+    verifyAction.value = action;
+};
+const confirmVerify = () => {
+    if (verifyTarget.value) {
+        processingId.value = verifyTarget.value;
+        router.post(route('contributions.verify-action', verifyTarget.value), { action: verifyAction.value }, {
+            onFinish: () => { processingId.value = null; verifyTarget.value = null; verifyAction.value = null; },
+            preserveScroll: true,
+        });
+    }
 };
 
 const tabs = [

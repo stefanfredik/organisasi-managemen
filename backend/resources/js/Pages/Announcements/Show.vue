@@ -3,16 +3,16 @@ import { ref } from "vue";
 import { Head, Link, router } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Button } from "@/components/ui/button";
-import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-    AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
     ArrowLeft, Pencil, Trash2, CalendarDays, UserCircle, Users, Globe, MoreVertical,
 } from "lucide-vue-next";
+import { useToast } from '@/composables/useToast';
+
+const toast = useToast();
 
 const props = defineProps({
     announcement: Object,
@@ -36,7 +36,10 @@ const formatDate = (date) => {
 
 const showDeleteDialog = ref(false);
 const confirmDelete = () => {
-    router.delete(route("announcements.destroy", props.announcement.id));
+    router.delete(route("announcements.destroy", props.announcement.id), {
+        onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus pengumuman.'),
+        onFinish: () => (showDeleteDialog.value = false),
+    });
 };
 </script>
 
@@ -116,19 +119,12 @@ const confirmDelete = () => {
         </div>
 
         <!-- Delete Confirmation -->
-        <AlertDialog :open="showDeleteDialog" @update:open="val => (showDeleteDialog = val)">
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Hapus Pengumuman</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Apakah Anda yakin ingin menghapus pengumuman <strong>{{ announcement.title }}</strong>? Tindakan ini tidak dapat dibatalkan.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Batal</AlertDialogCancel>
-                    <AlertDialogAction variant="destructive" @click="confirmDelete">Hapus</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+        <DeleteConfirmDialog
+            :open="showDeleteDialog"
+            title="Hapus Pengumuman"
+            :description="`Apakah Anda yakin ingin menghapus pengumuman ${announcement.title}? Tindakan ini tidak dapat dibatalkan.`"
+            @confirm="confirmDelete"
+            @cancel="showDeleteDialog = false"
+        />
     </AuthenticatedLayout>
 </template>
