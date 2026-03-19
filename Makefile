@@ -63,7 +63,7 @@ prod-migrate: ## Menjalankan migrasi database prod
 	$(DC_PROD) exec app php artisan migrate --force
 
 prod-build-assets: ## Build frontend assets (NPM) di dalam container prod
-	$(DC_PROD) exec app npm install
+	$(DC_PROD) exec app npm install --legacy-peer-deps
 	$(DC_PROD) exec app npm run build
 
 prod-optimize: ## Jalankan optimasi Laravel untuk production
@@ -71,9 +71,9 @@ prod-optimize: ## Jalankan optimasi Laravel untuk production
 	$(DC_PROD) exec app php artisan view:cache
 	$(DC_PROD) exec app php artisan config:cache
 
-prod-perms: ## Set permission untuk folder storage & bootstrap/cache
-	sudo chown -R $(USER_ID):$(GROUP_ID) backend/storage backend/bootstrap/cache
-	chmod -R 775 backend/storage backend/bootstrap/cache
+prod-perms: ## Set permission untuk folder storage, bootstrap/cache, & node_modules
+	sudo chown -R $(USER_ID):$(GROUP_ID) backend/storage backend/bootstrap/cache backend/node_modules
+	chmod -R 775 backend/storage backend/bootstrap/cache backend/node_modules
 
 # --- TOOLS & UTILITIES ---
 artisan: ## Menjalankan php artisan (contoh: make artisan c="migrate")
