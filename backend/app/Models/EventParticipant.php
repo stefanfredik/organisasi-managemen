@@ -27,6 +27,6 @@ class EventParticipant extends Model
 
     public function member(): BelongsTo
     {
-        return $this->belongsTo(Member::class);
+        return $this->belongsTo(Member::class)->withTrashed();
     }
 }
