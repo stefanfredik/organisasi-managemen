@@ -11,8 +11,8 @@ const iconMap = {
 };
 
 const styleMap = {
-    success: 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/50',
-    error: 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/50',
+    success: 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950',
+    error: 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950',
     default: 'border-border bg-card',
 };
 
@@ -37,7 +37,7 @@ const descStyleMap = {
 
 <template>
     <Teleport to="body">
-        <div class="fixed bottom-4 right-4 z-[100] flex flex-col-reverse gap-2 max-w-sm w-full pointer-events-none">
+        <div class="fixed top-4 left-1/2 -translate-x-1/2 sm:translate-x-0 sm:left-auto sm:top-auto sm:bottom-4 sm:right-4 z-[100] flex flex-col-reverse gap-2 w-[calc(100%-2rem)] sm:w-full max-w-sm pointer-events-none">
             <TransitionGroup
                 enter-active-class="transition ease-out duration-300"
                 enter-from-class="opacity-0 translate-y-2 scale-95"
