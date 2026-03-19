@@ -62,6 +62,10 @@ prod-shell: ## Masuk ke dalam terminal kontainer app prod
 prod-migrate: ## Menjalankan migrasi database prod
 	$(DC_PROD) exec app php artisan migrate --force
 
+prod-build-assets: ## Build frontend assets (NPM) di dalam container prod
+	$(DC_PROD) exec app npm install
+	$(DC_PROD) exec app npm run build
+
 prod-optimize: ## Jalankan optimasi Laravel untuk production
 	$(DC_PROD) exec app php artisan optimize
 	$(DC_PROD) exec app php artisan view:cache
