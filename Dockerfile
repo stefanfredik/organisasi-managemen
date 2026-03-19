@@ -1,5 +1,9 @@
 FROM php:8.4-fpm
 
+# Arguments for User/Group ID
+ARG USER_ID=1000
+ARG GROUP_ID=1000
+
 # Set working directory
 WORKDIR /var/www/html
 
@@ -43,16 +47,15 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Install Node.js and NPM
-RUN curl -fsSL https://deb.nodesource.com/setup_25.x | bash - \
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
     && apt-get install -y nodejs
 
 # Create system user to run Composer and Artisan Commands
-RUN useradd -G www-data,root -u 1000 -d /home/organisasi organisasi
-RUN mkdir -p /home/organisasi/.composer && \
-    chown -R organisasi:organisasi /home/organisasi
+RUN groupadd -g ${GROUP_ID} organisasi && \
+    useradd -u ${USER_ID} -g organisasi -m -s /bin/bash organisasi
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html
+# Set permissions for the working directory
+RUN chown -R organisasi:organisasi /var/www/html
 
 # Switch to user
 USER organisasi
