@@ -36,6 +36,20 @@ class Setting extends Model
             return json_decode($setting->value, true) ?? [];
         }
 
+        // For image type, return full URL if value exists
+        if ($setting->type === 'image' && $setting->value) {
+            return asset('storage/' . $setting->value);
+        }
+
         return $setting->value;
+    }
+
+    /**
+     * Get raw value without transformation (for forms).
+     */
+    public static function getRawValue($key, $default = null)
+    {
+        $setting = self::where('key', $key)->first();
+        return $setting ? $setting->value : $default;
     }
 }

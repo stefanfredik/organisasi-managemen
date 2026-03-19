@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreAnnouncementRequest;
 use App\Http\Requests\UpdateAnnouncementRequest;
 use App\Models\Announcement;
+use App\Models\Setting;
 use App\Services\ActivityLogger;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
@@ -48,7 +49,7 @@ class AnnouncementController extends Controller
             }
         }
 
-        $announcements = $query->paginate(10)->withQueryString();
+        $announcements = $query->paginate(\App\Models\Setting::getValue('pagination_per_page', 15))->withQueryString();
 
         return Inertia::render('Announcements/Index', [
             'announcements' => $announcements,

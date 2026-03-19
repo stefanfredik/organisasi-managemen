@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreMeetingMinuteRequest;
 use App\Http\Requests\UpdateMeetingMinuteRequest;
 use App\Models\MeetingMinute;
+use App\Models\Setting;
 use App\Models\MeetingMinuteAttachment;
 use App\Services\ActivityLogger;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -33,7 +34,7 @@ class MeetingMinuteController extends Controller
             $query->where('agenda', 'like', '%' . $request->search . '%');
         }
 
-        $minutes = $query->paginate(10)->withQueryString();
+        $minutes = $query->paginate(\App\Models\Setting::getValue('pagination_per_page', 15))->withQueryString();
 
         return Inertia::render('MeetingMinutes/Index', [
             'minutes' => $minutes,

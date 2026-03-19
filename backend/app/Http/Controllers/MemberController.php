@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreMemberRequest;
 use App\Http\Requests\UpdateMemberRequest;
 use App\Models\Member;
+use App\Models\Setting;
 use App\Services\ActivityLogger;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
@@ -122,7 +123,7 @@ class MemberController extends Controller
         }
 
         $members = $query
-            ->paginate(15)
+            ->paginate(\App\Models\Setting::getValue('pagination_per_page', 15))
             ->withQueryString();
 
         return Inertia::render('Members/Index', [

@@ -15,10 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
+            \App\Http\Middleware\CheckMaintenanceMode::class,
         ]);
 
         $middleware->alias([
             'permission' => \App\Http\Middleware\CheckPermission::class,
+            'feature' => \App\Http\Middleware\CheckFeatureEnabled::class,
         ]);
 
         //

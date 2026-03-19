@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -20,6 +21,10 @@ class RegisteredUserController extends Controller
      */
     public function create(): Response
     {
+        if (!Setting::getValue('allow_public_registration', false)) {
+            abort(403, 'Registrasi publik tidak diaktifkan.');
+        }
+
         return Inertia::render('Auth/Register');
     }
 
@@ -30,6 +35,10 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        if (!Setting::getValue('allow_public_registration', false)) {
+            abort(403, 'Registrasi publik tidak diaktifkan.');
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreVisionMissionRequest;
 use App\Http\Requests\UpdateVisionMissionRequest;
+use App\Models\Setting;
 use App\Models\VisionMission;
 use App\Services\ActivityLogger;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -34,7 +35,7 @@ class VisionMissionController extends Controller
                 $query->where('vision', 'like', "%{$search}%");
             })
             ->latest()
-            ->paginate(10)
+            ->paginate(\App\Models\Setting::getValue('pagination_per_page', 15))
             ->withQueryString();
 
         return Inertia::render('VisionMissions/Index', [

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -30,7 +31,7 @@ class UserController extends Controller
                 $query->where('status', $status);
             })
             ->latest()
-            ->paginate(10)
+            ->paginate(\App\Models\Setting::getValue('pagination_per_page', 15))
             ->withQueryString();
 
         return Inertia::render('Users/Index', [

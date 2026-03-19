@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 
 use App\Models\Donation;
+use App\Models\Setting;
 use App\Models\DonationTransaction;
 use App\Models\Member;
 use App\Services\ActivityLogger;
@@ -36,7 +37,7 @@ class DonationController extends Controller
                 $query->where('status', $status);
             })
             ->latest()
-            ->paginate(10)
+            ->paginate(\App\Models\Setting::getValue('pagination_per_page', 15))
             ->withQueryString();
 
         return Inertia::render('Donations/Index', [

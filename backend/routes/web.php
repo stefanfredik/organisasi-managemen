@@ -16,14 +16,21 @@ Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'ind
     ->name('dashboard');
 
 // Public Event Routes
-Route::get('/events/public', [\App\Http\Controllers\PublicEventController::class, 'index'])->name('public.events.index');
-Route::get('/events/public/{slug}', [\App\Http\Controllers\PublicEventController::class, 'show'])->name('public.events.show');
-Route::get('/donations/public', [\App\Http\Controllers\PublicDonationController::class, 'index'])->name('public.donations.index');
-Route::get('/donations/public/{slug}', [\App\Http\Controllers\PublicDonationController::class, 'show'])->name('public.donations.show');
+Route::middleware('feature:enable_events')->group(function () {
+    Route::get('/events/public', [\App\Http\Controllers\PublicEventController::class, 'index'])->name('public.events.index');
+    Route::get('/events/public/{slug}', [\App\Http\Controllers\PublicEventController::class, 'show'])->name('public.events.show');
+});
+
+Route::middleware('feature:enable_donations')->group(function () {
+    Route::get('/donations/public', [\App\Http\Controllers\PublicDonationController::class, 'index'])->name('public.donations.index');
+    Route::get('/donations/public/{slug}', [\App\Http\Controllers\PublicDonationController::class, 'show'])->name('public.donations.show');
+});
 
 // Public Album/Gallery Routes
-Route::get('/gallery', [\App\Http\Controllers\PublicAlbumController::class, 'index'])->name('public.gallery.index');
-Route::get('/gallery/{slug}', [\App\Http\Controllers\PublicAlbumController::class, 'show'])->name('public.gallery.show');
+Route::middleware('feature:enable_gallery')->group(function () {
+    Route::get('/gallery', [\App\Http\Controllers\PublicAlbumController::class, 'index'])->name('public.gallery.index');
+    Route::get('/gallery/{slug}', [\App\Http\Controllers\PublicAlbumController::class, 'show'])->name('public.gallery.show');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

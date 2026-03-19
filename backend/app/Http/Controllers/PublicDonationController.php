@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 
 use App\Models\Donation;
+use App\Models\Setting;
 use Inertia\Inertia;
 
 class PublicDonationController extends Controller
@@ -20,7 +21,7 @@ class PublicDonationController extends Controller
                 $query->where('program_name', 'like', "%{$search}%");
             })
             ->latest()
-            ->paginate(12)
+            ->paginate(\App\Models\Setting::getValue('pagination_per_page', 15))
             ->withQueryString();
 
         return Inertia::render('Public/Donations/Index', [

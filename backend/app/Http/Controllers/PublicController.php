@@ -9,6 +9,7 @@ use App\Models\VisionMission;
 use App\Models\OrganizationStructure;
 use App\Models\Album;
 use App\Models\Photo;
+use App\Models\Member;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 
@@ -34,7 +35,11 @@ class PublicController extends Controller
             ->get();
 
         $latestPhotos = Photo::with('album')->latest()->take(5)->get();
-        $featuredAlbums = Album::public()->withCount('photos')->latest()->take(3)->get();
+        $featuredAlbums = Album::public()->withCount('photos')->latest()->take(6)->get();
+
+        $visionMission = VisionMission::active()->first();
+
+        $structures = OrganizationStructure::with(['member', 'parent', 'children'])->get();
 
         return Inertia::render('Public/Home', [
             'upcomingEvents' => $upcomingEvents,
@@ -42,6 +47,8 @@ class PublicController extends Controller
             'activeDonations' => $activeDonations,
             'latestPhotos' => $latestPhotos,
             'featuredAlbums' => $featuredAlbums,
+            'visionMission' => $visionMission,
+            'structures' => $structures,
         ]);
     }
 

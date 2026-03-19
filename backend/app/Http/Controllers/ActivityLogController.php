@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -25,7 +26,7 @@ class ActivityLogController extends Controller
                 $query->where('user_id', $userId);
             })
             ->latest()
-            ->paginate(20)
+            ->paginate(\App\Models\Setting::getValue('pagination_per_page', 15))
             ->withQueryString();
 
         return Inertia::render('Administration/ActivityLogs/Index', [

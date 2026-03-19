@@ -7,8 +7,14 @@
     <meta name="theme-color" content="#4f46e5">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="description" content="{{ \App\Models\Setting::getValue('portal_meta_description', '') }}">
+    <meta name="keywords" content="{{ \App\Models\Setting::getValue('portal_meta_keywords', '') }}">
 
-    <title inertia>{{ config('app.name', 'Laravel') }}</title>
+    <title inertia>{{ \App\Models\Setting::getValue('organization_name', config('app.name', 'Laravel')) }}</title>
+
+    @if(\App\Models\Setting::getRawValue('organization_favicon'))
+        <link rel="icon" href="{{ \App\Models\Setting::getValue('organization_favicon') }}" type="image/x-icon">
+    @endif
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">

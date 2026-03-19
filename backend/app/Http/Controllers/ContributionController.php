@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Contribution;
+use App\Models\Setting;
 use App\Models\ContributionType;
 use App\Models\Member;
 use App\Models\Wallet;
@@ -210,7 +211,7 @@ class ContributionController extends Controller
         }
 
         return Inertia::render('Contributions/Index', [
-            'contributions' => $query->latest()->paginate(10)->withQueryString(),
+            'contributions' => $query->latest()->paginate(\App\Models\Setting::getValue('pagination_per_page', 15))->withQueryString(),
             'types' => $types,
             'wallets' => Wallet::where('is_active', true)->get(),
             'members' => Member::active()->get(['id', 'full_name', 'member_code']),
@@ -1044,7 +1045,7 @@ class ContributionController extends Controller
         }
             
         return Inertia::render('Contributions/Monitoring/Verification', [
-            'pendingTransactions' => $query->paginate(15)->withQueryString(),
+            'pendingTransactions' => $query->paginate(\App\Models\Setting::getValue('pagination_per_page', 15))->withQueryString(),
             'types' => ContributionType::where('is_active', true)->get(),
         ]);
     }
@@ -1150,7 +1151,7 @@ class ContributionController extends Controller
         }
         
         return Inertia::render('Contributions/Index', [
-             'contributions' => $query->paginate(15)->withQueryString(),
+             'contributions' => $query->paginate(\App\Models\Setting::getValue('pagination_per_page', 15))->withQueryString(),
              'filters' => $request->only(['search']),
              'context' => 'admin-history', // Tell Index.vue to act as admin history
              'type' => $contributionType,

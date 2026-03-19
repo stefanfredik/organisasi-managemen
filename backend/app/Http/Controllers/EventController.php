@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreEventRequest;
 use App\Http\Requests\UpdateEventRequest;
 use App\Models\Event;
+use App\Models\Setting;
 use App\Models\EventDocumentation;
 use App\Models\Member;
 use App\Services\ActivityLogger;
@@ -38,7 +39,7 @@ class EventController extends Controller
                 $query->where('status', $status);
             })
             ->latest()
-            ->paginate(10)
+            ->paginate(\App\Models\Setting::getValue('pagination_per_page', 15))
             ->withQueryString();
 
         return Inertia::render('Events/Index', [

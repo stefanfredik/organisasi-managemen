@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreAlbumRequest;
 use App\Http\Requests\UpdateAlbumRequest;
 use App\Models\Album;
+use App\Models\Setting;
 use App\Models\Event;
 use App\Models\Photo;
 use App\Services\ActivityLogger;
@@ -43,7 +44,7 @@ class AlbumController extends Controller
                 $query->where('status', $status);
             })
             ->latest()
-            ->paginate(12)
+            ->paginate(\App\Models\Setting::getValue('pagination_per_page', 15))
             ->withQueryString();
 
         return Inertia::render('Albums/Index', [

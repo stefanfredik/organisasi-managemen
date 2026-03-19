@@ -25,29 +25,28 @@ const formatDate = (dateString) => {
     <PublicLayout>
         <div class="bg-muted min-h-screen">
             <!-- Hero Section -->
-            <div class="relative bg-gradient-to-br from-primary/10 via-card to-card border-b border pt-32 pb-16 px-4 sm:pt-36 sm:pb-20 sm:px-6 lg:pt-40 lg:pb-24 lg:px-8 text-center overflow-hidden">
-                <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
+            <div class="relative bg-gradient-to-br from-primary to-primary/80 pt-24 pb-10 px-4 sm:px-6 lg:px-8 text-center overflow-hidden">
                 <div class="relative z-10">
-                    <div data-reveal="scale" class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 text-primary mb-6">
-                        <Images class="w-8 h-8" />
+                    <div data-reveal="scale" class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/15 backdrop-blur-sm text-white mb-4">
+                        <Images class="w-7 h-7" />
                     </div>
-                    <h2 data-reveal class="text-3xl font-extrabold text-foreground sm:text-5xl uppercase tracking-tight">
+                    <h2 data-reveal class="text-2xl font-bold text-white sm:text-4xl tracking-tight">
                         Galeri Kegiatan
                     </h2>
-                    <p data-reveal data-reveal-delay="100" class="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto italic">
+                    <p data-reveal data-reveal-delay="100" class="mt-2 text-base text-white/80 max-w-2xl mx-auto">
                         Kumpulan momen berharga dari berbagai kegiatan yang telah kami laksanakan.
                     </p>
                 </div>
             </div>
 
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 py-16 lg:px-8">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-14 lg:px-8">
                 <div v-if="albums.data.length > 0" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     <div
                         v-for="(album, index) in albums.data"
                         :key="album.id"
                         data-reveal
                         :data-reveal-delay="(index % 6) * 100"
-                        class="relative group bg-card rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500"
+                        class="relative group bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500"
                     >
                         <Link :href="route('public.gallery.show', album.slug)" class="block">
                             <!-- Image Container -->
@@ -67,14 +66,14 @@ const formatDate = (dateString) => {
                                     {{ album.photos_count }}
                                 </div>
 
-                                <div class="absolute bottom-0 left-0 right-0 p-5 sm:p-8">
-                                    <p class="text-primary/70 text-xs font-black uppercase tracking-widest mb-2">
+                                <div class="absolute bottom-0 left-0 right-0 p-5">
+                                    <p class="text-primary/70 text-xs font-semibold tracking-wide mb-1.5">
                                         {{ album.category }}
                                     </p>
-                                    <h3 class="text-2xl font-bold text-white mb-2 leading-tight group-hover:text-primary/90 transition-colors duration-300">
+                                    <h3 class="text-xl font-bold text-white mb-1.5 leading-tight group-hover:text-primary/90 transition-colors duration-300">
                                         {{ album.name }}
                                     </h3>
-                                    <p class="text-white/50 text-sm italic">
+                                    <p class="text-white/50 text-sm">
                                         {{ formatDate(album.created_at) }}
                                     </p>
                                 </div>
@@ -84,16 +83,16 @@ const formatDate = (dateString) => {
                 </div>
 
                 <!-- Empty State -->
-                <div v-else data-reveal="scale" class="text-center py-20 bg-card rounded-3xl border-2 border-dashed border">
-                    <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-muted mb-4">
-                        <ImageOff class="h-10 w-10 text-muted-foreground" />
+                <div v-else data-reveal="scale" class="text-center py-16 bg-card rounded-2xl border-2 border-dashed border">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+                        <ImageOff class="h-8 w-8 text-muted-foreground" />
                     </div>
-                    <h3 class="mt-2 text-xl font-bold text-foreground">Belum Ada Foto</h3>
-                    <p class="mt-2 text-muted-foreground italic">Kami akan segera mengunggah momen terbaru kegiatan kami.</p>
+                    <h3 class="mt-2 text-lg font-bold text-foreground">Belum Ada Foto</h3>
+                    <p class="mt-1 text-sm text-muted-foreground">Kami akan segera mengunggah momen terbaru kegiatan kami.</p>
                 </div>
 
                 <!-- Pagination -->
-                <div v-if="albums.links.length > 3" data-reveal="fade" class="mt-16 flex justify-center">
+                <div v-if="albums.links.length > 3" data-reveal="fade" class="mt-10 flex justify-center">
                     <div class="flex gap-2">
                         <Link
                             v-for="link in albums.links"

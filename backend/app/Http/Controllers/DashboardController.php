@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Member;
+use App\Models\Setting;
 use App\Models\Event;
 use App\Models\Finance;
 use App\Models\Wallet;
@@ -113,7 +114,7 @@ class DashboardController extends Controller
         return \App\Models\ActivityLog::query()
             ->with('user')
             ->latest()
-            ->paginate(10)
+            ->paginate(\App\Models\Setting::getValue('pagination_per_page', 15))
             ->through(function ($log) {
                 return [
                     'id' => $log->id,

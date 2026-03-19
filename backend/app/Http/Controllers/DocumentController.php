@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreDocumentRequest;
 use App\Http\Requests\UpdateDocumentRequest;
 use App\Models\Document;
+use App\Models\Setting;
 use App\Services\ActivityLogger;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
@@ -36,7 +37,7 @@ class DocumentController extends Controller
             $query->byCategory($request->category);
         }
 
-        $documents = $query->paginate(15)->withQueryString();
+        $documents = $query->paginate(\App\Models\Setting::getValue('pagination_per_page', 15))->withQueryString();
 
         // Get unique categories for filter
         $categories = Document::query()

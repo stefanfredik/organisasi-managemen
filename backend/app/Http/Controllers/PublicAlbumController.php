@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Album;
+use App\Models\Setting;
 use Inertia\Inertia;
 
 class PublicAlbumController extends Controller
@@ -16,7 +17,7 @@ class PublicAlbumController extends Controller
             ->with(['event', 'photos'])
             ->withCount('photos')
             ->latest()
-            ->paginate(12);
+            ->paginate(\App\Models\Setting::getValue('pagination_per_page', 15));
 
         return Inertia::render('Public/Gallery', [
             'albums' => $albums,

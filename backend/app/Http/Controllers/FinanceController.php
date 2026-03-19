@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Finance;
+use App\Models\Setting;
 use App\Models\Wallet;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -43,7 +44,7 @@ class FinanceController extends Controller
         });
 
         return Inertia::render('Finances/Index', [
-            'finances' => $query->latest('transaction_date')->latest('id')->paginate(10)->withQueryString(),
+            'finances' => $query->latest('transaction_date')->latest('id')->paginate(\App\Models\Setting::getValue('pagination_per_page', 15))->withQueryString(),
             'wallets' => Wallet::where('is_active', true)->get(),
             'filters' => $request->only(['search', 'wallet_id', 'type', 'date_from', 'date_to']),
             'stats' => [
