@@ -1,9 +1,28 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import DataTable from '@/Components/DataTable.vue';
-import { Button } from '@/components/ui/button';
-import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
+import { Head, Link, router } from '@inertiajs/vue3';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import SearchBar from '@/Components/SearchBar.vue';
+import FilterDropdown from '@/Components/FilterDropdown.vue';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table';
+import {
+    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+    AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+    Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
+} from '@/components/ui/sheet';
+import {
+    Plus, Eye, Pencil, Trash2, MoreVertical, Inbox, KeyRound, ShieldCheck, ShieldOff,
+    ChevronLeft, ChevronRight, Mail,
+} from 'lucide-vue-next';
 import debounce from 'lodash/debounce';
 
 const props = defineProps({
@@ -13,52 +32,73 @@ const props = defineProps({
     statuses: Object,
 });
 
-const search = ref(props.filters.search);
-const role = ref(props.filters.role);
-const status = ref(props.filters.status);
-    
-const columns = [
-    { key: 'name', label: 'User' },
-    { key: 'role', label: 'Role' },
-    { key: 'status', label: 'Status' },
-    { key: 'last_login_at', label: 'Login Terakhir', format: (val) => val ? new Date(val).toLocaleString('id-ID') : 'Belum pernah' },
-];
+const search = ref(props.filters?.search || '');
+const role = ref(props.filters?.role || '');
+const status = ref(props.filters?.status || '');
+
+const roleOptions = Object.entries(props.roles || {}).map(([value, label]) => ({ value, label }));
+const statusOptions = Object.entries(props.statuses || {}).map(([value, label]) => ({ value, label }));
 
 watch([search, role, status], debounce(() => {
     router.get(route('users.index'), {
         search: search.value,
         role: role.value,
         status: status.value,
-    }, {
-        preserveState: true,
-        replace: true,
-    });
+    }, { preserveState: true, replace: true });
 }, 300));
 
-const deleteUser = (id) => {
-    if (confirm('Apakah Anda yakin ingin menghapus user ini?')) {
-        router.delete(route('users.destroy', id));
+// Delete
+const deleteTarget = ref(null);
+const confirmDelete = () => {
+    if (deleteTarget.value) {
+        router.delete(route('users.destroy', deleteTarget.value.id), {
+            preserveScroll: true,
+            onFinish: () => (deleteTarget.value = null),
+        });
     }
 };
 
-const toggleStatus = (id) => {
-    router.patch(route('users.toggle-status', id));
+// Toggle status
+const toggleStatus = (user) => {
+    router.patch(route('users.toggle-status', user.id), {}, { preserveScroll: true });
 };
 
-const resetPassword = (id) => {
-    if (confirm('Apakah Anda yakin ingin mereset password user ini?')) {
-        router.post(route('users.reset-password', id));
+// Reset password
+const resetTarget = ref(null);
+const confirmResetPassword = () => {
+    if (resetTarget.value) {
+        router.post(route('users.reset-password', resetTarget.value.id), {}, {
+            preserveScroll: true,
+            onFinish: () => (resetTarget.value = null),
+        });
     }
 };
 
-const getRoleBadgeClass = (role) => {
-    switch (role) {
-        case 'admin': return 'bg-purple-100 text-purple-700 border-purple-200';
-        case 'ketua': return 'bg-primary-100 text-primary border-primary-200';
-        case 'bendahara': return 'bg-success/20 text-success-700 border-success-200';
-        case 'sekretaris': return 'bg-orange-100 text-orange-700 border-orange-200';
-        default: return 'bg-muted text-foreground border';
+// Mobile detail sheet
+const detailItem = ref(null);
+const showDetailSheet = ref(false);
+const openDetail = (u) => { detailItem.value = u; showDetailSheet.value = true; };
+const closeDetail = () => { showDetailSheet.value = false; detailItem.value = null; };
+
+const getRoleBadgeClass = (r) => {
+    switch (r) {
+        case 'admin': return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
+        case 'ketua': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+        case 'bendahara': return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+        case 'sekretaris': return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
+        default: return 'bg-muted text-muted-foreground';
     }
+};
+
+const getStatusBadge = (s) => {
+    return s === 'active'
+        ? { label: 'Aktif', class: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' }
+        : { label: 'Nonaktif', class: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' };
+};
+
+const formatLastLogin = (val) => {
+    if (!val) return 'Belum pernah';
+    return new Date(val).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
 </script>
 
@@ -71,106 +111,305 @@ const getRoleBadgeClass = (role) => {
                 <h2 class="text-lg font-semibold leading-tight text-foreground">Manajemen User</h2>
                 <Button size="sm" as-child>
                     <Link :href="route('users.create')">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
+                        <Plus class="w-4 h-4 mr-1" />
                         <span class="hidden sm:inline">Tambah User</span>
                     </Link>
                 </Button>
             </div>
         </template>
 
-        <div class="py-4 sm:py-6">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
-                <!-- Compact Filters -->
-                <div class="bg-card p-3 sm:p-4 rounded-xl border flex flex-col sm:flex-row gap-2">
-                    <div class="flex-1 relative">
-                        <input v-model="search" type="text" placeholder="Cari nama atau email..."
-                            class="w-full bg-muted border rounded-lg py-2 pl-9 text-sm focus:ring-2 focus:ring-ring focus:border-ring transition-all" />
-                        <svg class="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
+        <div class="py-3 sm:py-6">
+            <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 space-y-3 sm:space-y-4">
+
+                <!-- Filters -->
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <div class="flex-1">
+                        <SearchBar v-model="search" placeholder="Cari nama atau email..." />
                     </div>
-                    <select v-model="role" class="bg-muted border rounded-lg py-2 px-3 text-sm focus:ring-2 focus:ring-ring sm:w-auto">
-                        <option value="">Semua Role</option>
-                        <option v-for="(label, value) in roles" :key="value" :value="value">{{ label }}</option>
-                    </select>
-                    <select v-model="status" class="bg-muted border rounded-lg py-2 px-3 text-sm focus:ring-2 focus:ring-ring sm:w-auto">
-                        <option value="">Semua Status</option>
-                        <option v-for="(label, value) in statuses" :key="value" :value="value">{{ label }}</option>
-                    </select>
+                    <div class="flex gap-2">
+                        <div class="flex-1 sm:w-36">
+                            <FilterDropdown v-model="role" :options="roleOptions" label="Role" />
+                        </div>
+                        <div class="flex-1 sm:w-36">
+                            <FilterDropdown v-model="status" :options="statusOptions" label="Status" />
+                        </div>
+                    </div>
                 </div>
 
-                <!-- DataTable -->
-                <DataTable 
-                    :data="users" 
-                    :columns="columns"
-                    :searchable="false" 
-                >
-                    <template #cell-name="{ row: user }">
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold uppercase ring-4 ring-white shadow-sm">
-                                {{ user.name.charAt(0) }}
-                            </div>
-                            <div>
-                                <div class="font-bold text-foreground">{{ user.name }}</div>
-                                <div class="text-xs text-muted-foreground">{{ user.email }}</div>
-                            </div>
-                        </div>
-                    </template>
-
-                    <template #cell-role="{ row: user }">
-                        <span 
-                            class="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border"
-                            :class="getRoleBadgeClass(user.role)"
+                <!-- Mobile: Contact List -->
+                <div class="sm:hidden">
+                    <div class="bg-card border rounded-xl overflow-hidden divide-y divide-border">
+                        <div
+                            v-for="user in users.data"
+                            :key="'m-' + user.id"
+                            class="flex items-center gap-3 px-3 py-3 active:bg-muted/50 transition-colors"
                         >
-                            {{ roles[user.role] }}
-                        </span>
-                    </template>
+                            <!-- Avatar -->
+                            <div class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                <span class="text-primary font-semibold text-sm">{{ user.name.charAt(0).toUpperCase() }}</span>
+                            </div>
 
-                    <template #cell-status="{ row: user }">
-                        <button 
-                            @click="toggleStatus(user.id)"
-                            class="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border transition-all active:scale-95"
-                            :class="user.status === 'active' 
-                                ? 'bg-success/10 text-success-600 border-success-100 hover:bg-success/20' 
-                                : 'bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100'"
-                        >
-                            {{ statuses[user.status] }}
-                        </button>
-                    </template>
+                            <!-- Info -->
+                            <div class="flex-1 min-w-0" @click="openDetail(user)">
+                                <p class="text-sm font-semibold text-foreground truncate">{{ user.name }}</p>
+                                <div class="flex items-center gap-1.5 text-[10px] text-muted-foreground mt-0.5">
+                                    <Mail class="w-2.5 h-2.5" />
+                                    <span class="truncate">{{ user.email }}</span>
+                                </div>
+                            </div>
 
-                    <template #actions="{ row: user }">
-                        <div class="flex justify-end gap-2 text-right">
-                             <button 
-                                @click="resetPassword(user.id)"
-                                title="Reset Password"
-                                class="p-2 text-warning-500 hover:bg-warning-50 rounded-xl transition-colors"
-                            >
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                </svg>
-                            </button>
-                            <Link 
-                                :href="route('users.edit', user.id)"
-                                class="p-2 text-primary-500 hover:bg-primary/10 rounded-xl transition-colors"
-                            >
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                            </Link>
-                            <button 
-                                @click="deleteUser(user.id)"
-                                class="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-colors"
-                            >
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                            </button>
+                            <!-- Role Badge -->
+                            <span :class="['px-1.5 py-0.5 rounded-full text-[9px] font-semibold shrink-0 uppercase', getRoleBadgeClass(user.role)]">
+                                {{ roles[user.role] }}
+                            </span>
+
+                            <!-- Hamburger -->
+                            <DropdownMenu>
+                                <DropdownMenuTrigger as-child>
+                                    <button class="shrink-0 w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors" @click.stop>
+                                        <MoreVertical class="w-4 h-4 text-muted-foreground" />
+                                    </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem as-child>
+                                        <Link :href="route('users.edit', user.id)" class="flex items-center gap-2">
+                                            <Pencil class="w-4 h-4" /> Edit
+                                        </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem @click="toggleStatus(user)" class="flex items-center gap-2">
+                                        <ShieldCheck v-if="user.status !== 'active'" class="w-4 h-4" />
+                                        <ShieldOff v-else class="w-4 h-4" />
+                                        {{ user.status === 'active' ? 'Nonaktifkan' : 'Aktifkan' }}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem @click="resetTarget = user" class="flex items-center gap-2">
+                                        <KeyRound class="w-4 h-4" /> Reset Password
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem @click="deleteTarget = user" class="text-destructive focus:text-destructive flex items-center gap-2">
+                                        <Trash2 class="w-4 h-4" /> Hapus
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
-                    </template>
-                </DataTable>
+
+                        <!-- Empty -->
+                        <div v-if="(users?.data?.length || 0) === 0" class="py-12 text-center">
+                            <div class="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-2">
+                                <Inbox class="w-6 h-6 text-muted-foreground" />
+                            </div>
+                            <p class="text-xs text-muted-foreground">Tidak ada user ditemukan.</p>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Pagination -->
+                    <div v-if="users.total > users.per_page" class="flex items-center justify-between pt-2">
+                        <p class="text-[10px] text-muted-foreground">{{ users.from }}-{{ users.to }} dari {{ users.total }}</p>
+                        <div class="flex gap-1">
+                            <Button v-if="users.prev_page_url" variant="outline" size="sm" class="h-6 text-[10px] px-2" as-child>
+                                <Link :href="users.prev_page_url">Sebelumnya</Link>
+                            </Button>
+                            <Button v-if="users.next_page_url" variant="outline" size="sm" class="h-6 text-[10px] px-2" as-child>
+                                <Link :href="users.next_page_url">Selanjutnya</Link>
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Desktop: Table -->
+                <div class="hidden sm:block bg-card rounded-xl border overflow-hidden">
+                    <Table>
+                        <TableHeader>
+                            <TableRow class="bg-muted/50">
+                                <TableHead class="text-[11px] uppercase tracking-wide font-medium">User</TableHead>
+                                <TableHead class="text-[11px] uppercase tracking-wide font-medium">Role</TableHead>
+                                <TableHead class="text-[11px] uppercase tracking-wide font-medium">Status</TableHead>
+                                <TableHead class="text-[11px] uppercase tracking-wide font-medium">Login Terakhir</TableHead>
+                                <TableHead class="text-[11px] uppercase tracking-wide font-medium text-right">Aksi</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="user in users.data" :key="user.id" class="hover:bg-muted/30 transition-colors">
+                                <TableCell>
+                                    <div class="flex items-center gap-3">
+                                        <div class="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                            <span class="text-primary font-semibold text-sm">{{ user.name.charAt(0).toUpperCase() }}</span>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-foreground">{{ user.name }}</p>
+                                            <p class="text-xs text-muted-foreground">{{ user.email }}</p>
+                                        </div>
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <span :class="['px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase', getRoleBadgeClass(user.role)]">
+                                        {{ roles[user.role] }}
+                                    </span>
+                                </TableCell>
+                                <TableCell>
+                                    <button
+                                        @click="toggleStatus(user)"
+                                        :class="['px-2 py-0.5 rounded-full text-[10px] font-semibold transition-colors', getStatusBadge(user.status).class]"
+                                    >
+                                        {{ getStatusBadge(user.status).label }}
+                                    </button>
+                                </TableCell>
+                                <TableCell class="text-sm text-muted-foreground whitespace-nowrap">
+                                    {{ formatLastLogin(user.last_login_at) }}
+                                </TableCell>
+                                <TableCell class="text-right">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger as-child>
+                                            <Button variant="ghost" size="icon" class="h-8 w-8">
+                                                <MoreVertical class="w-4 h-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem as-child>
+                                                <Link :href="route('users.edit', user.id)" class="flex items-center gap-2">
+                                                    <Pencil class="w-4 h-4" /> Edit
+                                                </Link>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem @click="toggleStatus(user)" class="flex items-center gap-2">
+                                                <ShieldCheck v-if="user.status !== 'active'" class="w-4 h-4" />
+                                                <ShieldOff v-else class="w-4 h-4" />
+                                                {{ user.status === 'active' ? 'Nonaktifkan' : 'Aktifkan' }}
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem @click="resetTarget = user" class="flex items-center gap-2">
+                                                <KeyRound class="w-4 h-4" /> Reset Password
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem @click="deleteTarget = user" class="text-destructive focus:text-destructive flex items-center gap-2">
+                                                <Trash2 class="w-4 h-4" /> Hapus
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </TableCell>
+                            </TableRow>
+                            <TableRow v-if="(users?.data?.length || 0) === 0">
+                                <TableCell colspan="5" class="h-24 text-center">
+                                    <div class="flex flex-col items-center gap-2 text-muted-foreground">
+                                        <Inbox class="w-8 h-8" />
+                                        <span class="text-sm">Tidak ada user ditemukan.</span>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+
+                    <!-- Desktop Pagination -->
+                    <div v-if="users.total > users.per_page" class="flex items-center justify-between px-4 py-3 border-t bg-muted/30">
+                        <p class="text-xs text-muted-foreground">{{ users.from }}-{{ users.to }} dari {{ users.total }}</p>
+                        <div class="flex gap-1.5">
+                            <Button v-if="users.prev_page_url" variant="outline" size="sm" class="h-8" as-child>
+                                <Link :href="users.prev_page_url"><ChevronLeft class="w-4 h-4 mr-0.5" /> Sebelumnya</Link>
+                            </Button>
+                            <Button v-if="users.next_page_url" variant="outline" size="sm" class="h-8" as-child>
+                                <Link :href="users.next_page_url">Selanjutnya <ChevronRight class="w-4 h-4 ml-0.5" /></Link>
+                            </Button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <!-- Delete Confirmation -->
+        <AlertDialog :open="!!deleteTarget" @update:open="val => !val && (deleteTarget = null)">
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Hapus User</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Apakah Anda yakin ingin menghapus user <strong>{{ deleteTarget?.name }}</strong>? Tindakan ini tidak dapat dibatalkan.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                    <AlertDialogAction variant="destructive" @click="confirmDelete">Hapus</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
+        <!-- Reset Password Confirmation -->
+        <AlertDialog :open="!!resetTarget" @update:open="val => !val && (resetTarget = null)">
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Reset Password</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Apakah Anda yakin ingin mereset password user <strong>{{ resetTarget?.name }}</strong>?
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                    <AlertDialogAction @click="confirmResetPassword">Reset Password</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
+        <!-- Mobile: Detail Sheet -->
+        <Sheet :open="showDetailSheet" @update:open="val => { if (!val) closeDetail(); }">
+            <SheetContent side="bottom" class="rounded-t-2xl max-h-[80vh] overflow-y-auto px-4 pb-6 pt-3">
+                <SheetHeader class="text-left pb-2.5 border-b mb-3">
+                    <SheetTitle class="text-sm">Detail User</SheetTitle>
+                    <SheetDescription class="sr-only">Detail informasi user</SheetDescription>
+                </SheetHeader>
+
+                <template v-if="detailItem">
+                    <!-- User info -->
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                            <span class="text-primary font-semibold text-lg">{{ detailItem.name.charAt(0).toUpperCase() }}</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-bold text-foreground truncate">{{ detailItem.name }}</p>
+                            <p class="text-xs text-muted-foreground truncate">{{ detailItem.email }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Info grid -->
+                    <div class="grid grid-cols-3 gap-2 mb-3">
+                        <div class="bg-muted/50 rounded-lg p-2.5">
+                            <p class="text-[10px] text-muted-foreground uppercase font-medium">Role</p>
+                            <span :class="['inline-block mt-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-semibold uppercase', getRoleBadgeClass(detailItem.role)]">
+                                {{ roles[detailItem.role] }}
+                            </span>
+                        </div>
+                        <div class="bg-muted/50 rounded-lg p-2.5">
+                            <p class="text-[10px] text-muted-foreground uppercase font-medium">Status</p>
+                            <span :class="['inline-block mt-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-semibold', getStatusBadge(detailItem.status).class]">
+                                {{ getStatusBadge(detailItem.status).label }}
+                            </span>
+                        </div>
+                        <div class="bg-muted/50 rounded-lg p-2.5">
+                            <p class="text-[10px] text-muted-foreground uppercase font-medium">Login</p>
+                            <p class="text-[10px] font-medium text-foreground mt-0.5">{{ formatLastLogin(detailItem.last_login_at) }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="space-y-2 border-t pt-3">
+                        <Button variant="outline" size="sm" class="w-full justify-start" as-child>
+                            <Link :href="route('users.edit', detailItem.id)" @click="closeDetail()">
+                                <Pencil class="w-4 h-4 mr-2" /> Edit User
+                            </Link>
+                        </Button>
+                        <Button variant="outline" size="sm" class="w-full justify-start" @click="closeDetail(); toggleStatus(detailItem)">
+                            <ShieldCheck v-if="detailItem.status !== 'active'" class="w-4 h-4 mr-2" />
+                            <ShieldOff v-else class="w-4 h-4 mr-2" />
+                            {{ detailItem.status === 'active' ? 'Nonaktifkan' : 'Aktifkan' }}
+                        </Button>
+                        <Button variant="outline" size="sm" class="w-full justify-start" @click="closeDetail(); resetTarget = detailItem">
+                            <KeyRound class="w-4 h-4 mr-2" /> Reset Password
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            class="w-full justify-start text-destructive hover:text-destructive"
+                            @click="closeDetail(); deleteTarget = detailItem;"
+                        >
+                            <Trash2 class="w-4 h-4 mr-2" /> Hapus User
+                        </Button>
+                    </div>
+                </template>
+            </SheetContent>
+        </Sheet>
     </AuthenticatedLayout>
 </template>

@@ -103,6 +103,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/matrix', [\App\Http\Controllers\ContributionController::class, 'monitoringMatrix'])->name('matrix');
             Route::get('/matrix/export', [\App\Http\Controllers\ContributionController::class, 'exportMatrix'])->name('matrix.export');
             Route::get('/history', [\App\Http\Controllers\ContributionController::class, 'monitoringHistory'])->name('history');
+            Route::get('/members-by-status', [\App\Http\Controllers\ContributionController::class, 'membersByStatus'])->name('members-by-status');
         });
     });
 
@@ -126,6 +127,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('donations', \App\Http\Controllers\DonationController::class)->except(['index', 'show']);
         Route::post('donations/{donation}/transactions', [\App\Http\Controllers\DonationController::class, 'recordTransaction'])->name('donations.transactions.store');
         Route::post('donations/transactions/{transaction}/verify', [\App\Http\Controllers\DonationController::class, 'verifyTransaction'])->name('donations.transactions.verify');
+        Route::put('donations/transactions/{transaction}', [\App\Http\Controllers\DonationController::class, 'updateTransaction'])->name('donations.transactions.update');
+        Route::delete('donations/transactions/{transaction}', [\App\Http\Controllers\DonationController::class, 'deleteTransaction'])->name('donations.transactions.destroy');
     });
 
     Route::middleware('permission:view_donations')->group(function () {
@@ -187,6 +190,10 @@ Route::middleware('auth')->group(function () {
         Route::get('meeting-minutes/attachments/{attachment}/download', [\App\Http\Controllers\MeetingMinuteController::class, 'downloadAttachment'])->name('meeting-minutes.attachments.download');
         Route::get('meeting-minutes/{minute}', [\App\Http\Controllers\MeetingMinuteController::class, 'show'])->name('meeting-minutes.show');
     });
+
+    // Role Management (admin only)
+    Route::get('roles', [\App\Http\Controllers\RoleController::class, 'index'])->name('roles.index');
+    Route::post('roles', [\App\Http\Controllers\RoleController::class, 'update'])->name('roles.update');
 
     // Administration - Activity Logs
     Route::get('activity-logs', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-logs.index');

@@ -1,26 +1,36 @@
 <script setup>
+import { ref } from "vue";
 import { Head, Link, router } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Pencil, Calendar, User, FileText, Download, Users, Trash2 } from "lucide-vue-next";
+import {
+    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+    AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+    ArrowLeft, Pencil, Trash2, CalendarDays, UserCircle, Users, FileText, Download, Inbox, MoreVertical,
+} from "lucide-vue-next";
 
 const props = defineProps({
     record: Object,
     participant_names: Array,
 });
 
-const deleteMeetingMinute = () => {
-    if (confirm('Apakah Anda yakin ingin menghapus notulensi rapat ini?')) {
-        router.delete(route('meeting-minutes.destroy', props.record.id));
-    }
-};
-
 const formatDate = (dateString) => {
     if (!dateString) return "-";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("id-ID", {
+    return new Date(dateString).toLocaleDateString("id-ID", {
         weekday: "long", day: "numeric", month: "long", year: "numeric",
+    });
+};
+
+const formatDateShort = (dateString) => {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleDateString("id-ID", {
+        day: "numeric", month: "short", year: "numeric",
     });
 };
 
@@ -31,119 +41,156 @@ const formatFileSize = (bytes) => {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
 };
+
+const showDeleteDialog = ref(false);
+const confirmDelete = () => {
+    router.delete(route("meeting-minutes.destroy", props.record.id));
+};
 </script>
 
 <template>
-    <Head :title="`Notulensi: ${props.record.agenda}`" />
+    <Head :title="`Notulensi: ${record.agenda}`" />
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <Button variant="ghost" size="icon" as-child>
+            <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                    <Button variant="ghost" size="icon" class="h-8 w-8 shrink-0" as-child>
                         <Link :href="route('meeting-minutes.index')">
-                            <ArrowLeft class="w-5 h-5" />
+                            <ArrowLeft class="w-4 h-4" />
                         </Link>
                     </Button>
-                    <h2 class="text-xl font-semibold text-foreground">Notulensi Rapat</h2>
+                    <h2 class="text-lg font-semibold leading-tight text-foreground truncate">Notulensi Rapat</h2>
                 </div>
-                <div class="flex gap-2">
-                    <Link
-                        v-if="hasPermission('manage_meeting_minutes') && props.record?.id"
-                        :href="route('meeting-minutes.edit', props.record.id)"
-                        class="inline-flex items-center px-4 py-2 bg-primary border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary/90 active:bg-primary/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition ease-in-out duration-150"
-                    >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                    </Link>
-                    <button
-                        v-if="hasPermission('manage_meeting_minutes') && props.record?.id"
-                        @click="deleteMeetingMinute"
-                        class="inline-flex items-center px-4 py-2 bg-destructive border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-destructive/90 active:bg-danger-900 focus:outline-none focus:ring-2 focus:ring-danger-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                    >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                    </button>
-                </div>
+                <DropdownMenu v-if="hasPermission('manage_meeting_minutes') && record?.id">
+                    <DropdownMenuTrigger as-child>
+                        <Button variant="ghost" size="icon" class="h-8 w-8 shrink-0">
+                            <MoreVertical class="w-4 h-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem as-child>
+                            <Link :href="route('meeting-minutes.edit', record.id)" class="flex items-center gap-2">
+                                <Pencil class="w-4 h-4" /> Edit
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem class="text-destructive focus:text-destructive flex items-center gap-2" @click="showDeleteDialog = true">
+                            <Trash2 class="w-4 h-4" /> Hapus
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </template>
 
-        <div class="py-8">
-            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-                <Card>
-                    <CardContent class="p-6">
-                        <div class="flex items-start justify-between mb-4">
-                            <div class="flex-1">
-                                <h1 class="text-2xl font-bold text-foreground mb-2">{{ props.record.agenda }}</h1>
-                                <div class="flex items-center text-sm text-muted-foreground">
-                                    <Calendar class="w-4 h-4 mr-1.5" />
-                                    {{ formatDate(props.record.meeting_date) }}
-                                </div>
+        <div class="py-3 sm:py-6">
+            <div class="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8 space-y-3 sm:space-y-4">
+
+                <!-- Main Info Card -->
+                <div class="bg-card rounded-xl border overflow-hidden">
+                    <div class="h-1 w-full bg-primary" />
+                    <div class="p-4 sm:p-6">
+                        <h1 class="text-base sm:text-xl font-bold text-foreground mb-3">{{ record.agenda }}</h1>
+
+                        <div class="flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] sm:text-xs text-muted-foreground">
+                            <div class="flex items-center gap-1.5">
+                                <CalendarDays class="w-3.5 h-3.5 text-primary" />
+                                <span>{{ formatDate(record.meeting_date) }}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <UserCircle class="w-3.5 h-3.5 text-primary" />
+                                <span>{{ record.creator?.name || '-' }}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <Users class="w-3.5 h-3.5 text-primary" />
+                                <span>{{ participant_names?.length || 0 }} peserta</span>
                             </div>
                         </div>
-                        <div class="flex items-center pt-4 border-t">
-                            <User class="w-5 h-5 text-muted-foreground mr-2" />
-                            <div>
-                                <p class="text-xs text-muted-foreground">Dibuat Oleh</p>
-                                <p class="text-sm font-medium text-foreground">{{ props.record.creator?.name || "-" }}</p>
-                                <p class="text-xs text-muted-foreground">Pada {{ formatDate(props.record.created_at) }}</p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
 
-                <Card>
-                    <CardContent class="p-6">
-                        <div v-if="props.record.notes" class="prose max-w-none text-foreground" v-html="props.record.notes"></div>
-                        <p v-else class="text-muted-foreground text-sm italic text-center py-8">Tidak ada catatan hasil rapat</p>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader class="pb-2">
-                        <div class="flex items-center justify-between">
-                            <CardTitle class="text-lg">Lampiran</CardTitle>
-                            <span class="text-sm text-muted-foreground">{{ props.record.attachments?.length || 0 }}</span>
+                <!-- Notes Content -->
+                <div class="bg-card rounded-xl border overflow-hidden">
+                    <div class="px-4 sm:px-6 py-3 border-b">
+                        <h3 class="text-xs sm:text-sm font-semibold text-foreground">Hasil Rapat</h3>
+                    </div>
+                    <div class="p-4 sm:p-6">
+                        <div v-if="record.notes" class="prose prose-sm sm:prose max-w-none dark:prose-invert" v-html="record.notes"></div>
+                        <div v-else class="py-6 text-center">
+                            <p class="text-sm text-muted-foreground italic">Tidak ada catatan hasil rapat.</p>
                         </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div v-if="props.record.attachments?.length > 0" class="space-y-2">
-                            <a
-                                v-for="att in props.record.attachments"
-                                :key="att.id"
-                                :href="route('meeting-minutes.attachments.download', att.id)"
-                                class="flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors group"
-                            >
-                                <div class="flex items-center min-w-0 flex-1">
-                                    <FileText class="w-5 h-5 text-muted-foreground mr-3 shrink-0" />
-                                    <div class="min-w-0 flex-1">
-                                        <p class="text-sm font-medium text-foreground truncate">{{ att.original_name }}</p>
-                                        <p class="text-xs text-muted-foreground">{{ formatFileSize(att.size) }}</p>
+                    </div>
+                </div>
+
+                <!-- Attachments & Participants Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+
+                    <!-- Attachments -->
+                    <div class="bg-card rounded-xl border overflow-hidden">
+                        <div class="px-4 sm:px-6 py-3 border-b flex items-center justify-between">
+                            <h3 class="text-xs sm:text-sm font-semibold text-foreground">Lampiran</h3>
+                            <span class="text-[10px] sm:text-xs text-muted-foreground">{{ record.attachments?.length || 0 }} file</span>
+                        </div>
+                        <div class="p-3 sm:p-4">
+                            <div v-if="record.attachments?.length > 0" class="space-y-1.5">
+                                <a
+                                    v-for="att in record.attachments"
+                                    :key="att.id"
+                                    :href="route('meeting-minutes.attachments.download', att.id)"
+                                    class="flex items-center gap-2.5 p-2.5 bg-muted/50 rounded-lg hover:bg-muted transition-colors group"
+                                >
+                                    <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                                        <FileText class="w-4 h-4 text-primary" />
                                     </div>
-                                </div>
-                                <Download class="w-5 h-5 text-muted-foreground group-hover:text-primary ml-3 shrink-0" />
-                            </a>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-xs sm:text-sm font-medium text-foreground truncate">{{ att.original_name }}</p>
+                                        <p class="text-[10px] sm:text-xs text-muted-foreground">{{ formatFileSize(att.size) }}</p>
+                                    </div>
+                                    <Download class="w-4 h-4 text-muted-foreground group-hover:text-primary shrink-0 transition-colors" />
+                                </a>
+                            </div>
+                            <div v-else class="py-6 text-center">
+                                <FileText class="w-8 h-8 text-muted-foreground/30 mx-auto mb-1.5" />
+                                <p class="text-xs text-muted-foreground">Tidak ada lampiran.</p>
+                            </div>
                         </div>
-                        <div v-else class="text-center py-8">
-                            <FileText class="mx-auto h-12 w-12 text-muted-foreground/30" />
-                            <p class="mt-2 text-sm text-muted-foreground">Tidak ada lampiran</p>
-                        </div>
-                    </CardContent>
-                </Card>
+                    </div>
 
-                <Card>
-                    <CardHeader class="pb-2">
-                        <div class="flex items-center justify-between">
-                            <CardTitle class="text-lg">Peserta Rapat</CardTitle>
-                            <span class="text-sm font-medium text-primary">{{ props.participant_names?.length || 0 }} Orang</span>
+                    <!-- Participants -->
+                    <div class="bg-card rounded-xl border overflow-hidden">
+                        <div class="px-4 sm:px-6 py-3 border-b flex items-center justify-between">
+                            <h3 class="text-xs sm:text-sm font-semibold text-foreground">Peserta Rapat</h3>
+                            <span class="text-[10px] sm:text-xs font-medium text-primary">{{ participant_names?.length || 0 }} orang</span>
                         </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div v-if="props.participant_names?.length > 0" class="flex flex-wrap gap-2">
-                            <Badge v-for="(n, i) in props.participant_names" :key="i" variant="secondary">{{ n }}</Badge>
+                        <div class="p-3 sm:p-4">
+                            <div v-if="participant_names?.length > 0" class="flex flex-wrap gap-1.5">
+                                <Badge v-for="(name, i) in participant_names" :key="i" variant="secondary" class="text-xs">
+                                    {{ name }}
+                                </Badge>
+                            </div>
+                            <div v-else class="py-6 text-center">
+                                <Users class="w-8 h-8 text-muted-foreground/30 mx-auto mb-1.5" />
+                                <p class="text-xs text-muted-foreground">Tidak ada peserta.</p>
+                            </div>
                         </div>
-                        <p v-else class="text-sm text-muted-foreground italic text-center py-4">Tidak ada peserta</p>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <!-- Delete Confirmation -->
+        <AlertDialog :open="showDeleteDialog" @update:open="val => (showDeleteDialog = val)">
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Hapus Notulensi Rapat</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Apakah Anda yakin ingin menghapus notulensi <strong>{{ record.agenda }}</strong>? Tindakan ini tidak dapat dibatalkan.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                    <AlertDialogAction variant="destructive" @click="confirmDelete">Hapus</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </AuthenticatedLayout>
 </template>

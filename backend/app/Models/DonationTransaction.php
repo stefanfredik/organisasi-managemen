@@ -21,6 +21,7 @@ class DonationTransaction extends Model
         'donation_date',
         'is_anonymous',
         'notes',
+        'payment_method',
         'receipt_path',
         'status',
         'verified_by',

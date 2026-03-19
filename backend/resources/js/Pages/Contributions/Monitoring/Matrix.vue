@@ -3,11 +3,19 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { ref } from 'vue';
 
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+
+import { ArrowLeft, LayoutDashboard, Grid3x3, Clock, Download, Loader2 } from 'lucide-vue-next';
+
 const props = defineProps({
     type: Object,
     years: Array,
     filters: Object,
-    matrixData: Object, 
+    matrixData: Object,
 });
 
 const form = ref({
@@ -35,10 +43,10 @@ const exportExcel = () => {
 
 const getStatusClass = (status) => {
     switch (status) {
-        case 'paid': return 'bg-success/20 text-success-700';
-        case 'pending': return 'bg-warning-100 text-warning-700';
-        case 'partial': return 'bg-primary/20 text-primary';
-        default: return 'bg-destructive/10 text-danger-300';
+        case 'paid': return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+        case 'pending': return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
+        case 'partial': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+        default: return 'bg-muted text-muted-foreground';
     }
 };
 
@@ -50,6 +58,16 @@ const getStatusLabel = (status) => {
         default: return '-';
     }
 };
+
+const navItems = [
+    { route: 'contributions.monitoring.dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { route: 'contributions.monitoring.matrix', label: 'Matrix', icon: Grid3x3 },
+    { route: 'contributions.monitoring.history', label: 'Riwayat', icon: Clock },
+];
+
+const onYearChange = (value) => {
+    form.value.year = value;
+};
 </script>
 
 <template>
@@ -57,110 +75,92 @@ const getStatusLabel = (status) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center">
-                 <Link :href="route('contributions.monitoring.index')" class="mr-3 text-muted-foreground hover:text-foreground">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            <div class="flex items-center gap-3">
+                <Link :href="route('contributions.monitoring.index')" class="shrink-0 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                    <ArrowLeft class="w-5 h-5" />
                 </Link>
-                <h2 class="text-xl font-semibold leading-tight text-foreground">
-                    Matrix: {{ type.name }}
-                </h2>
+                <div class="min-w-0">
+                    <h2 class="text-lg font-semibold leading-tight text-foreground truncate">{{ type.name }}</h2>
+                </div>
             </div>
         </template>
 
-        <div class="py-4">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row gap-4">
-                
-                <!-- Sidebar Navigation -->
-                <div class="w-full md:w-56 shrink-0">
-                    <div class="bg-card rounded-lg shadow-sm border border overflow-hidden sticky top-4">
-                        <div class="px-3 py-2 bg-muted border-b border">
-                            <h3 class="font-bold text-foreground text-sm">Menu</h3>
-                        </div>
-                        <div class="p-1.5 space-y-0.5">
-                            <Link :href="route('contributions.monitoring.dashboard', type.id)" 
-                                class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
-                                :class="route().current('contributions.monitoring.dashboard') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'"
-                            >
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                                Dashboard
-                            </Link>
-                            <Link :href="route('contributions.monitoring.matrix', type.id)" 
-                                class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
-                                :class="route().current('contributions.monitoring.matrix') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'"
-                            >
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7-8v8m14-8v8M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                                Matrix
-                            </Link>
-                            <Link :href="route('contributions.monitoring.history', type.id)" 
-                                class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
-                                :class="route().current('contributions.monitoring.history') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'"
-                            >
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                Riwayat
-                            </Link>
-                        </div>
+        <div class="py-4 sm:py-6">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-4">
+
+                <!-- Navigation Tabs (compact) -->
+                <div class="flex items-center justify-between gap-3 flex-wrap">
+                    <div class="inline-flex items-center gap-1 bg-muted p-1 rounded-lg">
+                        <Link
+                            v-for="item in navItems"
+                            :key="item.route"
+                            :href="route(item.route, type.id)"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors"
+                            :class="route().current(item.route)
+                                ? 'bg-card text-foreground shadow-sm'
+                                : 'text-muted-foreground hover:text-foreground'"
+                        >
+                            <component :is="item.icon" class="w-3.5 h-3.5" />
+                            {{ item.label }}
+                        </Link>
+                    </div>
+
+                    <!-- Inline filter -->
+                    <div class="flex items-center gap-2">
+                        <Select :model-value="String(form.year)" @update:model-value="onYearChange">
+                            <SelectTrigger class="w-[100px] h-8 text-xs">
+                                <SelectValue placeholder="Tahun" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem v-for="y in years" :key="y" :value="String(y)">{{ y }}</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Button size="sm" variant="outline" class="h-8 text-xs" @click="applyFilter" :disabled="isLoading">
+                            <Loader2 v-if="isLoading" class="w-3 h-3 mr-1 animate-spin" />
+                            Tampil
+                        </Button>
+                        <Button size="sm" variant="outline" class="h-8 text-xs gap-1" @click="exportExcel">
+                            <Download class="w-3.5 h-3.5" />
+                            <span class="hidden sm:inline">Export</span>
+                        </Button>
                     </div>
                 </div>
 
-                <!-- Main Content -->
-                <div class="flex-1 space-y-4">
-                    <!-- Filters -->
-                    <div class="bg-card p-3 rounded-lg shadow-sm border border">
-                        <div class="flex flex-wrap items-end gap-3">
-                            <div>
-                                <label class="block text-xs font-medium text-muted-foreground mb-1">Tahun</label>
-                                <select v-model="form.year" class="text-sm rounded-md border-input font-medium text-foreground focus:ring-ring focus:border-ring">
-                                    <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
-                                </select>
-                            </div>
-                            <button @click="applyFilter" :disabled="isLoading" class="px-4 py-2 text-sm bg-primary hover:bg-primary/90 text-white font-medium rounded-md transition-colors disabled:opacity-50 flex items-center">
-                                <span v-if="isLoading" class="mr-1.5">
-                                    <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                </span>
-                                {{ isLoading ? '...' : 'Tampil' }}
-                            </button>
-                            <button @click="exportExcel" class="px-3 py-2 text-sm bg-success-600 hover:bg-success-700 text-white font-medium rounded-md transition-colors flex items-center" title="Export Excel">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                            </button>
-                        </div>
+                <!-- Matrix Table -->
+                <div v-if="matrixData && matrixData.periods && matrixData.periods.length > 0" class="bg-card rounded-xl border overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-center text-sm">
+                            <thead class="bg-muted/50 text-xs uppercase font-medium text-muted-foreground">
+                                <tr>
+                                    <th class="px-3 py-2.5 text-left border-b sticky left-0 bg-muted/50 z-10 w-40 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)]">Anggota</th>
+                                    <th v-for="period in matrixData.periods" :key="period.key" class="px-1.5 py-2.5 border-b min-w-[50px]">{{ period.label }}</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-border">
+                                <tr v-for="member in matrixData.members" :key="member.id" class="hover:bg-muted/30 transition-colors">
+                                    <td class="px-3 py-2 text-left bg-card font-semibold text-foreground text-xs sticky left-0 z-10 border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)]">
+                                        {{ member.name }}
+                                        <div class="text-[10px] text-muted-foreground font-normal">{{ member.member_code }}</div>
+                                    </td>
+                                    <td v-for="period in matrixData.periods" :key="period.key" class="px-1 py-2 bg-card border-l">
+                                        <span
+                                            class="inline-flex items-center justify-center w-full px-1.5 py-0.5 rounded text-[10px] font-bold"
+                                            :class="getStatusClass(member.status_by_period[period.key])"
+                                        >
+                                            {{ getStatusLabel(member.status_by_period[period.key]) }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
+                </div>
 
-                    <!-- Matrix Table -->
-                    <div v-if="matrixData && matrixData.periods && matrixData.periods.length > 0" class="bg-card rounded-lg shadow-sm border border overflow-hidden">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-center text-sm">
-                                <thead class="bg-muted text-xs uppercase font-bold text-muted-foreground">
-                                    <tr>
-                                        <th class="px-3 py-2.5 text-left border-b border sticky left-0 bg-muted z-10 w-40 shadow-sm">Anggota</th>
-                                        <th v-for="period in matrixData.periods" :key="period.key" class="px-1.5 py-2.5 border-b border min-w-[50px]">{{ period.label }}</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-border">
-                                    <tr v-for="member in matrixData.members" :key="member.id" class="hover:bg-muted transition-colors">
-                                        <td class="px-3 py-2 text-left bg-card font-bold text-foreground text-xs sticky left-0 z-10 border-r border shadow-sm">
-                                            {{ member.name }}
-                                            <div class="text-[10px] text-muted-foreground font-normal">{{ member.member_code }}</div>
-                                        </td>
-                                        <td v-for="period in matrixData.periods" :key="period.key" class="px-1 py-2 bg-card border-l border">
-                                            <div 
-                                                class="inline-flex items-center justify-center w-full h-7 rounded text-[10px] font-bold"
-                                                :class="getStatusClass(member.status_by_period[period.key])"
-                                            >
-                                                {{ getStatusLabel(member.status_by_period[period.key]) }}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                <div v-else class="flex flex-col items-center justify-center py-16 text-center bg-card rounded-xl border">
+                    <div class="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-3">
+                        <Grid3x3 class="w-6 h-6 text-muted-foreground" />
                     </div>
-
-                    <div v-else class="text-center py-8">
-                        <p class="text-sm text-muted-foreground">Pilih tahun untuk melihat data.</p>
-                    </div>
+                    <p class="text-sm text-muted-foreground">Pilih tahun untuk melihat data.</p>
                 </div>
             </div>
         </div>

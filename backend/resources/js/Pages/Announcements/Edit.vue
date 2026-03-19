@@ -6,11 +6,11 @@ import QuillEditor from "@/Components/QuillEditor.vue";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { ArrowLeft, Loader2 } from "lucide-vue-next";
 
 const props = defineProps({
     announcement: Object,
@@ -47,9 +47,7 @@ const saving = ref(false);
 const save = () => {
     saving.value = true;
     router.put(route("announcements.update", props.announcement.id), form.value, {
-        onFinish: () => {
-            saving.value = false;
-        },
+        onFinish: () => { saving.value = false; },
     });
 };
 
@@ -67,28 +65,44 @@ const toggleRole = (role, checked) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-foreground">Edit Pengumuman</h2>
+            <div class="flex items-center gap-2.5">
+                <Button variant="ghost" size="icon" class="h-8 w-8 shrink-0" as-child>
+                    <Link :href="route('announcements.index')">
+                        <ArrowLeft class="w-4 h-4" />
+                    </Link>
+                </Button>
+                <h2 class="text-lg font-semibold leading-tight text-foreground">Edit Pengumuman</h2>
+            </div>
         </template>
 
-        <div class="py-6 sm:py-8">
-            <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-                <Card>
-                    <CardContent class="p-6 space-y-4">
+        <div class="py-3 sm:py-6">
+            <div class="max-w-3xl mx-auto px-3 sm:px-6 lg:px-8">
+                <div class="bg-card rounded-xl border overflow-hidden">
+                    <div class="h-1 w-full bg-primary" />
+
+                    <form @submit.prevent="save" class="p-4 sm:p-6 space-y-4 sm:space-y-5">
+                        <!-- Title -->
                         <div>
-                            <Label for="title">Judul</Label>
-                            <Input id="title" v-model="form.title" type="text" class="mt-1" />
+                            <Label for="title" class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Judul</Label>
+                            <Input id="title" v-model="form.title" type="text" class="mt-1.5" placeholder="Judul pengumuman..." />
                         </div>
+
+                        <!-- Content -->
                         <div>
-                            <Label>Konten</Label>
-                            <div class="mt-1">
+                            <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Konten</Label>
+                            <div class="mt-1.5">
                                 <QuillEditor v-model="form.content" placeholder="Tulis isi pengumuman..." />
                             </div>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                        <div class="border-t" />
+
+                        <!-- Settings -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                             <div>
-                                <Label>Status</Label>
+                                <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Status</Label>
                                 <Select v-model="form.status">
-                                    <SelectTrigger class="mt-1 w-full">
+                                    <SelectTrigger class="mt-1.5 w-full">
                                         <SelectValue placeholder="Pilih status" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -98,13 +112,13 @@ const toggleRole = (role, checked) => {
                                 </Select>
                             </div>
                             <div>
-                                <Label>Tanggal Publish</Label>
-                                <Input v-model="form.publish_date" type="date" class="mt-1" />
+                                <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Tanggal Publish</Label>
+                                <Input v-model="form.publish_date" type="date" class="mt-1.5" />
                             </div>
                             <div>
-                                <Label>Audiens</Label>
+                                <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Audiens</Label>
                                 <Select v-model="form.target_audience">
-                                    <SelectTrigger class="mt-1 w-full">
+                                    <SelectTrigger class="mt-1.5 w-full">
                                         <SelectValue placeholder="Pilih audiens" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -114,10 +128,12 @@ const toggleRole = (role, checked) => {
                                 </Select>
                             </div>
                         </div>
-                        <div v-if="form.target_audience === 'roles'">
-                            <Label>Pilih Role</Label>
-                            <div class="mt-2 grid grid-cols-2 md:grid-cols-3 gap-2">
-                                <label v-for="r in roleOptions" :key="r" class="inline-flex items-center gap-2">
+
+                        <!-- Role Selection -->
+                        <div v-if="form.target_audience === 'roles'" class="bg-muted/50 rounded-lg p-3 border">
+                            <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pilih Role</Label>
+                            <div class="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                <label v-for="r in roleOptions" :key="r" class="inline-flex items-center gap-2 cursor-pointer">
                                     <Checkbox
                                         :checked="form.target_roles.includes(r)"
                                         @update:checked="toggleRole(r, $event)"
@@ -126,14 +142,19 @@ const toggleRole = (role, checked) => {
                                 </label>
                             </div>
                         </div>
-                        <div class="flex items-center justify-end gap-3">
-                            <Button variant="outline" as-child>
+
+                        <!-- Footer -->
+                        <div class="flex items-center justify-end gap-2 pt-2 border-t">
+                            <Button variant="outline" size="sm" as-child>
                                 <Link :href="route('announcements.index')">Batal</Link>
                             </Button>
-                            <Button @click="save" :disabled="saving || !form.title">Simpan</Button>
+                            <Button size="sm" type="submit" :disabled="saving || !form.title">
+                                <Loader2 v-if="saving" class="w-4 h-4 mr-1 animate-spin" />
+                                {{ saving ? 'Menyimpan...' : 'Simpan Perubahan' }}
+                            </Button>
                         </div>
-                    </CardContent>
-                </Card>
+                    </form>
+                </div>
             </div>
         </div>
     </AuthenticatedLayout>

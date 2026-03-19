@@ -131,7 +131,7 @@ const hasData = computed(() => {
 <template>
     <div v-if="hasData" class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         <!-- Trend Chart -->
-        <div class="bg-card p-6 rounded-2xl shadow-sm border border h-80">
+        <div class="bg-card p-6 rounded-2xl shadow-sm border h-80">
             <h3 class="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4">Tren Arus Kas (6 Bulan)</h3>
             <div class="h-64">
                 <Line ref="chartRef" :data="trendData" :options="lineOptions" />
@@ -139,7 +139,7 @@ const hasData = computed(() => {
         </div>
 
         <!-- Category Chart -->
-        <div class="bg-card p-6 rounded-2xl shadow-sm border border h-80">
+        <div class="bg-card p-6 rounded-2xl shadow-sm border h-80">
              <h3 class="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4">Distribusi Pengeluaran</h3>
              <div class="h-64 relative">
                  <div v-if="props.data.categories.datasets[0].data.length === 0" class="absolute inset-0 flex items-center justify-center text-muted-foreground text-xs">
@@ -149,7 +149,7 @@ const hasData = computed(() => {
             </div>
         </div>
     </div>
-    <div v-else class="bg-card p-8 rounded-2xl shadow-sm border border text-center mb-8">
+    <div v-else class="bg-card p-8 rounded-2xl shadow-sm border text-center mb-8">
         <p class="text-muted-foreground">Belum ada cukup data untuk menampilkan grafik analisis.</p>
     </div>
 </template>

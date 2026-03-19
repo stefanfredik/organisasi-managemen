@@ -1,10 +1,15 @@
 <script setup>
 import { Head, useForm, Link } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import InputError from '@/Components/InputError.vue';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import { ArrowLeft, Loader2 } from 'lucide-vue-next';
 
 const props = defineProps({
     donation: Object,
@@ -35,128 +40,106 @@ const submit = () => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-foreground">
-                {{ isEdit ? 'Edit Program Donasi' : 'Buat Program Donasi' }}
-            </h2>
+            <div class="flex items-center gap-2.5">
+                <Button variant="ghost" size="icon" class="h-8 w-8 shrink-0" as-child>
+                    <Link :href="isEdit ? route('donations.show', donation.id) : route('donations.index')">
+                        <ArrowLeft class="w-4 h-4" />
+                    </Link>
+                </Button>
+                <h2 class="text-lg font-semibold leading-tight text-foreground">
+                    {{ isEdit ? 'Edit Program Donasi' : 'Buat Program Donasi' }}
+                </h2>
+            </div>
         </template>
 
-        <div class="py-6 sm:py-8">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div class="overflow-hidden bg-card shadow-sm sm:rounded-lg">
-                    <div class="p-6">
-                        <form @submit.prevent="submit" class="max-w-2xl">
-                            <div class="space-y-6">
-                                <div>
-                                    <Label for="program_name">Nama Program Donasi</Label>
-                                    <Input
-                                        id="program_name"
-                                        type="text"
-                                        class="mt-1 block w-full"
-                                        v-model="form.program_name"
-                                        required
-                                        autofocus
-                                        placeholder="Contoh: Donasi Anak Yatim 2026"
-                                    />
-                                    <InputError class="mt-2" :message="form.errors.program_name" />
-                                </div>
+        <div class="py-4 sm:py-6">
+            <div class="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
+                <div class="bg-card rounded-xl border overflow-hidden">
+                    <div class="h-1 w-full bg-primary" />
+                    <form @submit.prevent="submit" class="p-5 space-y-4">
+                        <div>
+                            <Label class="text-xs">Nama Program Donasi</Label>
+                            <Input
+                                v-model="form.program_name"
+                                class="mt-1"
+                                required
+                                autofocus
+                                placeholder="Contoh: Donasi Anak Yatim 2026"
+                            />
+                            <p v-if="form.errors.program_name" class="mt-1 text-xs text-destructive">{{ form.errors.program_name }}</p>
+                        </div>
 
-                                <div>
-                                    <Label for="description">Deskripsi</Label>
-                                    <textarea
-                                        id="description"
-                                        class="mt-1 block w-full border-input focus:border-ring focus:ring-ring rounded-md shadow-sm"
-                                        v-model="form.description"
-                                        rows="4"
-                                        placeholder="Jelaskan tujuan dan detail penggalangan dana..."
-                                    ></textarea>
-                                    <InputError class="mt-2" :message="form.errors.description" />
-                                </div>
+                        <div>
+                            <Label class="text-xs">Deskripsi</Label>
+                            <Textarea
+                                v-model="form.description"
+                                rows="4"
+                                class="mt-1"
+                                placeholder="Jelaskan tujuan dan detail penggalangan dana..."
+                            />
+                            <p v-if="form.errors.description" class="mt-1 text-xs text-destructive">{{ form.errors.description }}</p>
+                        </div>
 
-                                <div class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
-                                    <div>
-                                        <Label for="target_amount">Target Dana (Rp)</Label>
-                                        <Input
-                                            id="target_amount"
-                                            type="number"
-                                            class="mt-1 block w-full"
-                                            v-model="form.target_amount"
-                                            required
-                                            min="0"
-                                            placeholder="Contoh: 10000000"
-                                        />
-                                        <InputError class="mt-2" :message="form.errors.target_amount" />
-                                    </div>
-
-                                    <div>
-                                        <Label for="is_public">Status Publikasi</Label>
-                                        <div class="mt-2 flex items-center space-x-4">
-                                            <label class="inline-flex items-center">
-                                                <input
-                                                    type="checkbox"
-                                                    class="rounded border-input text-primary shadow-sm focus:ring-ring"
-                                                    v-model="form.is_public"
-                                                />
-                                                <span class="ml-2 text-sm text-muted-foreground">Terlihat di Halaman Publik</span>
-                                            </label>
-                                        </div>
-                                        <InputError class="mt-2" :message="form.errors.is_public" />
-                                    </div>
-                                </div>
-
-                                <div class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
-                                    <div>
-                                        <Label for="start_date">Tanggal Mulai</Label>
-                                        <Input
-                                            id="start_date"
-                                            type="date"
-                                            class="mt-1 block w-full"
-                                            v-model="form.start_date"
-                                            required
-                                        />
-                                        <InputError class="mt-2" :message="form.errors.start_date" />
-                                    </div>
-
-                                    <div>
-                                        <Label for="end_date">Tanggal Selesai (Opsional)</Label>
-                                        <Input
-                                            id="end_date"
-                                            type="date"
-                                            class="mt-1 block w-full"
-                                            v-model="form.end_date"
-                                        />
-                                        <InputError class="mt-2" :message="form.errors.end_date" />
-                                    </div>
-                                </div>
-
-                                <div v-if="isEdit">
-                                    <Label for="status">Status Program</Label>
-                                    <select
-                                        id="status"
-                                        class="mt-1 block w-full border-input focus:border-ring focus:ring-ring rounded-md shadow-sm"
-                                        v-model="form.status"
-                                        required
-                                    >
-                                        <option value="active">Aktif</option>
-                                        <option value="completed">Selesai</option>
-                                        <option value="cancelled">Dibatalkan</option>
-                                    </select>
-                                    <InputError class="mt-2" :message="form.errors.status" />
-                                </div>
-
-                                <div class="flex items-center justify-end mt-8 gap-4">
-                                    <Link
-                                        :href="isEdit ? route('donations.show', props.donation.id) : route('donations.index')"
-                                        class="text-sm text-muted-foreground hover:text-foreground"
-                                    >
-                                        Batal
-                                    </Link>
-                                    <Button type="submit" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
-                                        {{ isEdit ? 'Simpan Perubahan' : 'Buat Program Donasi' }}
-                                    </Button>
-                                </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <Label class="text-xs">Target Dana (Rp)</Label>
+                                <Input
+                                    v-model="form.target_amount"
+                                    type="number"
+                                    class="mt-1"
+                                    required
+                                    min="0"
+                                    placeholder="10000000"
+                                />
+                                <p v-if="form.errors.target_amount" class="mt-1 text-xs text-destructive">{{ form.errors.target_amount }}</p>
                             </div>
-                        </form>
-                    </div>
+                            <div class="flex items-end pb-1">
+                                <div class="flex items-center gap-2">
+                                    <Checkbox :checked="form.is_public" @update:checked="(v) => form.is_public = v" />
+                                    <Label class="text-sm text-muted-foreground">Terlihat di Halaman Publik</Label>
+                                </div>
+                                <p v-if="form.errors.is_public" class="mt-1 text-xs text-destructive">{{ form.errors.is_public }}</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <Label class="text-xs">Tanggal Mulai</Label>
+                                <Input v-model="form.start_date" type="date" class="mt-1" required />
+                                <p v-if="form.errors.start_date" class="mt-1 text-xs text-destructive">{{ form.errors.start_date }}</p>
+                            </div>
+                            <div>
+                                <Label class="text-xs">Tanggal Selesai (Opsional)</Label>
+                                <Input v-model="form.end_date" type="date" class="mt-1" />
+                                <p v-if="form.errors.end_date" class="mt-1 text-xs text-destructive">{{ form.errors.end_date }}</p>
+                            </div>
+                        </div>
+
+                        <div v-if="isEdit">
+                            <Label class="text-xs">Status Program</Label>
+                            <Select v-model="form.status">
+                                <SelectTrigger class="mt-1 w-full">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="active">Aktif</SelectItem>
+                                    <SelectItem value="completed">Selesai</SelectItem>
+                                    <SelectItem value="cancelled">Dibatalkan</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <p v-if="form.errors.status" class="mt-1 text-xs text-destructive">{{ form.errors.status }}</p>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-2 pt-4 border-t">
+                            <Button variant="outline" size="sm" as-child>
+                                <Link :href="isEdit ? route('donations.show', donation.id) : route('donations.index')">Batal</Link>
+                            </Button>
+                            <Button size="sm" type="submit" :disabled="form.processing">
+                                <Loader2 v-if="form.processing" class="w-4 h-4 mr-1 animate-spin" />
+                                {{ isEdit ? 'Simpan Perubahan' : 'Buat Program' }}
+                            </Button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

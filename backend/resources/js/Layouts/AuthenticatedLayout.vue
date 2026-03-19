@@ -55,6 +55,7 @@ import {
     ChevronDown,
     MoreHorizontal,
     X,
+    Shield,
 } from "lucide-vue-next";
 
 const page = usePage();
@@ -148,6 +149,7 @@ const navGroups = computed(() => [
             { icon: Megaphone, label: "Pengumuman", route: "announcements.index", pattern: "announcements.*", show: true },
             { icon: FileText, label: "Notulensi Rapat", route: "meeting-minutes.index", pattern: "meeting-minutes.*", show: true },
             { icon: UserCog, label: "Manajemen User", route: "users.index", pattern: "users.*", show: isAdmin.value },
+            { icon: Shield, label: "Manajemen Role", route: "roles.index", pattern: "roles.*", show: isAdmin.value },
             { icon: Clock, label: "Log Aktivitas", route: "activity-logs.index", pattern: "activity-logs.*", show: isAdmin.value },
             { icon: Database, label: "Backup Data", route: "backups.index", pattern: "backups.*", show: isAdmin.value },
             { icon: Settings, label: "Pengaturan", route: "settings.index", pattern: "settings.*", show: isAdmin.value },

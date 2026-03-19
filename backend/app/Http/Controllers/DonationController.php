@@ -176,9 +176,17 @@ class DonationController extends Controller
             'amount' => 'required|numeric|min:1',
             'donation_date' => 'required|date',
             'is_anonymous' => 'boolean',
+            'payment_method' => 'nullable|string|in:cash,transfer',
             'notes' => 'nullable|string',
+            'receipt' => 'nullable|file|image|max:2048',
         ]);
 
+        if ($request->hasFile('receipt')) {
+            $validated['receipt_path'] = $request->file('receipt')->store('donation-receipts', 'public');
+        }
+        unset($validated['receipt']);
+
+        $validated['payment_method'] = $validated['payment_method'] ?? 'cash';
         $validated['status'] = 'paid';
         $validated['verified_by'] = $request->user()->id;
         $validated['verified_at'] = now();
@@ -207,6 +215,7 @@ class DonationController extends Controller
             'donation_date' => 'required|date',
             'receipt' => 'required|file|image|max:2048',
             'is_anonymous' => 'boolean',
+            'payment_method' => 'nullable|string|in:cash,transfer',
             'notes' => 'nullable|string',
             'donor_name' => 'nullable|string|max:255',
         ]);
@@ -218,6 +227,7 @@ class DonationController extends Controller
             'donation_date' => $validated['donation_date'],
             'receipt_path' => $path,
             'is_anonymous' => $validated['is_anonymous'] ?? false,
+            'payment_method' => $validated['payment_method'] ?? 'transfer',
             'notes' => $validated['notes'] ?? null,
             'status' => 'pending',
             'donor_name' => $validated['donor_name'] ?? $request->user()->name,
@@ -274,6 +284,69 @@ class DonationController extends Controller
             
             return back()->with('success', 'Donasi ditolak.');
         }
+    }
+
+    /**
+     * Update a donation transaction.
+     */
+    public function updateTransaction(Request $request, DonationTransaction $transaction)
+    {
+        $donation = $transaction->donation;
+        $this->authorize('recordTransaction', $donation);
+
+        $validated = $request->validate([
+            'donor_name' => 'nullable|string|max:255',
+            'donor_email' => 'nullable|email|max:255',
+            'donor_phone' => 'nullable|string|max:255',
+            'amount' => 'required|numeric|min:1',
+            'donation_date' => 'required|date',
+            'is_anonymous' => 'boolean',
+            'payment_method' => 'nullable|string|in:cash,transfer',
+            'notes' => 'nullable|string',
+        ]);
+
+        $oldAmount = (float) $transaction->amount;
+        $newAmount = (float) $validated['amount'];
+
+        $transaction->update($validated);
+
+        // Adjust collected_amount if transaction is paid
+        if ($transaction->status === 'paid' && $oldAmount !== $newAmount) {
+            $donation->decrement('collected_amount', $oldAmount);
+            $donation->increment('collected_amount', $newAmount);
+        }
+
+        $this->activityLogger->logUpdate($donation, "Memperbarui transaksi donasi dari {$transaction->donor_name}");
+
+        return back()->with('success', 'Transaksi donasi berhasil diperbarui.');
+    }
+
+    /**
+     * Delete a donation transaction.
+     */
+    public function deleteTransaction(DonationTransaction $transaction)
+    {
+        $donation = $transaction->donation;
+        $this->authorize('recordTransaction', $donation);
+
+        // Revert collected_amount if transaction was paid
+        if ($transaction->status === 'paid') {
+            $donation->decrement('collected_amount', $transaction->amount);
+        }
+
+        $donorName = $transaction->donor_name ?? 'Anonim';
+        $amount = $transaction->amount;
+
+        // Delete receipt file if exists
+        if ($transaction->receipt_path) {
+            Storage::disk('public')->delete($transaction->receipt_path);
+        }
+
+        $transaction->delete();
+
+        $this->activityLogger->logDelete($donation, "Menghapus transaksi donasi dari {$donorName} sebesar " . number_format($amount));
+
+        return back()->with('success', 'Transaksi donasi berhasil dihapus.');
     }
 
     /**

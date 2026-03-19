@@ -6,10 +6,9 @@ import QuillEditor from "@/Components/QuillEditor.vue";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import InputError from "@/Components/InputError.vue";
-import { FileText, X, Upload } from "lucide-vue-next";
+import { ArrowLeft, Loader2, FileText, X, Upload } from "lucide-vue-next";
 
 const props = defineProps({
     members: Array,
@@ -91,30 +90,43 @@ const toggleParticipant = (id, checked) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-foreground">Tambah Notulensi Rapat</h2>
+            <div class="flex items-center gap-2.5">
+                <Button variant="ghost" size="icon" class="h-8 w-8 shrink-0" as-child>
+                    <Link :href="route('meeting-minutes.index')">
+                        <ArrowLeft class="w-4 h-4" />
+                    </Link>
+                </Button>
+                <h2 class="text-lg font-semibold leading-tight text-foreground">Tambah Notulensi Rapat</h2>
+            </div>
         </template>
 
-        <div class="py-6 sm:py-8">
-            <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-                <Card>
-                    <CardContent class="p-6 space-y-4">
-                        <div class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
+        <div class="py-3 sm:py-6">
+            <div class="max-w-3xl mx-auto px-3 sm:px-6 lg:px-8">
+                <div class="bg-card rounded-xl border overflow-hidden">
+                    <div class="h-1 w-full bg-primary" />
+
+                    <form @submit.prevent="save" class="p-4 sm:p-6 space-y-4 sm:space-y-5">
+                        <!-- Date & Agenda -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                             <div>
-                                <Label>Tanggal Rapat</Label>
-                                <Input v-model="form.meeting_date" type="date" class="mt-1" />
+                                <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Tanggal Rapat</Label>
+                                <Input v-model="form.meeting_date" type="date" class="mt-1.5" />
+                                <InputError class="mt-1" :message="form.errors.meeting_date" />
                             </div>
                             <div>
-                                <Label>Agenda</Label>
-                                <Input v-model="form.agenda" type="text" class="mt-1" />
+                                <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Agenda</Label>
+                                <Input v-model="form.agenda" type="text" class="mt-1.5" placeholder="Agenda rapat..." />
                                 <InputError class="mt-1" :message="form.errors.agenda" />
                             </div>
                         </div>
+
+                        <!-- Participants -->
                         <div>
-                            <Label>Peserta</Label>
-                            <div class="mt-2 space-y-2">
+                            <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Peserta</Label>
+                            <div class="mt-1.5 space-y-2">
                                 <Input v-model="search" type="text" placeholder="Cari anggota..." />
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-auto border rounded-md p-2">
-                                    <label v-for="m in filtered" :key="m.id" class="inline-flex items-center gap-2 text-sm">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-auto border rounded-lg p-2.5">
+                                    <label v-for="m in filtered" :key="m.id" class="inline-flex items-center gap-2 text-sm cursor-pointer">
                                         <Checkbox
                                             :checked="form.participants.includes(m.id)"
                                             @update:checked="toggleParticipant(m.id, $event)"
@@ -122,49 +134,55 @@ const toggleParticipant = (id, checked) => {
                                         <span>{{ m.full_name }}</span>
                                     </label>
                                 </div>
-                                <p class="text-xs text-muted-foreground">Pilih satu atau lebih anggota sebagai peserta rapat.</p>
+                                <p class="text-[10px] sm:text-xs text-muted-foreground">Pilih satu atau lebih anggota sebagai peserta rapat.</p>
                                 <InputError :message="form.errors.participants" />
                             </div>
                         </div>
+
+                        <!-- Notes -->
                         <div>
-                            <Label>Hasil Rapat</Label>
-                            <div class="mt-1">
+                            <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Hasil Rapat</Label>
+                            <div class="mt-1.5">
                                 <QuillEditor v-model="form.notes" placeholder="Tulis hasil rapat..." />
                             </div>
                         </div>
 
-                        <!-- Lampiran Section -->
-                        <div class="border-t pt-4">
-                            <Label class="mb-2">Lampiran (Opsional)</Label>
-                            <div class="space-y-3">
+                        <div class="border-t" />
+
+                        <!-- Attachments -->
+                        <div>
+                            <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Lampiran (Opsional)</Label>
+                            <div class="mt-1.5 space-y-3">
                                 <div
                                     @dragover.prevent="isDragging = true"
                                     @dragleave.prevent="isDragging = false"
                                     @drop.prevent="handleDrop($event)"
                                     @click="fileInputRef?.click()"
-                                    class="relative border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all duration-200"
+                                    class="relative border-2 border-dashed rounded-xl p-4 sm:p-5 text-center cursor-pointer transition-all duration-200"
                                     :class="isDragging ? 'border-primary bg-primary/5 scale-[1.01]' : 'border-border hover:border-primary/50 hover:bg-muted/30'"
                                 >
                                     <input ref="fileInputRef" type="file" multiple class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif" @change="handleFileSelect($event)" />
-                                    <Upload class="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-                                    <p class="text-sm font-medium text-primary">Tambah Lampiran</p>
-                                    <p class="text-xs text-muted-foreground mt-1">Drag & drop atau klik. PDF, DOC, XLS, JPG, PNG (Max 10MB/file)</p>
+                                    <Upload class="mx-auto h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground mb-1.5" />
+                                    <p class="text-xs sm:text-sm font-medium text-primary">Tambah Lampiran</p>
+                                    <p class="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Drag & drop atau klik. PDF, DOC, XLS, JPG, PNG (Max 10MB/file)</p>
                                 </div>
 
-                                <div v-if="selectedFiles.length > 0" class="space-y-2">
+                                <div v-if="selectedFiles.length > 0" class="space-y-1.5">
                                     <div class="flex items-center justify-between">
-                                        <p class="text-sm font-medium text-foreground">{{ selectedFiles.length }} file dipilih</p>
-                                        <button type="button" @click="clearAllFiles" class="text-xs text-destructive hover:underline">Hapus semua</button>
+                                        <p class="text-xs sm:text-sm font-medium text-foreground">{{ selectedFiles.length }} file dipilih</p>
+                                        <button type="button" @click="clearAllFiles" class="text-[10px] sm:text-xs text-destructive hover:underline">Hapus semua</button>
                                     </div>
                                     <div
                                         v-for="(file, index) in selectedFiles"
                                         :key="index"
-                                        class="flex items-center gap-3 p-2.5 bg-muted rounded-lg"
+                                        class="flex items-center gap-2.5 p-2 sm:p-2.5 bg-muted/50 rounded-lg"
                                     >
-                                        <FileText class="w-5 h-5 text-muted-foreground shrink-0" />
+                                        <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                                            <FileText class="w-4 h-4 text-primary" />
+                                        </div>
                                         <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-medium text-foreground truncate">{{ file.name }}</p>
-                                            <p class="text-xs text-muted-foreground">{{ formatFileSize(file.size) }}</p>
+                                            <p class="text-xs sm:text-sm font-medium text-foreground truncate">{{ file.name }}</p>
+                                            <p class="text-[10px] sm:text-xs text-muted-foreground">{{ formatFileSize(file.size) }}</p>
                                         </div>
                                         <button type="button" @click="removeFile(index)" class="shrink-0 w-6 h-6 bg-destructive/10 text-destructive rounded-full flex items-center justify-center hover:bg-destructive/20">
                                             <X class="w-3 h-3" />
@@ -176,14 +194,18 @@ const toggleParticipant = (id, checked) => {
                             </div>
                         </div>
 
-                        <div class="flex items-center justify-end gap-3">
-                            <Button variant="outline" as-child>
+                        <!-- Footer -->
+                        <div class="flex items-center justify-end gap-2 pt-2 border-t">
+                            <Button variant="outline" size="sm" as-child>
                                 <Link :href="route('meeting-minutes.index')">Batal</Link>
                             </Button>
-                            <Button @click="save" :disabled="saving || !form.agenda || !form.meeting_date">Simpan</Button>
+                            <Button size="sm" type="submit" :disabled="saving || !form.agenda || !form.meeting_date">
+                                <Loader2 v-if="saving" class="w-4 h-4 mr-1 animate-spin" />
+                                {{ saving ? 'Menyimpan...' : 'Simpan' }}
+                            </Button>
                         </div>
-                    </CardContent>
-                </Card>
+                    </form>
+                </div>
             </div>
         </div>
     </AuthenticatedLayout>

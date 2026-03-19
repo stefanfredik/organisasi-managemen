@@ -1,6 +1,15 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import InputError from '@/Components/InputError.vue';
+import {
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import { ArrowLeft, Loader2, AlertTriangle } from 'lucide-vue-next';
 
 const props = defineProps({
     user: Object,
@@ -14,9 +23,15 @@ const form = useForm({
     role: props.user.role,
 });
 
+const saving = ref(false);
+
 const submit = () => {
+    saving.value = true;
     form.put(route('users.update', props.user.id), {
-        onFinish: () => form.reset('password', 'password_confirmation'),
+        onFinish: () => {
+            saving.value = false;
+            form.reset('password', 'password_confirmation');
+        },
     });
 };
 </script>
@@ -26,112 +41,95 @@ const submit = () => {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center gap-4">
-                <Link :href="route('users.index')" class="p-2 bg-card rounded-xl shadow-sm border border text-muted-foreground hover:text-primary transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                    </svg>
-                </Link>
-                <div>
-                    <h2 class="text-2xl font-black text-foreground uppercase tracking-tight">Edit Pengguna</h2>
-                    <p class="text-muted-foreground text-sm font-medium mt-1">Perbarui informasi akun dan hak akses: <span class="text-primary font-bold">{{ user.name }}</span></p>
-                </div>
+            <div class="flex items-center gap-2.5">
+                <Button variant="ghost" size="icon" class="h-8 w-8 shrink-0" as-child>
+                    <Link :href="route('users.index')">
+                        <ArrowLeft class="w-4 h-4" />
+                    </Link>
+                </Button>
+                <h2 class="text-lg font-semibold leading-tight text-foreground">Edit User</h2>
             </div>
         </template>
 
-        <div class="py-6 sm:py-8">
-            <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="bg-card rounded-[2.5rem] shadow-xl shadow-muted/50 border border overflow-hidden">
-                    <form @submit.prevent="submit" class="p-8 lg:p-12 space-y-8">
-                        <!-- Info Section (read-only) -->
-                        <div class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
-                            <div class="col-span-2">
-                                <div class="bg-muted border border rounded-2xl p-4">
-                                    <div class="flex items-center justify-between">
-                                        <div>
-                                            <div class="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Nama Lengkap</div>
-                                            <div class="text-foreground font-bold">{{ user.name }}</div>
-                                        </div>
-                                        <div>
-                                            <div class="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Email</div>
-                                            <div class="text-foreground font-bold">{{ user.email }}</div>
-                                        </div>
-                                    </div>
-                                    <p class="mt-3 text-[11px] text-muted-foreground">
-                                        Nama dan email dikelola dari menu Anggota. 
-                                        <Link v-if="memberId" :href="`/members/${memberId}/edit`" class="text-primary font-bold">Edit Anggota</Link>
-                                    </p>
+        <div class="py-3 sm:py-6">
+            <div class="max-w-3xl mx-auto px-3 sm:px-6 lg:px-8">
+                <div class="bg-card rounded-xl border overflow-hidden">
+                    <div class="h-1 w-full bg-primary" />
+
+                    <form @submit.prevent="submit" class="p-4 sm:p-6 space-y-4 sm:space-y-5">
+                        <!-- User Info (read-only) -->
+                        <div class="bg-muted/50 rounded-lg border p-3 sm:p-4">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                    <span class="text-primary font-semibold text-sm">{{ user.name.charAt(0).toUpperCase() }}</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-semibold text-foreground truncate">{{ user.name }}</p>
+                                    <p class="text-xs text-muted-foreground truncate">{{ user.email }}</p>
                                 </div>
                             </div>
+                            <p class="text-[10px] sm:text-xs text-muted-foreground">
+                                Nama dan email dikelola dari menu Anggota.
+                                <Link v-if="memberId" :href="`/members/${memberId}/edit`" class="text-primary font-medium hover:underline">Edit Anggota</Link>
+                            </p>
+                        </div>
 
+                        <!-- Role -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                             <div>
-                                <label class="text-[11px] font-black uppercase tracking-widest text-muted-foreground mb-2 block ml-1">Role Akses</label>
-                                <select
-                                    v-model="form.role"
-                                    class="w-full bg-muted border rounded-2xl py-4 px-6 focus:ring-2 focus:ring-ring focus:border-ring transition-all font-bold"
-                                    required
-                                >
-                                    <option v-for="(label, value) in roles" :key="value" :value="value">{{ label }}</option>
-                                </select>
-                                <div v-if="form.errors.role" class="text-rose-500 text-xs mt-2 ml-1 font-bold">{{ form.errors.role }}</div>
+                                <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Role Akses</Label>
+                                <Select v-model="form.role">
+                                    <SelectTrigger class="mt-1.5 w-full">
+                                        <SelectValue placeholder="Pilih role" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem v-for="(label, value) in roles" :key="value" :value="value">{{ label }}</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <InputError class="mt-1" :message="form.errors.role" />
                             </div>
-
-                            <!-- Status displayed read-only -->
                             <div>
-                                <label class="text-[11px] font-black uppercase tracking-widest text-muted-foreground mb-2 block ml-1">Status Akun</label>
-                                <div class="w-full bg-muted border border rounded-2xl py-4 px-6 font-bold">
+                                <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Status Akun</Label>
+                                <div class="mt-1.5 flex h-9 w-full items-center rounded-md border bg-muted/50 px-3 text-sm text-muted-foreground capitalize">
                                     {{ user.status }}
                                 </div>
-                                <p class="mt-2 text-[11px] text-muted-foreground">Status akun mengikuti status Anggota.</p>
-                            </div>
-
-                            <div class="col-span-2 pt-6">
-                                <div class="bg-warning-50 rounded-2xl p-6 border border-warning-100 mb-6">
-                                    <h4 class="text-xs font-black text-warning-700 uppercase tracking-widest mb-1 flex items-center">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                                        Keamanan
-                                    </h4>
-                                    <p class="text-warning-600 text-[11px] font-medium leading-relaxed">Isi bagian password di bawah ini hanya jika Anda ingin merubah password pengguna tersebut. Jika tidak, biarkan kosong.</p>
-                                </div>
-                                <hr class="border">
-                            </div>
-
-                            <div>
-                                <label class="text-[11px] font-black uppercase tracking-widest text-muted-foreground mb-2 block ml-1">Password Baru (Opsional)</label>
-                                <input
-                                    v-model="form.password"
-                                    type="password"
-                                    class="w-full bg-muted border rounded-2xl py-4 px-6 focus:ring-2 focus:ring-ring focus:border-ring transition-all font-medium"
-                                    placeholder="••••••••"
-                                >
-                                <div v-if="form.errors.password" class="text-rose-500 text-xs mt-2 ml-1 font-bold">{{ form.errors.password }}</div>
-                            </div>
-
-                            <div>
-                                <label class="text-[11px] font-black uppercase tracking-widest text-muted-foreground mb-2 block ml-1">Konfirmasi Password Baru</label>
-                                <input
-                                    v-model="form.password_confirmation"
-                                    type="password"
-                                    class="w-full bg-muted border rounded-2xl py-4 px-6 focus:ring-2 focus:ring-ring focus:border-ring transition-all font-medium"
-                                    placeholder="••••••••"
-                                >
+                                <p class="text-[10px] sm:text-xs text-muted-foreground mt-1">Status akun mengikuti status Anggota.</p>
                             </div>
                         </div>
 
-                        <div class="pt-8 flex items-center justify-end gap-4">
-                            <Link
-                                :href="route('users.index')"
-                                class="px-8 py-4 text-sm font-bold text-muted-foreground hover:text-muted-foreground transition-colors uppercase tracking-widest"
-                            >
-                                Batal
-                            </Link>
-                            <button
-                                type="submit"
-                                :disabled="form.processing"
-                                class="px-10 py-4 bg-primary hover:bg-primary/90 text-white text-sm font-black rounded-2xl shadow-xl shadow-sm transition-all active:scale-95 disabled:opacity-50 uppercase tracking-[0.2em]"
-                            >
-                                Simpan Perubahan
-                            </button>
+                        <div class="border-t" />
+
+                        <!-- Password Warning -->
+                        <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800 p-3">
+                            <div class="flex items-center gap-2 mb-1">
+                                <AlertTriangle class="w-4 h-4 text-yellow-600 dark:text-yellow-400 shrink-0" />
+                                <p class="text-xs font-semibold text-yellow-700 dark:text-yellow-400 uppercase tracking-wide">Keamanan</p>
+                            </div>
+                            <p class="text-[10px] sm:text-xs text-yellow-600 dark:text-yellow-300">Isi bagian password di bawah ini hanya jika ingin mengubah password. Jika tidak, biarkan kosong.</p>
+                        </div>
+
+                        <!-- Password -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                            <div>
+                                <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Password Baru (Opsional)</Label>
+                                <Input v-model="form.password" type="password" class="mt-1.5" placeholder="********" />
+                                <InputError class="mt-1" :message="form.errors.password" />
+                            </div>
+                            <div>
+                                <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Konfirmasi Password Baru</Label>
+                                <Input v-model="form.password_confirmation" type="password" class="mt-1.5" placeholder="********" />
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="flex items-center justify-end gap-2 pt-2 border-t">
+                            <Button variant="outline" size="sm" as-child>
+                                <Link :href="route('users.index')">Batal</Link>
+                            </Button>
+                            <Button size="sm" type="submit" :disabled="saving">
+                                <Loader2 v-if="saving" class="w-4 h-4 mr-1 animate-spin" />
+                                {{ saving ? 'Menyimpan...' : 'Simpan Perubahan' }}
+                            </Button>
                         </div>
                     </form>
                 </div>

@@ -5,7 +5,27 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import SearchBar from '@/Components/SearchBar.vue';
 import FilterDropdown from '@/Components/FilterDropdown.vue';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-vue-next';
+import { Badge } from '@/components/ui/badge';
+import {
+    Plus, Heart, CalendarDays, Eye, ChevronLeft, ChevronRight, Globe,
+    Target, TrendingUp, Inbox, MoreVertical, Pencil, Trash2,
+} from 'lucide-vue-next';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const props = defineProps({
     donations: Object,
@@ -31,13 +51,13 @@ watch([search, status], ([newSearch, newStatus]) => {
     });
 });
 
-const getStatusBadge = (status) => {
-    const badges = {
-        active: 'bg-success/20 text-success-foreground',
-        completed: 'bg-primary/20 text-primary',
-        cancelled: 'bg-destructive/20 text-destructive',
+const getStatusConfig = (status) => {
+    const map = {
+        active: { label: 'Aktif', class: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
+        completed: { label: 'Selesai', class: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+        cancelled: { label: 'Dibatalkan', class: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
     };
-    return badges[status] || 'bg-muted text-foreground';
+    return map[status] || { label: status, class: 'bg-muted text-foreground' };
 };
 
 const formatCurrency = (amount) => {
@@ -50,8 +70,7 @@ const formatCurrency = (amount) => {
 
 const calculateProgress = (collected, target) => {
     if (!target || target <= 0) return 0;
-    const progress = (collected / target) * 100;
-    return Math.min(Math.round(progress), 100);
+    return Math.min(Math.round((collected / target) * 100), 100);
 };
 
 const formatDate = (date) => {
@@ -60,6 +79,22 @@ const formatDate = (date) => {
         month: 'short',
         year: 'numeric',
     });
+};
+
+const getProgressColor = (pct) => {
+    if (pct >= 100) return 'bg-green-500';
+    if (pct >= 50) return 'bg-primary';
+    return 'bg-amber-500';
+};
+
+const deleteTarget = ref(null);
+
+const confirmDelete = () => {
+    if (deleteTarget.value) {
+        router.delete(route('donations.destroy', deleteTarget.value), {
+            onFinish: () => deleteTarget.value = null,
+        });
+    }
 };
 </script>
 
@@ -72,7 +107,10 @@ const formatDate = (date) => {
                 <h2 class="text-lg font-semibold leading-tight text-foreground">Donasi</h2>
                 <div class="flex gap-2">
                     <Button v-if="$page.props.auth.user.role !== 'anggota'" variant="outline" size="sm" as-child>
-                        <Link :href="route('donations.report')">Laporan</Link>
+                        <Link :href="route('donations.report')">
+                            <TrendingUp class="w-4 h-4 mr-1" />
+                            <span class="hidden sm:inline">Laporan</span>
+                        </Link>
                     </Button>
                     <Button v-if="$page.props.auth.user.role !== 'anggota'" size="sm" as-child>
                         <Link :href="route('donations.create')">
@@ -85,126 +123,238 @@ const formatDate = (date) => {
         </template>
 
         <div class="py-4 sm:py-6">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div class="bg-card border rounded-xl overflow-hidden">
-                    <!-- Compact Filters -->
-                    <div class="p-3 sm:p-4 border-b">
-                        <div class="flex flex-col sm:flex-row gap-2">
-                            <div class="flex-1">
-                                <SearchBar v-model="search" placeholder="Cari donasi..." />
-                            </div>
-                            <div class="sm:w-36">
-                                <FilterDropdown v-model="status" :options="statusOptions" label="Status" />
-                            </div>
-                        </div>
-                    </div>
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-4">
 
-                    <!-- Grid Layout for Donations -->
-                    <div class="p-3 sm:p-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        <Link 
-                            v-for="donation in donations.data" 
-                            :key="donation.id" 
-                            :href="route('donations.show', donation)"
-                            class="block border rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 bg-card group cursor-pointer h-full flex flex-col"
-                        >
-                            <div class="p-5 flex-1 flex flex-col">
-                                <div class="flex justify-between items-start mb-3">
-                                    <span :class="getStatusBadge(donation.status)" class="px-2.5 py-0.5 rounded-full text-xs font-medium">
-                                        {{ donation.status.charAt(0).toUpperCase() + donation.status.slice(1) }}
+                <!-- Filters -->
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <div class="flex-1">
+                        <SearchBar v-model="search" placeholder="Cari program donasi..." />
+                    </div>
+                    <div class="sm:w-36">
+                        <FilterDropdown v-model="status" :options="statusOptions" label="Status" />
+                    </div>
+                </div>
+
+                <!-- Mobile List View -->
+                <div class="sm:hidden space-y-2">
+                    <div
+                        v-for="donation in donations.data"
+                        :key="'m-' + donation.id"
+                        class="bg-card rounded-lg border overflow-hidden cursor-pointer active:bg-muted/50 transition-colors"
+                        @click="router.visit(route('donations.show', donation))"
+                    >
+                        <div class="flex items-center gap-3 p-3">
+                            <!-- Left color indicator -->
+                            <div
+                                class="w-1 self-stretch rounded-full shrink-0"
+                                :class="donation.status === 'active' ? 'bg-green-500' : donation.status === 'completed' ? 'bg-blue-500' : 'bg-muted-foreground/30'"
+                            />
+
+                            <!-- Content -->
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-1.5 mb-0.5">
+                                    <span
+                                        :class="['px-1.5 py-px rounded-full text-[9px] font-semibold', getStatusConfig(donation.status).class]"
+                                    >
+                                        {{ getStatusConfig(donation.status).label }}
                                     </span>
-                                    <span v-if="donation.is_public" class="text-xs text-muted-foreground flex items-center">
-                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/></svg>
+                                    <span v-if="donation.is_public" class="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                        <Globe class="w-2.5 h-2.5" />
                                         Publik
                                     </span>
                                 </div>
-                                
-                                <h3 class="text-lg font-bold text-foreground mb-2 truncate group-hover:text-primary transition-colors" :title="donation.program_name">
-                                    {{ donation.program_name }}
-                                </h3>
-                                
-                                <p class="text-sm text-muted-foreground mb-4 line-clamp-3 flex-1">
-                                    {{ donation.description || 'Tidak ada deskripsi.' }}
-                                </p>
-                                
-                                <div class="mb-4 bg-muted p-3 rounded-md border border">
-                                    <div class="flex justify-between text-xs font-medium mb-2">
-                                        <div class="flex flex-col">
-                                            <span class="text-muted-foreground text-[10px] uppercase">Terkumpul</span>
-                                            <span class="text-primary font-bold text-sm">{{ formatCurrency(donation.collected_amount) }}</span>
-                                        </div>
-                                        <div class="flex flex-col text-right">
-                                             <span class="text-muted-foreground text-[10px] uppercase">Target</span>
-                                            <span class="text-foreground font-semibold text-sm">{{ formatCurrency(donation.target_amount) }}</span>
-                                        </div>
-                                    </div>
-                                    <div class="w-full bg-muted rounded-full h-2.5 mb-1">
-                                        <div 
-                                            class="bg-primary h-2.5 rounded-full transition-all duration-500" 
+                                <h3 class="text-sm font-semibold text-foreground truncate">{{ donation.program_name }}</h3>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <div class="flex-1 bg-muted rounded-full h-1.5 overflow-hidden">
+                                        <div
+                                            :class="['h-full rounded-full', getProgressColor(calculateProgress(donation.collected_amount, donation.target_amount))]"
                                             :style="{ width: calculateProgress(donation.collected_amount, donation.target_amount) + '%' }"
-                                        ></div>
+                                        />
                                     </div>
-                                    <div class="text-right">
-                                        <span class="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                                            {{ calculateProgress(donation.collected_amount, donation.target_amount) }}% Tercapai
-                                        </span>
-                                    </div>
+                                    <span class="text-[10px] font-bold text-primary shrink-0">
+                                        {{ calculateProgress(donation.collected_amount, donation.target_amount) }}%
+                                    </span>
                                 </div>
-                                
-                                <div class="flex items-center justify-between text-xs text-muted-foreground mt-auto pt-3 border-t border">
-                                    <div class="flex items-center" title="Periode Donasi">
-                                        <svg class="w-4 h-4 mr-1.5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                        <span>{{ formatDate(donation.start_date) }}</span>
-                                        <span v-if="donation.end_date" class="mx-1">-</span>
-                                        <span v-if="donation.end_date">{{ formatDate(donation.end_date) }}</span>
-                                    </div>
+                                <div class="flex items-center justify-between mt-1">
+                                    <span class="text-[11px] text-muted-foreground tabular-nums">{{ formatCurrency(donation.collected_amount) }} / {{ formatCurrency(donation.target_amount) }}</span>
                                 </div>
                             </div>
-                        </Link>
 
-                        <div v-if="donations.data.length === 0" class="col-span-1 md:col-span-2 lg:col-span-3 py-12 text-center bg-muted rounded-lg border-2 border-dashed">
-                            <svg class="mx-auto h-12 w-12 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                            </svg>
-                            <h3 class="mt-2 text-sm font-medium text-foreground">Tidak ada program donasi</h3>
-                            <p class="mt-1 text-sm text-muted-foreground">Mulai dengan membuat program donasi baru.</p>
+                            <!-- Action menu -->
+                            <DropdownMenu v-if="$page.props.auth.user.role !== 'anggota'">
+                                <DropdownMenuTrigger as-child @click.stop>
+                                    <Button variant="ghost" size="sm" class="h-7 w-7 p-0 shrink-0">
+                                        <MoreVertical class="w-4 h-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem @click="router.visit(route('donations.edit', donation))">
+                                        <Pencil class="w-4 h-4 mr-2" />
+                                        Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem class="text-destructive" @click="deleteTarget = donation">
+                                        <Trash2 class="w-4 h-4 mr-2" />
+                                        Hapus
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Pagination -->
-                    <div class="p-6 border-t border">
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-foreground">
-                                Menampilkan {{ donations.from || 0 }} sampai {{ donations.to || 0 }} dari {{ donations.total }} hasil
-                            </span>
-                            <div class="flex gap-2">
-                                <Link
-                                    v-if="donations.prev_page_url"
-                                    :href="donations.prev_page_url"
-                                    class="px-3 py-1 border rounded bg-card hover:bg-muted text-sm font-medium"
-                                >
-                                    Sebelumnya
-                                </Link>
-                                <Link
-                                    v-if="donations.next_page_url"
-                                    :href="donations.next_page_url"
-                                    class="px-3 py-1 border rounded bg-card hover:bg-muted text-sm font-medium"
-                                >
-                                    Selanjutnya
-                                </Link>
+                <!-- Desktop Grid Cards -->
+                <div class="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div
+                        v-for="donation in donations.data"
+                        :key="'d-' + donation.id"
+                        class="group bg-card rounded-xl border overflow-hidden hover:shadow-md hover:border-primary/20 transition-all duration-200 flex flex-col cursor-pointer"
+                        @click="router.visit(route('donations.show', donation))"
+                    >
+                        <!-- Color accent -->
+                        <div
+                            class="h-1 w-full"
+                            :class="donation.status === 'active' ? 'bg-green-500' : donation.status === 'completed' ? 'bg-blue-500' : 'bg-muted-foreground/30'"
+                        />
+
+                        <div class="p-4 flex-1 flex flex-col">
+                            <!-- Header: Status + Actions -->
+                            <div class="flex items-center justify-between gap-2 mb-2.5">
+                                <div class="flex items-center gap-2">
+                                    <span
+                                        :class="['px-2 py-0.5 rounded-full text-[10px] font-semibold', getStatusConfig(donation.status).class]"
+                                    >
+                                        {{ getStatusConfig(donation.status).label }}
+                                    </span>
+                                    <span v-if="donation.is_public" class="text-[11px] text-muted-foreground flex items-center gap-1">
+                                        <Globe class="w-3 h-3" />
+                                        Publik
+                                    </span>
+                                </div>
+                                <DropdownMenu v-if="$page.props.auth.user.role !== 'anggota'">
+                                    <DropdownMenuTrigger as-child @click.stop>
+                                        <Button variant="ghost" size="sm" class="h-7 w-7 p-0">
+                                            <MoreVertical class="w-4 h-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem @click="router.visit(route('donations.edit', donation))">
+                                            <Pencil class="w-4 h-4 mr-2" />
+                                            Edit
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem class="text-destructive" @click="deleteTarget = donation">
+                                            <Trash2 class="w-4 h-4 mr-2" />
+                                            Hapus
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+
+                            <!-- Title -->
+                            <h3 class="text-sm font-semibold text-foreground mb-1.5 line-clamp-1 group-hover:text-primary transition-colors">
+                                {{ donation.program_name }}
+                            </h3>
+
+                            <!-- Description -->
+                            <p class="text-xs text-muted-foreground mb-3 line-clamp-2 flex-1">
+                                {{ donation.description || 'Tidak ada deskripsi.' }}
+                            </p>
+
+                            <!-- Progress Section -->
+                            <div class="bg-muted/50 rounded-lg p-3 border space-y-2">
+                                <div class="flex justify-between items-baseline">
+                                    <div>
+                                        <p class="text-[10px] text-muted-foreground uppercase font-medium">Terkumpul</p>
+                                        <p class="text-sm font-bold text-primary tabular-nums">{{ formatCurrency(donation.collected_amount) }}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-[10px] text-muted-foreground uppercase font-medium">Target</p>
+                                        <p class="text-xs font-semibold text-foreground tabular-nums">{{ formatCurrency(donation.target_amount) }}</p>
+                                    </div>
+                                </div>
+                                <div class="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                                    <div
+                                        :class="['h-full rounded-full transition-all duration-700 ease-out', getProgressColor(calculateProgress(donation.collected_amount, donation.target_amount))]"
+                                        :style="{ width: calculateProgress(donation.collected_amount, donation.target_amount) + '%' }"
+                                    />
+                                </div>
+                                <p class="text-right">
+                                    <span class="text-[10px] font-bold text-primary">
+                                        {{ calculateProgress(donation.collected_amount, donation.target_amount) }}% Tercapai
+                                    </span>
+                                </p>
+                            </div>
+
+                            <!-- Date -->
+                            <div class="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-3 pt-3 border-t">
+                                <CalendarDays class="w-3.5 h-3.5 shrink-0" />
+                                <span>{{ formatDate(donation.start_date) }}</span>
+                                <template v-if="donation.end_date">
+                                    <span>-</span>
+                                    <span>{{ formatDate(donation.end_date) }}</span>
+                                </template>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Empty State -->
+                <div v-if="donations.data.length === 0" class="py-16 text-center">
+                    <div class="w-14 h-14 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+                        <Inbox class="w-7 h-7 text-muted-foreground" />
+                    </div>
+                    <h3 class="text-sm font-semibold text-foreground mb-1">Tidak ada program donasi</h3>
+                    <p class="text-xs text-muted-foreground">Mulai dengan membuat program donasi baru.</p>
+                </div>
+
+                <!-- Pagination -->
+                <div v-if="donations.total > donations.per_page" class="flex items-center justify-between pt-2">
+                    <p class="text-xs text-muted-foreground">
+                        {{ donations.from }}-{{ donations.to }} dari {{ donations.total }}
+                    </p>
+                    <div class="flex gap-1.5">
+                        <Button
+                            v-if="donations.prev_page_url"
+                            variant="outline"
+                            size="sm"
+                            as-child
+                            class="h-8"
+                        >
+                            <Link :href="donations.prev_page_url">
+                                <ChevronLeft class="w-4 h-4 mr-0.5" />
+                                Sebelumnya
+                            </Link>
+                        </Button>
+                        <Button
+                            v-if="donations.next_page_url"
+                            variant="outline"
+                            size="sm"
+                            as-child
+                            class="h-8"
+                        >
+                            <Link :href="donations.next_page_url">
+                                Selanjutnya
+                                <ChevronRight class="w-4 h-4 ml-0.5" />
+                            </Link>
+                        </Button>
+                    </div>
+                </div>
+
             </div>
         </div>
+        <!-- Delete Confirmation -->
+        <AlertDialog :open="!!deleteTarget" @update:open="val => !val && (deleteTarget = null)">
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Hapus Program Donasi</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Apakah Anda yakin ingin menghapus program <strong>{{ deleteTarget?.program_name }}</strong>? Tindakan ini tidak dapat dibatalkan.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                    <AlertDialogAction variant="destructive" @click="confirmDelete">Hapus</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </AuthenticatedLayout>
 </template>
-
-<style scoped>
-.line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;  
-    overflow: hidden;
-}
-</style>

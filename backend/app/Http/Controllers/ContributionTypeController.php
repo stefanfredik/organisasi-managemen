@@ -12,7 +12,10 @@ class ContributionTypeController extends Controller
     public function index()
     {
         return Inertia::render('ContributionTypes/Index', [
-            'types' => ContributionType::with('wallet')->get(),
+            'types' => ContributionType::with('wallet')
+                ->withCount('contributions')
+                ->withSum('contributions', 'amount')
+                ->get(),
             'wallets' => Wallet::where('is_active', true)->get(),
         ]);
     }

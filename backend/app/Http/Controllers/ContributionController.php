@@ -469,7 +469,7 @@ class ContributionController extends Controller
                     Contribution::create([
                         'member_id' => $memberId,
                         'contribution_type_id' => $validated['contribution_type_id'],
-                        'amount' => $validated['amount'],
+                        'amount' => $contributionType->amount,
                         'payment_date' => $validated['payment_date'],
                         'payment_period' => $period,
                         'payment_method' => in_array($userRole, ['admin', 'bendahara']) ? ($validated['payment_method'] ?? 'cash') : 'transfer',
@@ -677,46 +677,90 @@ class ContributionController extends Controller
             $currentPeriodPaidCount = 0;
             $targetCount = $totalActiveMembers;
             $currentPeriodLabel = 'Periode Ini';
+            $isPeriodic = true;
+            $currentPeriodKey = null;
+            $prevPeriodKey = null;
 
             if ($type->period === 'monthly') {
-                // Assume 2025-01 format based on getMemberStatus usage
-                $currentPeriodKey = Carbon::now()->format('Y-m'); 
+                $currentPeriodKey = Carbon::now()->format('Y-m');
+                $prevPeriodKey = Carbon::now()->subMonth()->format('Y-m');
                 $currentPeriodLabel = Carbon::now()->locale('id')->isoFormat('MMMM Y');
-                
-                // Try finding by Y-m first (standard)
+
                 $currentPeriodPaidCount = $type->contributions()
                     ->where('status', 'paid')
                     ->where(function($q) use ($currentPeriodKey, $currentPeriodLabel) {
                         $q->where('payment_period', $currentPeriodKey)
-                          ->orWhere('payment_period', $currentPeriodLabel); // Fallback if stored as label
+                          ->orWhere('payment_period', $currentPeriodLabel);
                     })
                     ->count();
 
             } elseif ($type->period === 'yearly') {
                 $currentPeriodKey = Carbon::now()->format('Y');
+                $prevPeriodKey = Carbon::now()->subYear()->format('Y');
                 $currentPeriodLabel = $currentPeriodKey;
-                
+
                 $currentPeriodPaidCount = $type->contributions()
                     ->where('status', 'paid')
                     ->where('payment_period', $currentPeriodKey)
                     ->count();
 
             } elseif ($type->period === 'weekly') {
-                 $currentPeriodKey = Carbon::now()->format('o-W');
-                 $currentPeriodLabel = 'Minggu ini';
-                 $currentPeriodPaidCount = $type->contributions()
+                $currentPeriodKey = Carbon::now()->format('o-W');
+                $prevPeriodKey = Carbon::now()->subWeek()->format('o-W');
+                $currentPeriodLabel = 'Minggu ini';
+                $currentPeriodPaidCount = $type->contributions()
                     ->where('status', 'paid')
                     ->where('payment_period', $currentPeriodKey)
                     ->count();
             } else {
-                // One time
+                $isPeriodic = false;
                 $currentPeriodLabel = 'Total';
-                $currentPeriodPaidCount = $type->paid_count; // Cumulative
+                $currentPeriodPaidCount = $type->paid_count;
+            }
+
+            // Calculate member status counts (lunas, belum, tunggak)
+            $paidCurrentMemberCount = 0;
+            $paidPreviousMemberCount = 0;
+
+            if ($isPeriodic) {
+                $paidCurrentMemberCount = $type->contributions()
+                    ->where('status', 'paid')
+                    ->where(function($q) use ($currentPeriodKey) {
+                        $q->where('payment_period', $currentPeriodKey)
+                          ->orWhere('payment_period', 'like', "%$currentPeriodKey%");
+                    })
+                    ->distinct('member_id')
+                    ->count('member_id');
+
+                $paidPreviousMemberCount = $type->contributions()
+                    ->where('status', 'paid')
+                    ->where(function($q) use ($prevPeriodKey) {
+                        $q->where('payment_period', $prevPeriodKey)
+                          ->orWhere('payment_period', 'like', "%$prevPeriodKey%");
+                    })
+                    ->distinct('member_id')
+                    ->count('member_id');
+
+                $lunas = $paidCurrentMemberCount;
+                $tunggak = max($totalActiveMembers - $paidPreviousMemberCount, 0);
+                $belum = max($totalActiveMembers - $lunas - $tunggak, 0);
+            } else {
+                $paidCurrentMemberCount = $type->contributions()
+                    ->where('status', 'paid')
+                    ->distinct('member_id')
+                    ->count('member_id');
+
+                $lunas = $paidCurrentMemberCount;
+                $tunggak = 0;
+                $belum = max($totalActiveMembers - $lunas, 0);
             }
 
             $type->current_period_paid = $currentPeriodPaidCount;
             $type->target_count = $targetCount;
             $type->current_period_label = $currentPeriodLabel;
+            $type->lunas_count = $lunas;
+            $type->belum_count = $belum;
+            $type->tunggak_count = $tunggak;
 
             return $type;
         });
@@ -873,7 +917,86 @@ class ContributionController extends Controller
         ]);
     }
 
-    
+    /**
+     * Get members list by status category for a contribution type.
+     */
+    public function membersByStatus(Request $request, ContributionType $contributionType)
+    {
+        $status = $request->input('status'); // paid, unpaid, arrears
+        $totalMembers = Member::where('status', 'active');
+
+        $referenceDate = $request->input('period_filter')
+            ? \Carbon\Carbon::parse($request->input('period_filter'))
+            : \Carbon\Carbon::now();
+
+        $isPeriodic = true;
+        $currentPeriodKey = null;
+        $prevPeriodKey = null;
+
+        if ($contributionType->period === 'monthly') {
+            $currentPeriodKey = $referenceDate->format('Y-m');
+            $prevPeriodKey = $referenceDate->copy()->subMonth()->format('Y-m');
+        } elseif ($contributionType->period === 'yearly') {
+            $currentPeriodKey = $referenceDate->format('Y');
+            $prevPeriodKey = $referenceDate->copy()->subYear()->format('Y');
+        } elseif ($contributionType->period === 'weekly') {
+            $currentPeriodKey = $referenceDate->format('o-W');
+            $prevPeriodKey = $referenceDate->copy()->subWeek()->format('o-W');
+        } else {
+            $isPeriodic = false;
+        }
+
+        // Get member IDs who paid current period
+        $paidCurrentIds = Contribution::where('contribution_type_id', $contributionType->id)
+            ->where('status', 'paid')
+            ->when($isPeriodic, function ($q) use ($currentPeriodKey) {
+                $q->where(function ($q2) use ($currentPeriodKey) {
+                    $q2->where('payment_period', $currentPeriodKey)
+                        ->orWhere('payment_period', 'like', "%$currentPeriodKey%");
+                });
+            })
+            ->pluck('member_id')
+            ->unique()
+            ->values();
+
+        // Get member IDs who paid previous period (for arrears calc)
+        $paidPreviousIds = collect();
+        if ($isPeriodic && $prevPeriodKey) {
+            $paidPreviousIds = Contribution::where('contribution_type_id', $contributionType->id)
+                ->where('status', 'paid')
+                ->where(function ($q) use ($prevPeriodKey) {
+                    $q->where('payment_period', $prevPeriodKey)
+                        ->orWhere('payment_period', 'like', "%$prevPeriodKey%");
+                })
+                ->pluck('member_id')
+                ->unique()
+                ->values();
+        }
+
+        $query = Member::where('status', 'active')
+            ->select('id', 'full_name', 'member_code', 'photo');
+
+        if ($status === 'paid') {
+            $query->whereIn('id', $paidCurrentIds);
+        } elseif ($status === 'arrears' && $isPeriodic) {
+            $query->whereNotIn('id', $paidPreviousIds);
+        } elseif ($status === 'unpaid') {
+            if ($isPeriodic) {
+                // Unpaid = not paid current AND not in arrears (paid previous)
+                $arrearsIds = Member::where('status', 'active')
+                    ->whereNotIn('id', $paidPreviousIds)
+                    ->pluck('id');
+                $query->whereNotIn('id', $paidCurrentIds)
+                    ->whereNotIn('id', $arrearsIds);
+            } else {
+                $query->whereNotIn('id', $paidCurrentIds);
+            }
+        }
+
+        return response()->json($query->orderBy('full_name')->get());
+    }
+
+
     public function verifyAction(Request $request, $id)
     {
         $contribution = Contribution::findOrFail($id);
