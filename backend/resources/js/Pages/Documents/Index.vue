@@ -3,8 +3,11 @@
         <template #header>
             <div class="flex justify-between items-center">
                 <h2 class="font-semibold text-xl text-foreground leading-tight">
-                    Manajemen Dokumen
-                </h2>
+<div class="flex items-center gap-2.5">
+<FileText class="w-5 h-5" />
+<span>Manajemen Dokumen</span>
+</div>
+</h2>
                 <Button v-if="$page.props.auth.can.createDocument" as-child>
                     <Link :href="route('documents.create')">
                         <Plus class="w-4 h-4 mr-2" />
@@ -152,13 +155,11 @@ import { Button } from '@/components/ui/button';
 import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import { Input } from '@/components/ui/input';
 import {
-    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import {
-    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from '@/components/ui/table';
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from '@/components/ui/table';
 import Pagination from '@/Components/Pagination.vue';
 import { Plus, Download, Pencil, Trash2, FileText } from 'lucide-vue-next';
 import { useToast } from '@/composables/useToast';

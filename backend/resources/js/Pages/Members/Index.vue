@@ -7,19 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import {
-    Sheet,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
-    SheetDescription,
-    SheetFooter,
-} from '@/components/ui/sheet';
+    Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, } from '@/components/ui/sheet';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import FilterDropdown from '@/Components/FilterDropdown.vue';
@@ -181,7 +171,9 @@ const getPositionBadgeClass = (pos) => {
             <div class="flex items-center justify-between gap-3">
                 <div class="flex items-center gap-2.5">
                     <Users class="w-5 h-5 text-primary" />
-                    <h2 class="text-lg font-semibold leading-tight text-foreground">Daftar Anggota</h2>
+                    <h2 class="text-lg font-semibold leading-tight text-foreground">
+                        Daftar Anggota
+                    </h2>
                 </div>
                 <Link v-if="hasPermission('manage_members')" href="/members/create">
                     <Button size="sm">

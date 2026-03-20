@@ -6,12 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "@/components/ui/table";
 import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import {
-    Shield, ShieldCheck, Users, Loader2, Check, Briefcase, Plus, Pencil, Trash2, Inbox
-} from "lucide-vue-next";
+    Shield, ShieldCheck, Users, Loader2, Check, Briefcase, Plus, Pencil, Trash2, Inbox } from 'lucide-vue-next';
 import { useToast } from '@/composables/useToast';
 
 const toast = useToast();
@@ -249,7 +247,9 @@ const confirmDelete = () => {
             <div class="flex items-center justify-between gap-3">
                 <div class="flex items-center gap-2.5">
                     <Shield class="w-5 h-5 text-primary" />
-                    <h2 class="text-lg font-semibold leading-tight text-foreground">Role & Jabatan</h2>
+                    <h2 class="text-lg font-semibold leading-tight text-foreground">
+                        Role & Jabatan
+                    </h2>
                 </div>
                 <!-- Only show save button if editing permissions -->
                 <Button v-show="activeTab === 'permissions'" size="sm" :disabled="saving" @click="save">

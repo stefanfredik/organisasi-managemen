@@ -6,15 +6,11 @@ import SearchBar from "@/Components/SearchBar.vue";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "@/components/ui/table";
 import {
-    Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
-} from "@/components/ui/sheet";
+    Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, } from "@/components/ui/sheet";
 import {
-    Inbox, Clock, UserCircle, Globe, FileText, MoreVertical,
-    ChevronLeft, ChevronRight,
-} from "lucide-vue-next";
+    Inbox, Clock, UserCircle, Globe, FileText, MoreVertical, ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import debounce from "lodash/debounce";
 
 const props = defineProps({
@@ -82,7 +78,12 @@ const closeDetail = () => { showDetailSheet.value = false; detailItem.value = nu
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-lg font-semibold leading-tight text-foreground">Log Aktivitas</h2>
+            <h2 class="text-lg font-semibold leading-tight text-foreground">
+<div class="flex items-center gap-2.5">
+<Clock class="w-5 h-5" />
+<span>Log Aktivitas</span>
+</div>
+</h2>
         </template>
 
         <div class="py-3 sm:py-6">

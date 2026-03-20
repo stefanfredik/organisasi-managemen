@@ -6,9 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-    Building2, Coins, Hash, Globe, Settings, Loader2, Check,
-    Upload, X, Image as ImageIcon, Palette,
-} from "lucide-vue-next";
+    Building2, Coins, Hash, Globe, Settings, Loader2, Check, Upload, X, Image as ImageIcon, Palette } from 'lucide-vue-next';
 import { getThemes, applyTheme } from "@/composables/useTheme";
 
 const props = defineProps({
@@ -268,7 +266,12 @@ const selectTheme = (key) => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between gap-3">
-                <h2 class="text-lg font-semibold leading-tight text-foreground">Pengaturan Sistem</h2>
+                <h2 class="text-lg font-semibold leading-tight text-foreground">
+<div class="flex items-center gap-2.5">
+<Settings class="w-5 h-5" />
+<span>Pengaturan Sistem</span>
+</div>
+</h2>
                 <Button size="sm" :disabled="saving" @click="submit">
                     <Loader2 v-if="saving" class="w-4 h-4 mr-1 animate-spin" />
                     <Check v-else class="w-4 h-4 mr-1" />

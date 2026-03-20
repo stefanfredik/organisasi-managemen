@@ -8,13 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from '@/components/ui/card';
 import {
-    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "@/components/ui/table";
 import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import {
-    Plus, Eye, Pencil, Trash2, Megaphone, CalendarDays, Users, Inbox,
-    ChevronLeft, ChevronRight, MoreVertical, CheckCircle,
-} from "lucide-vue-next";
+    Plus, Eye, Pencil, Trash2, Megaphone, CalendarDays, Users, Inbox, ChevronLeft, ChevronRight, MoreVertical, CheckCircle } from 'lucide-vue-next';
 import {
     Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
@@ -87,7 +84,9 @@ const closeDetail = () => { showDetailSheet.value = false; detailItem.value = nu
             <div class="flex items-center justify-between gap-3">
                 <div class="flex items-center gap-2.5">
                     <Megaphone class="w-5 h-5 text-primary" />
-                    <h2 class="text-lg font-semibold leading-tight text-foreground">Pengumuman</h2>
+                    <h2 class="text-lg font-semibold leading-tight text-foreground">
+                        Pengumuman
+                    </h2>
                 </div>
                 <Button v-if="hasPermission('manage_announcements')" size="sm" as-child>
                     <Link :href="route('announcements.create')">

@@ -7,23 +7,16 @@ import FilterDropdown from '@/Components/FilterDropdown.vue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from '@/components/ui/table';
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from '@/components/ui/table';
 import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-    AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, } from '@/components/ui/alert-dialog';
 import {
-    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, } from '@/components/ui/dropdown-menu';
 import {
-    Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
-} from '@/components/ui/sheet';
+    Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, } from '@/components/ui/sheet';
 import {
-    Plus, Eye, Pencil, Trash2, MoreVertical, Inbox, KeyRound, ShieldCheck, ShieldOff,
-    ChevronLeft, ChevronRight, Mail,
-} from 'lucide-vue-next';
+    Plus, Eye, Pencil, Trash2, MoreVertical, Inbox, KeyRound, ShieldCheck, ShieldOff, ChevronLeft, ChevronRight, Mail, UserCog } from 'lucide-vue-next';
 import debounce from 'lodash/debounce';
 import { useToast } from '@/composables/useToast';
 
@@ -121,7 +114,12 @@ const formatLastLogin = (val) => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between gap-3">
-                <h2 class="text-lg font-semibold leading-tight text-foreground">Manajemen User</h2>
+                <h2 class="text-lg font-semibold leading-tight text-foreground">
+<div class="flex items-center gap-2.5">
+<UserCog class="w-5 h-5" />
+<span>Manajemen User</span>
+</div>
+</h2>
                 <Button size="sm" as-child>
                     <Link :href="route('users.create')">
                         <Plus class="w-4 h-4 mr-1" />

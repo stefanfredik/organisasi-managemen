@@ -9,20 +9,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import {
-    Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from '@/components/ui/dialog';
+    Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, } from '@/components/ui/dialog';
 import {
-    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/ui/select';
 import {
-    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, } from '@/components/ui/dropdown-menu';
 import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import {
-    Plus, Pencil, Trash2, MoreVertical, Settings2, Wallet,
-    CalendarClock, Repeat, CircleDot, TrendingUp, Users,
-    Loader2, Search, CalendarDays, Clock,
-} from 'lucide-vue-next';
+    Plus, Pencil, Trash2, MoreVertical, Settings2, Wallet, CalendarClock, Repeat, CircleDot, TrendingUp, Users, Loader2, Search, CalendarDays, Clock, Coins } from 'lucide-vue-next';
 import { useToast } from '@/composables/useToast';
 
 const toast = useToast();
@@ -186,7 +180,12 @@ const executeDelete = () => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between gap-3">
-                <h2 class="text-lg font-semibold leading-tight text-foreground">Jenis Iuran</h2>
+                <h2 class="text-lg font-semibold leading-tight text-foreground">
+<div class="flex items-center gap-2.5">
+<Coins class="w-5 h-5" />
+<span>Jenis Iuran</span>
+</div>
+</h2>
                 <Button v-if="hasPermission('manage_contribution_types')" size="sm" @click="openCreate">
                     <Plus class="w-4 h-4 mr-1" />
                     <span class="hidden sm:inline">Tambah Jenis</span>

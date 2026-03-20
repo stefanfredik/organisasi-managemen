@@ -8,17 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-    Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from "@/components/ui/dialog";
+    Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import {
-    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, } from "@/components/ui/dropdown-menu";
 import {
-    Plus, Pencil, Trash2, Wallet, TrendingUp, TrendingDown, ArrowRight,
-    MoreVertical, Eye, CreditCard, Save, Banknote, FileText, ToggleLeft,
-} from "lucide-vue-next";
+    Plus, Pencil, Trash2, Wallet, TrendingUp, TrendingDown, ArrowRight, MoreVertical, Eye, CreditCard, Save, Banknote, FileText, ToggleLeft } from 'lucide-vue-next';
 import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import { useToast } from '@/composables/useToast';
 
@@ -158,7 +154,12 @@ const getGradient = (index) => cardGradients[index % cardGradients.length];
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between gap-3">
-                <h2 class="text-lg font-semibold leading-tight text-foreground">Kas & Dompet</h2>
+                <h2 class="text-lg font-semibold leading-tight text-foreground">
+<div class="flex items-center gap-2.5">
+<Wallet class="w-5 h-5" />
+<span>Kas & Dompet</span>
+</div>
+</h2>
                 <Button
                     v-if="$page.props.auth.user.role === 'admin' || $page.props.auth.user.position === 'bendahara'"
                     size="sm"

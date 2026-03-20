@@ -33,7 +33,7 @@ import {
     LayoutDashboard,
     Users,
     CalendarDays,
-    Network,
+    Share2,
     Image,
     Eye,
     Wallet,
@@ -59,6 +59,10 @@ import {
     Shield,
     Briefcase,
     Trophy,
+    Compass,
+    Layers,
+    Landmark,
+    LineChart,
 } from "lucide-vue-next";
 
 const page = usePage();
@@ -124,15 +128,17 @@ const appNameRest = computed(() => appName.value.split(" ").slice(1).join(" "));
 const navGroups = computed(() => [
     {
         label: "Utama",
+        icon: Compass,
         items: [
             { icon: LayoutDashboard, label: "Dashboard", route: "dashboard", pattern: "dashboard", show: true },
             { icon: Users, label: "Anggota", route: "members.index", pattern: "members.*", show: hasPermission("view_members") },
             { icon: CalendarDays, label: "Kegiatan", route: "events.index", pattern: "events.*", show: hasPermission("view_events") },
-            { icon: Network, label: "Struktur Organisasi", route: "organization-structures.index", pattern: "organization-structures.*", show: hasPermission("view_organization_structures") },
+            { icon: Share2, label: "Struktur Organisasi", route: "organization-structures.index", pattern: "organization-structures.*", show: hasPermission("view_organization_structures") },
         ],
     },
     {
         label: "Konten",
+        icon: Layers,
         items: [
             { icon: Image, label: "Album", route: "albums.index", pattern: "albums.*", show: hasPermission("view_albums") },
             { icon: Eye, label: "Visi & Misi", route: "vision-missions.index", pattern: "vision-missions.*", show: hasPermission("view_vision_missions") },
@@ -140,6 +146,7 @@ const navGroups = computed(() => [
     },
     {
         label: "Keuangan",
+        icon: Landmark,
         items: [
             { icon: Wallet, label: "Kas (Dompet)", route: "wallets.index", pattern: "wallets.*", show: hasPermission("view_finance") },
             { icon: BarChart3, label: "Transaksi", route: "finances.index", pattern: "finances.*", show: hasPermission("view_finance") },
@@ -158,6 +165,7 @@ const navGroups = computed(() => [
     },
     {
         label: "Administrasi",
+        icon: Briefcase,
         items: [
             { icon: Megaphone, label: "Pengumuman", route: "announcements.index", pattern: "announcements.*", show: hasPermission("view_announcements") },
             { icon: FileText, label: "Notulensi Rapat", route: "meeting-minutes.index", pattern: "meeting-minutes.*", show: hasPermission("view_meeting_minutes") },
@@ -170,6 +178,7 @@ const navGroups = computed(() => [
     },
     {
         label: "Laporan",
+        icon: LineChart,
         items: [
             { icon: FileBarChart, label: "Laporan", route: "reports.index", pattern: "reports.*", show: hasPermission("view_reports") },
         ],
@@ -252,8 +261,9 @@ const isMoreActive = computed(() => {
                     <div v-for="group in navGroups" :key="group.label">
                         <p
                             v-show="isSidebarOpen"
-                            class="px-3 mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+                            class="px-3 mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5"
                         >
+                            <component v-if="group.icon" :is="group.icon" class="h-3.5 w-3.5" />
                             {{ group.label }}
                         </p>
                         <div v-if="!isSidebarOpen && group !== navGroups[0]" class="my-2">
@@ -433,7 +443,8 @@ const isMoreActive = computed(() => {
                         <!-- Mobile Nav Links -->
                         <div class="flex-1 overflow-y-auto py-4 px-3 space-y-5 overscroll-contain">
                             <div v-for="group in navGroups" :key="group.label">
-                                <p class="px-3 mb-2 text-[10px] font-bold uppercase text-muted-foreground tracking-widest">
+                                <p class="px-3 mb-2 text-[10px] font-bold uppercase text-muted-foreground tracking-widest flex items-center gap-1.5">
+                                    <component v-if="group.icon" :is="group.icon" class="h-3.5 w-3.5" />
                                     {{ group.label }}
                                 </p>
                                 <div class="space-y-0.5">
@@ -507,7 +518,8 @@ const isMoreActive = computed(() => {
                         <!-- Grid menu items -->
                         <div class="flex-1 overflow-y-auto overscroll-contain px-5 pb-6">
                             <div v-for="group in moreNavItems" :key="group.label" class="mb-5 last:mb-0">
-                                <p class="text-[10px] font-bold uppercase text-muted-foreground tracking-widest mb-3">
+                                <p class="text-[10px] font-bold uppercase text-muted-foreground tracking-widest mb-3 flex items-center gap-1.5">
+                                    <component v-if="group.icon" :is="group.icon" class="h-3.5 w-3.5" />
                                     {{ group.label }}
                                 </p>
                                 <div class="grid grid-cols-4 gap-2">

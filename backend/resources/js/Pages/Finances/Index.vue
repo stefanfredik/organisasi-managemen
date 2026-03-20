@@ -9,16 +9,12 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
-    Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter,
-} from '@/components/ui/sheet';
+    Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, } from '@/components/ui/sheet';
 import {
-    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, } from '@/components/ui/dropdown-menu';
 import FilterDropdown from '@/Components/FilterDropdown.vue';
 import {
-    Plus, TrendingUp, TrendingDown, Wallet, Calendar, Camera, X,
-    Search, SlidersHorizontal, MoreVertical, Eye, Trash2,
-} from 'lucide-vue-next';
+    Plus, TrendingUp, TrendingDown, Wallet, Calendar, Camera, X, Search, SlidersHorizontal, MoreVertical, Eye, Trash2, BarChart3 } from 'lucide-vue-next';
 import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import { useToast } from '@/composables/useToast';
 
@@ -293,7 +289,12 @@ watch(() => form.type, () => { form.category = ''; });
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between gap-3">
-                <h2 class="text-lg font-semibold leading-tight text-foreground">Transaksi Keuangan</h2>
+                <h2 class="text-lg font-semibold leading-tight text-foreground">
+<div class="flex items-center gap-2.5">
+<BarChart3 class="w-5 h-5" />
+<span>Transaksi Keuangan</span>
+</div>
+</h2>
                 <Button v-if="hasPermission('manage_finance')" size="sm" @click="showModal = true">
                     <Plus class="w-4 h-4 mr-1" />
                     <span class="hidden sm:inline">Catat Transaksi</span>

@@ -8,13 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import {
-    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "@/components/ui/table";
 import {
-    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, } from '@/components/ui/dropdown-menu';
 import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
-import { Plus, Search, Calendar, MapPin, MoreVertical, Eye, Pencil, Trash2, SlidersHorizontal, Clock, User, TrendingUp, CheckCircle } from 'lucide-vue-next';
+import { Plus, Search, Calendar, MapPin, MoreVertical, Eye, Pencil, Trash2, SlidersHorizontal, Clock, User, TrendingUp, CheckCircle, CalendarDays } from 'lucide-vue-next';
 import { useToast } from '@/composables/useToast';
 
 const toast = useToast();
@@ -76,8 +74,10 @@ const doDelete = () => {
         <template #header>
             <div class="flex items-center justify-between gap-3">
                 <div class="flex items-center gap-2.5">
-                    <Calendar class="w-5 h-5 text-primary" />
-                    <h2 class="text-lg font-semibold leading-tight text-foreground">Kegiatan</h2>
+                    <CalendarDays class="w-5 h-5 text-primary" />
+                    <h2 class="text-lg font-semibold leading-tight text-foreground">
+                        Kegiatan
+                    </h2>
                 </div>
                 <Button v-if="hasPermission('manage_events')" size="sm" as-child>
                     <Link :href="route('events.create')">

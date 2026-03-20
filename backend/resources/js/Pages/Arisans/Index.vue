@@ -4,10 +4,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "@/components/ui/table";
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus, PiggyBank, Eye, Trash2, Users, TrendingUp, ChevronRight } from "lucide-vue-next";
+import { Plus, PiggyBank, Eye, Trash2, Users, TrendingUp, ChevronRight, Trophy } from 'lucide-vue-next';
 import { useToast } from '@/composables/useToast';
 import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import { ref, computed } from 'vue';
@@ -56,8 +55,10 @@ const formatRupiah = (value) => {
         <template #header>
             <div class="flex items-center justify-between gap-3">
                 <div class="flex items-center gap-2.5">
-                    <PiggyBank class="w-5 h-5 text-primary" />
-                    <h2 class="text-lg font-semibold leading-tight text-foreground">Program Arisan</h2>
+                    <Trophy class="w-5 h-5 text-primary" />
+                    <h2 class="text-lg font-semibold leading-tight text-foreground">
+                        Program Arisan
+                    </h2>
                 </div>
                 <Button v-if="canManage" size="sm" class="hidden sm:flex" as-child>
                     <Link :href="route('arisans.create')">

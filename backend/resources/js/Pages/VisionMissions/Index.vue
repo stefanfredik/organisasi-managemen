@@ -8,15 +8,11 @@ import Pagination from "@/Components/Pagination.vue";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-    Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
-} from "@/components/ui/sheet";
+    Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, } from "@/components/ui/sheet";
 import {
-    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, } from "@/components/ui/dropdown-menu";
 import {
-    Plus, Eye, Pencil, Trash2, MoreVertical, Search, SlidersHorizontal,
-    X, Lightbulb, Target, Calendar, User,
-} from "lucide-vue-next";
+    Plus, Eye, Pencil, Trash2, MoreVertical, Search, SlidersHorizontal, X, Lightbulb, Target, Calendar, User } from 'lucide-vue-next';
 import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import { useToast } from '@/composables/useToast';
 
@@ -85,7 +81,12 @@ const executeDelete = () => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between gap-3">
-                <h2 class="text-lg font-semibold leading-tight text-foreground">Visi & Misi</h2>
+                <h2 class="text-lg font-semibold leading-tight text-foreground">
+<div class="flex items-center gap-2.5">
+<Eye class="w-5 h-5" />
+<span>Visi & Misi</span>
+</div>
+</h2>
                 <Button v-if="hasPermission('manage_vision_missions')" size="sm" as-child class="hidden md:inline-flex">
                     <Link :href="route('vision-missions.create')">
                         <Plus class="w-4 h-4 mr-1" />

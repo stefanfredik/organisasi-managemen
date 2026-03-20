@@ -9,19 +9,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import {
-    Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from '@/components/ui/dialog';
+    Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, } from '@/components/ui/dialog';
 import {
-    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/ui/select';
 import {
-    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, } from '@/components/ui/dropdown-menu';
 import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import {
-    Coins, CheckCircle, Clock, ChevronRight, Users, AlertCircle, Loader2, User,
-    Plus, Pencil, Trash2, MoreVertical, Settings2,
-} from 'lucide-vue-next';
+    Coins, CheckCircle, Clock, ChevronRight, Users, AlertCircle, Loader2, User, Plus, Pencil, Trash2, MoreVertical, Settings2, PiggyBank } from 'lucide-vue-next';
 import axios from 'axios';
 import { useToast } from '@/composables/useToast';
 
@@ -164,8 +159,11 @@ const executeDelete = () => {
         <template #header>
             <div class="flex items-center justify-between gap-3">
                 <h2 class="text-xl font-semibold leading-tight text-foreground">
-                    Kelola Iuran
-                </h2>
+<div class="flex items-center gap-2.5">
+<PiggyBank class="w-5 h-5" />
+<span>Kelola Iuran</span>
+</div>
+</h2>
                 <Button v-if="hasPermission('manage_contribution_types')" size="sm" @click="openCreate">
                     <Plus class="w-4 h-4 mr-1" />
                     <span class="hidden sm:inline">Tambah Jenis Iuran</span>

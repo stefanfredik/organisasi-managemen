@@ -5,16 +5,12 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import SearchBar from "@/Components/SearchBar.vue";
 import { Button } from "@/components/ui/button";
 import {
-    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "@/components/ui/table";
 import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import {
-    Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
-} from "@/components/ui/sheet";
+    Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, } from "@/components/ui/sheet";
 import {
-    Plus, Eye, Pencil, Trash2, Inbox, CalendarDays, Users, MoreVertical,
-    ChevronLeft, ChevronRight,
-} from "lucide-vue-next";
+    Plus, Eye, Pencil, Trash2, Inbox, CalendarDays, Users, MoreVertical, ChevronLeft, ChevronRight, FileText } from 'lucide-vue-next';
 import { useToast } from '@/composables/useToast';
 
 const toast = useToast();
@@ -58,7 +54,12 @@ const closeDetail = () => { showDetailSheet.value = false; detailItem.value = nu
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between gap-3">
-                <h2 class="text-lg font-semibold leading-tight text-foreground">Notulensi Rapat</h2>
+                <h2 class="text-lg font-semibold leading-tight text-foreground">
+<div class="flex items-center gap-2.5">
+<FileText class="w-5 h-5" />
+<span>Notulensi Rapat</span>
+</div>
+</h2>
                 <Button v-if="hasPermission('manage_meeting_minutes')" size="sm" as-child>
                     <Link :href="route('meeting-minutes.create')">
                         <Plus class="w-4 h-4 mr-1" />

@@ -7,11 +7,9 @@ import FilterDropdown from "@/Components/FilterDropdown.vue";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-    Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
-} from "@/components/ui/sheet";
+    Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, } from "@/components/ui/sheet";
 import {
-    Plus, ImageIcon, SlidersHorizontal, X, Search, Eye, Pencil,
-} from "lucide-vue-next";
+    Plus, ImageIcon, SlidersHorizontal, X, Search, Eye, Pencil } from 'lucide-vue-next';
 
 const props = defineProps({
     albums: Object,
@@ -87,7 +85,12 @@ const getCoverImage = (album) => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between gap-3">
-                <h2 class="text-lg font-semibold leading-tight text-foreground">Album</h2>
+                <h2 class="text-lg font-semibold leading-tight text-foreground">
+<div class="flex items-center gap-2.5">
+<ImageIcon class="w-5 h-5" />
+<span>Album</span>
+</div>
+</h2>
                 <Button v-if="hasPermission('manage_albums')" size="sm" as-child class="hidden md:inline-flex">
                     <Link :href="route('albums.create')">
                         <Plus class="w-4 h-4 mr-1" />

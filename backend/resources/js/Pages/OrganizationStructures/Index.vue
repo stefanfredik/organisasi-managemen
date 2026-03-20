@@ -8,15 +8,11 @@ import StructureChart from "@/Components/StructureChart.vue";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-    Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
-} from "@/components/ui/sheet";
+    Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, } from "@/components/ui/sheet";
 import {
-    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, } from "@/components/ui/dropdown-menu";
 import {
-    Plus, MoreVertical, Pencil, Trash2, SlidersHorizontal, X,
-    Search, ChevronRight, ChevronDown, Network, Table2, Users,
-} from "lucide-vue-next";
+    Plus, MoreVertical, Pencil, Trash2, SlidersHorizontal, X, Search, ChevronRight, ChevronDown, Network, Table2, Users, Share2 } from 'lucide-vue-next';
 import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import { useToast } from '@/composables/useToast';
 
@@ -175,7 +171,12 @@ const executeDelete = () => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between gap-3">
-                <h2 class="text-lg font-semibold leading-tight text-foreground">Struktur Organisasi</h2>
+                <h2 class="text-lg font-semibold leading-tight text-foreground">
+<div class="flex items-center gap-2.5">
+<Share2 class="w-5 h-5" />
+<span>Struktur Organisasi</span>
+</div>
+</h2>
                 <!-- Desktop add button -->
                 <Button v-if="hasPermission('manage_organization_structures')" size="sm" as-child class="hidden md:inline-flex">
                     <Link :href="route('organization-structures.create')">

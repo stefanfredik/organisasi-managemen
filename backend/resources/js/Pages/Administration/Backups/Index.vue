@@ -8,11 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import axios from 'axios';
 import {
-    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "@/components/ui/table";
 import {
-    Database, Download, Trash2, ShieldAlert, Loader2, Play
-} from "lucide-vue-next";
+    Database, Download, Trash2, ShieldAlert, Loader2, Play } from 'lucide-vue-next';
 
 const toast = useToast();
 
@@ -130,7 +128,9 @@ const formatDate = (dateString) => {
             <div class="flex items-center justify-between gap-3">
                 <div class="flex items-center gap-2.5">
                     <Database class="w-5 h-5 text-primary" />
-                    <h2 class="text-lg font-semibold leading-tight text-foreground">Backup & Restore</h2>
+                    <h2 class="text-lg font-semibold leading-tight text-foreground">
+                        Backup & Restore
+                    </h2>
                 </div>
                 <Button size="sm" :disabled="isCreating" @click="createBackup" class="hidden sm:flex min-w-[160px]">
                     <Loader2 v-if="isCreating" class="w-4 h-4 mr-2 animate-spin shrink-0" />

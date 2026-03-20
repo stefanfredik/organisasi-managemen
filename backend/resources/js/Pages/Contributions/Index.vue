@@ -9,10 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import DataTable from "@/Components/DataTable.vue";
 import debounce from "lodash/debounce";
 import {
-    Plus, Search, SlidersHorizontal, X, MoreVertical,
-    CheckCircle, Clock, XCircle, CreditCard, Banknote, Eye, Receipt,
-    ArrowLeft, LayoutDashboard, Grid3x3,
-} from "lucide-vue-next";
+    Plus, Search, SlidersHorizontal, X, MoreVertical, CheckCircle, Clock, XCircle, CreditCard, Banknote, Eye, Receipt, ArrowLeft, LayoutDashboard, Grid3x3, Coins } from 'lucide-vue-next';
 import {
     Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from '@/components/ui/sheet';
@@ -310,8 +307,11 @@ const closeDetailSheet = () => { showDetailSheet.value = false; detailRow.value 
                         <ArrowLeft class="w-5 h-5" />
                     </Link>
                     <h2 class="text-lg font-semibold leading-tight text-foreground truncate">
-                        {{ isHistory ? type?.name : (userPosition === "anggota" ? "Iuran Saya" : "Pembayaran Iuran") }}
-                    </h2>
+<div class="flex items-center gap-2.5">
+<Coins class="w-5 h-5" />
+<span>{{ isHistory ? type?.name : (userPosition === "anggota" ? "Iuran Saya" : "Pembayaran Iuran") }}</span>
+</div>
+</h2>
                 </div>
                 <Button
                     v-if="!isHistory && (userRole === 'admin' || userPosition === 'bendahara' || userPosition === 'anggota')"

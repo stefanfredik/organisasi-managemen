@@ -7,9 +7,7 @@ import FilterDropdown from '@/Components/FilterDropdown.vue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-    Plus, Heart, CalendarDays, Eye, ChevronLeft, ChevronRight, Globe,
-    Target, TrendingUp, Inbox, MoreVertical, Pencil, Trash2,
-} from 'lucide-vue-next';
+    Plus, Heart, CalendarDays, Eye, ChevronLeft, ChevronRight, Globe, Target, TrendingUp, Inbox, MoreVertical, Pencil, Trash2, HandCoins } from 'lucide-vue-next';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -99,7 +97,12 @@ const confirmDelete = () => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between gap-3">
-                <h2 class="text-lg font-semibold leading-tight text-foreground">Donasi</h2>
+                <h2 class="text-lg font-semibold leading-tight text-foreground">
+<div class="flex items-center gap-2.5">
+<HandCoins class="w-5 h-5" />
+<span>Donasi</span>
+</div>
+</h2>
                 <div class="flex gap-2">
                     <Button v-if="$page.props.auth.user.position !== 'anggota'" variant="outline" size="sm" as-child>
                         <Link :href="route('donations.report')">

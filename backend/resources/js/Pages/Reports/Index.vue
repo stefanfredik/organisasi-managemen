@@ -1,4 +1,5 @@
 <script setup>
+import { FileBarChart } from 'lucide-vue-next';
 import { Head, Link } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 
@@ -69,8 +70,11 @@ const getColorClasses = (color) => {
     <AuthenticatedLayout>
         <template #header>
             <h2 class="text-xl font-semibold leading-tight text-foreground">
-                Laporan
-            </h2>
+<div class="flex items-center gap-2.5">
+<FileBarChart class="w-5 h-5" />
+<span>Laporan</span>
+</div>
+</h2>
         </template>
 
         <div class="py-4">
