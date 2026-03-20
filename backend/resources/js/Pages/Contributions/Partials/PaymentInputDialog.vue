@@ -34,6 +34,7 @@ const emit = defineEmits(['update:open', 'success']);
 
 const page = usePage();
 const userRole = computed(() => page.props.auth.user.role);
+const userPosition = computed(() => page.props.auth.user.position);
 
 const manualForm = useForm({
     member_id: '',
@@ -78,7 +79,7 @@ const loadUnpaidMembers = async () => {
 
 const fetchMemberStatus = async () => {
     paidPeriods.value = [];
-    const isMember = userRole.value === 'anggota';
+    const isMember = userPosition.value === 'anggota';
     if ((!manualForm.member_id && !isMember) || !selectedType.value) return;
     statusLoading.value = true;
     try {
@@ -111,10 +112,10 @@ watch(
             }
             manualForm.payment_period = '';
             manualForm.payment_periods = [];
-            if (userRole.value === 'anggota') {
+            if (userPosition.value === 'anggota') {
                 manualForm.payment_method = 'transfer';
             }
-            if (userRole.value !== 'anggota') {
+            if (userPosition.value !== 'anggota') {
                 loadUnpaidMembers();
             }
             fetchMemberStatus();
@@ -206,11 +207,11 @@ const submitManual = () => {
     if (!isBulk && !manualForm.payment_period) {
         manualForm.payment_period = manualForm.payment_periods[0] || '';
     }
-    if (isBulk && !manualForm.member_id && userRole.value !== 'anggota') {
+    if (isBulk && !manualForm.member_id && userPosition.value !== 'anggota') {
         return;
     }
 
-    if (userRole.value === 'anggota' && !manualForm.receipt) {
+    if (userPosition.value === 'anggota' && !manualForm.receipt) {
         manualForm.setError('receipt', 'Bukti transfer wajib diunggah untuk verifikasi.');
         return;
     }
@@ -279,10 +280,10 @@ watch(() => props.open, (val) => {
                         <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                             <CircleDollarSign class="w-4 h-4 text-primary" />
                         </div>
-                        {{ userRole === 'anggota' ? 'Upload Bukti Pembayaran' : 'Input Pembayaran' }}
+                        {{ userPosition === 'anggota' ? 'Upload Bukti Pembayaran' : 'Input Pembayaran' }}
                     </DialogTitle>
                     <DialogDescription class="mt-1 text-xs">
-                        {{ userRole === 'anggota' ? 'Unggah bukti transfer untuk pembayaran iuran Anda' : 'Catat transaksi pembayaran iuran anggota' }}
+                        {{ userPosition === 'anggota' ? 'Unggah bukti transfer untuk pembayaran iuran Anda' : 'Catat transaksi pembayaran iuran anggota' }}
                     </DialogDescription>
                 </DialogHeader>
             </div>
@@ -318,7 +319,7 @@ watch(() => props.open, (val) => {
                             </div>
 
                             <!-- Member Selection (admin only) -->
-                            <div v-if="userRole !== 'anggota'">
+                            <div v-if="userPosition !== 'anggota'">
                                 <SearchableSelect
                                     label="Anggota"
                                     v-model="manualForm.member_id"
@@ -358,7 +359,7 @@ watch(() => props.open, (val) => {
                             <!-- Payment Method -->
                             <div>
                                 <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Metode Pembayaran</Label>
-                                <div v-if="userRole !== 'anggota'" class="grid grid-cols-2 gap-2 mt-1.5">
+                                <div v-if="userPosition !== 'anggota'" class="grid grid-cols-2 gap-2 mt-1.5">
                                     <label class="cursor-pointer">
                                         <input type="radio" v-model="manualForm.payment_method" value="cash" class="peer sr-only" />
                                         <div class="rounded-lg border-2 p-3 peer-checked:border-primary peer-checked:bg-primary/5 text-muted-foreground peer-checked:text-primary transition-all flex items-center gap-2.5 hover:bg-muted/50">
@@ -396,7 +397,7 @@ watch(() => props.open, (val) => {
                             </div>
 
                             <!-- Wallet (admin only, when type has no wallet) -->
-                            <div v-if="!selectedType?.wallet_id && userRole !== 'anggota'">
+                            <div v-if="!selectedType?.wallet_id && userPosition !== 'anggota'">
                                 <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Dompet Tujuan</Label>
                                 <Select v-model="manualForm.wallet_id">
                                     <SelectTrigger class="mt-1.5 w-full">
@@ -412,7 +413,7 @@ watch(() => props.open, (val) => {
                             <!-- Receipt Upload -->
                             <div>
                                 <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                                    {{ userRole === 'anggota' ? 'Bukti Transfer' : 'Bukti Transfer (Opsional)' }}
+                                    {{ userPosition === 'anggota' ? 'Bukti Transfer' : 'Bukti Transfer (Opsional)' }}
                                 </Label>
                                 <div
                                     @dragover.prevent="isDraggingManualReceipt = true"

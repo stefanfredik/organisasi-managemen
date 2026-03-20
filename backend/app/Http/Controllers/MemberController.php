@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreMemberRequest;
 use App\Http\Requests\UpdateMemberRequest;
 use App\Models\Member;
+use App\Models\Position;
 use App\Models\Setting;
 use App\Services\ActivityLogger;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -31,7 +32,7 @@ class MemberController extends Controller
     {
         $this->authorize('viewAny', Member::class);
 
-        $query = Member::query();
+        $query = Member::query()->with(['user', 'position']);
 
         // Search
         if ($request->filled('search')) {
@@ -49,7 +50,7 @@ class MemberController extends Controller
 
         // Filter by gender
         if ($request->filled('gender')) {
-            $query->where('gender', $request->gender);
+            $query->where('gender', '=', $request->gender);
         }
 
         // Filter by email availability
@@ -112,6 +113,11 @@ class MemberController extends Controller
             $query->where('occupation', $request->occupation);
         }
 
+        // Filter by position
+        if ($request->filled('position_id')) {
+            $query->where('position_id', $request->position_id);
+        }
+
         // Sorting
         $sortBy = $request->input('sort_by', 'created_at');
         $sortDir = strtolower($request->input('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
@@ -128,10 +134,12 @@ class MemberController extends Controller
 
         return Inertia::render('Members/Index', [
             'members' => $members,
+            'positions' => Position::orderBy('id')->get()->pluck('name', 'id'),
             'filters' => $request->only([
                 'search',
                 'status',
                 'gender',
+                'position_id',
                 'has_email',
                 'has_phone',
                 'bpjs_health',
@@ -153,7 +161,9 @@ class MemberController extends Controller
     {
         $this->authorize('create', Member::class);
 
-        return Inertia::render('Members/Create');
+        return Inertia::render('Members/Create', [
+            'positions' => Position::orderBy('id')->get()->pluck('name', 'id'),
+        ]);
     }
 
     /**
@@ -174,7 +184,7 @@ class MemberController extends Controller
                 'name' => $data['full_name'],
                 'email' => $data['email'],
                 'password' => Hash::make('password'), // Access default, user should change it
-                'role' => User::ROLE_ANGGOTA,
+                'role' => User::ROLE_MEMBER,
                 'status' => User::STATUS_ACTIVE,
                 'email_verified_at' => now(),
             ]);
@@ -207,7 +217,7 @@ class MemberController extends Controller
     {
         $this->authorize('view', $member);
 
-        $member->load(['user']);
+        $member->load(['user', 'position']);
 
         // Load contribution history with type information
         $contributions = $member->contributions()
@@ -276,7 +286,8 @@ class MemberController extends Controller
         $this->authorize('update', $member);
 
         return Inertia::render('Members/Edit', [
-            'member' => $member,
+            'member' => $member->load('user', 'position'),
+            'positions' => Position::orderBy('id')->get()->pluck('name', 'id'),
         ]);
     }
 

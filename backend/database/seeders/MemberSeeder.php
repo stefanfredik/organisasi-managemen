@@ -16,7 +16,7 @@ class MemberSeeder extends Seeder
     {
         for ($i = 0; $i < 10; $i++) {
             $user = User::factory()->create([
-                'role' => 'anggota',
+                'role' => 'member',
                 'status' => 'active',
                 'password' => Hash::make('password'),
             ]);
@@ -25,6 +25,7 @@ class MemberSeeder extends Seeder
                 ->active()
                 ->create([
                     'user_id' => $user->id,
+                    'position' => 'anggota',
                     'member_code' => Member::generateMemberCode(),
                     'full_name' => $user->name,
                     'email' => $user->email,

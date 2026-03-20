@@ -21,7 +21,7 @@ const props = defineProps({
     contribution: Object,
 });
 
-const isAdmin = computed(() => ['admin', 'bendahara'].includes(page.props.auth.user.role));
+const isAdmin = computed(() => page.props.auth.user.role === 'admin' || page.props.auth.user.position === 'bendahara');
 
 const formatCurrency = (value) => {
     const currency = page.props.appSettings?.financial?.currency || 'Rp';

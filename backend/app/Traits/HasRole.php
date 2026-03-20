@@ -5,47 +5,37 @@ namespace App\Traits;
 trait HasRole
 {
     /**
-     * Check if user has a specific role or roles
-     *
-     * @param string|array $roles
-     * @return bool
+     * Check if user has a specific role or position.
+     * 'admin'/'member' checks against users.role.
+     * 'ketua'/'bendahara'/'sekretaris'/'anggota' checks against members.position.
      */
     public function hasRole(string|array $roles): bool
     {
-        if (is_array($roles)) {
-            return in_array($this->role, $roles);
+        $roles = is_array($roles) ? $roles : [$roles];
+
+        $userRoles = ['admin', 'member'];
+
+        foreach ($roles as $role) {
+            if (in_array($role, $userRoles)) {
+                if ($this->role === $role) return true;
+            } else {
+                if ($this->member?->position?->code === $role) return true;
+            }
         }
 
-        return $this->role === $roles;
+        return false;
     }
 
     /**
-     * Check if user has any of the given roles
-     *
-     * @param array $roles
-     * @return bool
+     * Check if user has any of the given roles/positions.
      */
     public function hasAnyRole(array $roles): bool
     {
-        return in_array($this->role, $roles);
+        return $this->hasRole($roles);
     }
 
     /**
-     * Check if user has all of the given roles
-     * Note: This is less useful since a user can only have one role
-     *
-     * @param array $roles
-     * @return bool
-     */
-    public function hasAllRoles(array $roles): bool
-    {
-        return count($roles) === 1 && $this->hasRole($roles[0]);
-    }
-
-    /**
-     * Check if user is an admin
-     *
-     * @return bool
+     * Check if user is an admin.
      */
     public function isAdmin(): bool
     {
@@ -53,49 +43,47 @@ trait HasRole
     }
 
     /**
-     * Check if user is ketua (chairman)
-     *
-     * @return bool
+     * Check if user is a member (non-admin).
+     */
+    public function isMember(): bool
+    {
+        return $this->role === 'member';
+    }
+
+    /**
+     * Check if user holds ketua (chairman) position.
      */
     public function isKetua(): bool
     {
-        return $this->role === 'ketua';
+        return $this->member?->position?->code === 'ketua';
     }
 
     /**
-     * Check if user is bendahara (treasurer)
-     *
-     * @return bool
+     * Check if user holds bendahara (treasurer) position.
      */
     public function isBendahara(): bool
     {
-        return $this->role === 'bendahara';
+        return $this->member?->position?->code === 'bendahara';
     }
 
     /**
-     * Check if user is sekretaris (secretary)
-     *
-     * @return bool
+     * Check if user holds sekretaris (secretary) position.
      */
     public function isSekretaris(): bool
     {
-        return $this->role === 'sekretaris';
+        return $this->member?->position?->code === 'sekretaris';
     }
 
     /**
-     * Check if user is anggota (member)
-     *
-     * @return bool
+     * Check if user holds anggota (regular member) position.
      */
     public function isAnggota(): bool
     {
-        return $this->role === 'anggota';
+        return $this->member?->position?->code === 'anggota';
     }
 
     /**
-     * Check if user is active
-     *
-     * @return bool
+     * Check if user is active.
      */
     public function isActive(): bool
     {
@@ -103,9 +91,7 @@ trait HasRole
     }
 
     /**
-     * Check if user is inactive
-     *
-     * @return bool
+     * Check if user is inactive.
      */
     public function isInactive(): bool
     {

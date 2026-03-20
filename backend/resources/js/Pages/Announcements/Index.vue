@@ -24,7 +24,7 @@ const toast = useToast();
 const props = defineProps({
     announcements: Object,
     filters: Object,
-    roleOptions: Array,
+    positionOptions: Array,
 });
 
 const search = ref(props.filters?.search || "");
@@ -106,7 +106,7 @@ const closeDetail = () => { showDetailSheet.value = false; detailItem.value = nu
                             <FilterDropdown v-model="status" :options="statusOptions" label="Status" />
                         </div>
                         <div class="flex-1 sm:w-36">
-                            <FilterDropdown v-model="audience" :options="props.roleOptions" label="Audiens" />
+                            <FilterDropdown v-model="audience" :options="props.positionOptions" label="Audiens" />
                         </div>
                     </div>
                 </div>

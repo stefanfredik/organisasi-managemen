@@ -14,10 +14,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable, HasRole;
     
     const ROLE_ADMIN = 'admin';
-    const ROLE_KETUA = 'ketua';
-    const ROLE_BENDAHARA = 'bendahara';
-    const ROLE_SEKRETARIS = 'sekretaris';
-    const ROLE_ANGGOTA = 'anggota';
+    const ROLE_MEMBER = 'member';
 
     const STATUS_ACTIVE = 'active';
     const STATUS_INACTIVE = 'inactive';
@@ -26,10 +23,7 @@ class User extends Authenticatable
     {
         return [
             self::ROLE_ADMIN => 'Admin',
-            self::ROLE_KETUA => 'Ketua',
-            self::ROLE_BENDAHARA => 'Bendahara',
-            self::ROLE_SEKRETARIS => 'Sekretaris',
-            self::ROLE_ANGGOTA => 'Anggota',
+            self::ROLE_MEMBER => 'Anggota',
         ];
     }
 
@@ -84,8 +78,13 @@ class User extends Authenticatable
             return true;
         }
 
-        $permissions = Setting::getValue("role_permissions_{$this->role}", []);
-        
+        $position = $this->member?->position?->code;
+        if (!$position) {
+            return false;
+        }
+
+        $permissions = Setting::getValue("role_permissions_{$position}", []);
+
         // Direct check
         if (in_array($permission, $permissions)) {
             return true;
@@ -101,6 +100,12 @@ class User extends Authenticatable
 
         return false;
     }
+
+    public function getPositionAttribute(): ?string
+    {
+        return $this->member?->position?->name;
+    }
+
     public function member()
     {
         return $this->hasOne(Member::class);

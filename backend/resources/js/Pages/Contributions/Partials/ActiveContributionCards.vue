@@ -5,7 +5,7 @@ import { CheckCircle, Banknote, TrendingUp, ArrowRight } from 'lucide-vue-next';
 
 const props = defineProps({
     types: Array,
-    userRole: String,
+    userPosition: String,
     formatCurrency: Function,
 });
 
@@ -149,7 +149,7 @@ const getProgressColor = (pct) => {
                         @click.stop="$emit('pay', type)"
                     >
                         <Banknote class="w-4 h-4 mr-1.5" />
-                        {{ userRole === 'anggota' ? 'Bayar Sekarang' : 'Input Data' }}
+                        {{ userPosition === 'anggota' ? 'Bayar Sekarang' : 'Input Data' }}
                         <ArrowRight class="w-3.5 h-3.5 ml-auto opacity-0 -translate-x-1 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all" />
                     </Button>
                 </div>

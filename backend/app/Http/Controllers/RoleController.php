@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Member;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -22,15 +23,12 @@ class RoleController extends Controller
     public function index()
     {
         $roles = User::getRoles();
-        $userCounts = User::selectRaw('role, count(*) as count')
-            ->groupBy('role')
-            ->pluck('count', 'role')
-            ->toArray();
+        $userCounts = \App\Models\Position::withCount('members')->pluck('members_count', 'code')->toArray();
 
-        // Get current permissions for each non-admin role
+        // Get current permissions for each position
+        $positions = \App\Models\Position::orderBy('id')->get()->pluck('name', 'code')->toArray();
         $rolePermissions = [];
-        foreach ($roles as $key => $label) {
-            if ($key === 'admin') continue;
+        foreach ($positions as $key => $label) {
             $rolePermissions[$key] = Setting::getValue("role_permissions_{$key}", []);
         }
 
@@ -38,6 +36,7 @@ class RoleController extends Controller
             'roles' => $roles,
             'userCounts' => $userCounts,
             'rolePermissions' => $rolePermissions,
+            'positions' => $positions,
         ]);
     }
 

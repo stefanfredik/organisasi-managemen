@@ -31,11 +31,13 @@ const toast = useToast();
 const props = defineProps({
     members: Object,
     filters: Object,
+    positions: Object,
 });
 
 // Filter state
 const status = ref(props.filters?.status || '');
 const gender = ref(props.filters?.gender || '');
+const position = ref(props.filters?.position_id || '');
 const hasEmail = ref(props.filters?.has_email || '');
 const hasPhone = ref(props.filters?.has_phone || '');
 const bpjsHealth = ref(props.filters?.bpjs_health || '');
@@ -55,6 +57,9 @@ const genderOptions = [
     { value: 'male', label: 'Laki-laki' },
     { value: 'female', label: 'Perempuan' },
 ];
+const positionOptions = computed(() =>
+    Object.entries(props.positions || {}).map(([value, label]) => ({ value, label }))
+);
 const yesNoOptions = [
     { value: '1', label: 'Ya' },
     { value: '0', label: 'Tidak' },
@@ -74,6 +79,7 @@ const activeFilters = computed(() => {
     
     if (status.value) items.push({ key: 'status', label: `Status: ${optionLabel(statusOptions, status.value)}` });
     if (gender.value) items.push({ key: 'gender', label: `Gender: ${optionLabel(genderOptions, gender.value)}` });
+    if (position.value) items.push({ key: 'position', label: `Posisi: ${props.positions?.[position.value] || position.value}` });
     if (hasEmail.value) items.push({ key: 'has_email', label: `Email: ${optionLabel(yesNoOptions, hasEmail.value)}` });
     if (hasPhone.value) items.push({ key: 'has_phone', label: `Telepon: ${optionLabel(yesNoOptions, hasPhone.value)}` });
     if (bpjsHealth.value) items.push({ key: 'bpjs_health', label: `BPJS Kes: ${optionLabel(bpjsOptions, bpjsHealth.value)}` });
@@ -88,12 +94,12 @@ const activeFilters = computed(() => {
 const activeFilterCount = computed(() => activeFilters.value.length);
 
 const clearFilter = (key) => {
-    const map = { status, gender, has_email: hasEmail, has_phone: hasPhone, bpjs_health: bpjsHealth, bpjs_employment: bpjsEmployment, has_user: hasUser, join_start: joinStart, join_end: joinEnd, occupation };
+    const map = { status, gender, position, has_email: hasEmail, has_phone: hasPhone, bpjs_health: bpjsHealth, bpjs_employment: bpjsEmployment, has_user: hasUser, join_start: joinStart, join_end: joinEnd, occupation };
     if (map[key]) map[key].value = '';
 };
 
 const resetFilters = () => {
-    status.value = ''; gender.value = ''; hasEmail.value = ''; hasPhone.value = '';
+    status.value = ''; gender.value = ''; position.value = ''; hasEmail.value = ''; hasPhone.value = '';
     bpjsHealth.value = ''; bpjsEmployment.value = ''; hasUser.value = '';
     joinStart.value = ''; joinEnd.value = ''; occupation.value = '';
     applyFilters();
@@ -104,6 +110,7 @@ const applyFilters = () => {
         search: new URLSearchParams(window.location.search).get('search') || '',
         status: status.value,
         gender: gender.value,
+        position_id: position.value,
         has_email: hasEmail.value,
         has_phone: hasPhone.value,
         bpjs_health: bpjsHealth.value,
@@ -151,6 +158,16 @@ const formatName = (row) => {
         return `${row.full_name} (${row.nickname})`;
     }
     return row.full_name;
+};
+
+const getPositionBadgeClass = (pos) => {
+    switch (pos) {
+        case 'ketua': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+        case 'bendahara': return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+        case 'sekretaris': return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
+        case 'anggota': return 'bg-muted text-muted-foreground';
+        default: return 'bg-muted text-muted-foreground';
+    }
 };
 </script>
 
@@ -225,17 +242,22 @@ const formatName = (row) => {
                                 </div>
                             </Link>
 
-                            <!-- Name & Phone - clickable to detail -->
+                            <!-- Name & Phone + Position badge - clickable to detail -->
                             <Link :href="`/members/${member.id}`" class="flex-1 min-w-0">
                                 <p class="text-sm font-semibold text-foreground truncate">
                                     {{ member.full_name }}
                                     <span v-if="member.nickname" class="font-normal text-muted-foreground"> ({{ member.nickname }})</span>
                                 </p>
-                                <p v-if="member.phone" class="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                                    <Phone class="w-3 h-3" />
-                                    {{ member.phone }}
-                                </p>
-                                <p v-else class="text-xs text-muted-foreground mt-0.5">Belum ada nomor</p>
+                                <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                    <span v-if="member.position" :class="getPositionBadgeClass(member.position.code)" class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full">
+                                        {{ member.position.name }}
+                                    </span>
+                                    <span v-if="member.phone" class="text-xs text-muted-foreground flex items-center gap-1">
+                                        <Phone class="w-3 h-3" />
+                                        {{ member.phone }}
+                                    </span>
+                                    <span v-else class="text-xs text-muted-foreground">Belum ada nomor</span>
+                                </div>
                             </Link>
 
                             <!-- Status badge -->
@@ -340,6 +362,9 @@ const formatName = (row) => {
                                 <div class="flex-1">
                                     <span class="text-sm font-medium text-foreground">{{ row.full_name }}</span>
                                     <span v-if="row.nickname" class="block text-xs text-muted-foreground">({{ row.nickname }})</span>
+                                    <span v-if="row.position" :class="getPositionBadgeClass(row.position.code)" class="inline-block mt-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full">
+                                        {{ row.position.name }}
+                                    </span>
                                 </div>
                             </div>
                         </template>
@@ -394,6 +419,10 @@ const formatName = (row) => {
                     <div class="space-y-1.5">
                         <Label class="text-xs text-muted-foreground">Status</Label>
                         <FilterDropdown v-model="status" :options="statusOptions" label="Semua" />
+                    </div>
+                    <div class="space-y-1.5">
+                        <Label class="text-xs text-muted-foreground">Posisi / Jabatan</Label>
+                        <FilterDropdown v-model="position" :options="positionOptions" label="Semua Posisi" />
                     </div>
                     <div class="space-y-1.5">
                         <Label class="text-xs text-muted-foreground">Gender</Label>

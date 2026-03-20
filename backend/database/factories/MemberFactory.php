@@ -25,6 +25,7 @@ class MemberFactory extends Factory
             'address' => fake()->address(),
             'date_of_birth' => fake()->date('Y-m-d', '-20 years'),
             'join_date' => fake()->dateTimeBetween('-5 years', 'now')->format('Y-m-d'),
+            'position_id' => \App\Models\Position::where('code', 'anggota')->value('id') ?? 4,
             'status' => $status,
             'notes' => fake()->optional()->sentence(),
         ];

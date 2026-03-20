@@ -160,7 +160,7 @@ const getGradient = (index) => cardGradients[index % cardGradients.length];
             <div class="flex items-center justify-between gap-3">
                 <h2 class="text-lg font-semibold leading-tight text-foreground">Kas & Dompet</h2>
                 <Button
-                    v-if="$page.props.auth.user.role === 'admin' || $page.props.auth.user.role === 'bendahara'"
+                    v-if="$page.props.auth.user.role === 'admin' || $page.props.auth.user.position === 'bendahara'"
                     size="sm"
                     @click="openModal()"
                 >
@@ -278,7 +278,7 @@ const getGradient = (index) => cardGradients[index % cardGradients.length];
                                 <span>{{ wallet.finances_count || 0 }} transaksi</span>
                                 <span>{{ wallet.contributions_count || 0 }} iuran</span>
                             </div>
-                            <DropdownMenu v-if="$page.props.auth.user.role === 'admin' || $page.props.auth.user.role === 'bendahara'">
+                            <DropdownMenu v-if="$page.props.auth.user.role === 'admin' || $page.props.auth.user.position === 'bendahara'">
                                 <DropdownMenuTrigger class="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
                                     <MoreVertical class="w-4 h-4" />
                                 </DropdownMenuTrigger>

@@ -88,9 +88,17 @@ const closeDetail = () => { showDetailSheet.value = false; detailItem.value = nu
 const getRoleBadgeClass = (r) => {
     switch (r) {
         case 'admin': return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
+        case 'member': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+        default: return 'bg-muted text-muted-foreground';
+    }
+};
+
+const getPositionBadgeClass = (p) => {
+    switch (p) {
         case 'ketua': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
         case 'bendahara': return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
         case 'sekretaris': return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
+        case 'anggota': return 'bg-muted text-muted-foreground';
         default: return 'bg-muted text-muted-foreground';
     }
 };
@@ -163,10 +171,15 @@ const formatLastLogin = (val) => {
                                 </div>
                             </div>
 
-                            <!-- Role Badge -->
-                            <span :class="['px-1.5 py-0.5 rounded-full text-[9px] font-semibold shrink-0 uppercase', getRoleBadgeClass(user.role)]">
-                                {{ roles[user.role] }}
-                            </span>
+                            <!-- Role & Position Badges -->
+                            <div class="flex flex-col items-end gap-0.5 shrink-0">
+                                <span :class="['px-1.5 py-0.5 rounded-full text-[9px] font-semibold uppercase', getRoleBadgeClass(user.role)]">
+                                    {{ roles[user.role] }}
+                                </span>
+                                <span v-if="user.position" :class="['px-1.5 py-0.5 rounded-full text-[9px] font-semibold uppercase', getPositionBadgeClass(user.position)]">
+                                    {{ user.position }}
+                                </span>
+                            </div>
 
                             <!-- Hamburger -->
                             <DropdownMenu>
@@ -246,9 +259,14 @@ const formatLastLogin = (val) => {
                                     </div>
                                 </TableCell>
                                 <TableCell>
-                                    <span :class="['px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase', getRoleBadgeClass(user.role)]">
-                                        {{ roles[user.role] }}
-                                    </span>
+                                    <div class="flex flex-wrap items-center gap-1">
+                                        <span :class="['px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase', getRoleBadgeClass(user.role)]">
+                                            {{ roles[user.role] }}
+                                        </span>
+                                        <span v-if="user.position" :class="['px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase', getPositionBadgeClass(user.position)]">
+                                            {{ user.position }}
+                                        </span>
+                                    </div>
                                 </TableCell>
                                 <TableCell>
                                     <button
@@ -368,6 +386,9 @@ const formatLastLogin = (val) => {
                             <p class="text-[10px] text-muted-foreground uppercase font-medium">Role</p>
                             <span :class="['inline-block mt-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-semibold uppercase', getRoleBadgeClass(detailItem.role)]">
                                 {{ roles[detailItem.role] }}
+                            </span>
+                            <span v-if="detailItem.position" :class="['inline-block mt-0.5 ml-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold uppercase', getPositionBadgeClass(detailItem.position)]">
+                                {{ detailItem.position }}
                             </span>
                         </div>
                         <div class="bg-muted/50 rounded-lg p-2.5">

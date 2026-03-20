@@ -37,12 +37,16 @@ class HandleInertiaRequests extends Middleware
                     'name' => $request->user()->name,
                     'email' => $request->user()->email,
                     'role' => $request->user()->role,
+                    'position' => $request->user()->member?->position,
                     'status' => $request->user()->status,
-                    'permissions' => \App\Models\Setting::getValue("role_permissions_" . $request->user()->role, []),
+                    'permissions' => $request->user()->role === 'admin'
+                        ? []
+                        : \App\Models\Setting::getValue("role_permissions_" . ($request->user()->member?->position ?? ''), []),
                     'member' => $request->user()->member ? [
                         'id' => $request->user()->member->id,
                         'full_name' => $request->user()->member->full_name,
                         'member_code' => $request->user()->member->member_code,
+                        'position' => $request->user()->member->position,
                     ] : null,
                 ] : null,
             ],

@@ -6,40 +6,33 @@ use App\Models\Donation;
 use App\Models\DonationTransaction;
 use App\Models\Member;
 use App\Models\User;
+use App\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class DonationFlowTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-        // Seed roles if necessary or create them
-        if (!Role::where('name', 'anggota')->exists()) {
-            Role::create(['name' => 'anggota']);
-        }
-        if (!Role::where('name', 'admin')->exists()) {
-            Role::create(['name' => 'admin']);
-        }
-    }
 
     public function test_member_can_submit_donation_payment()
     {
         Storage::fake('public');
 
-        $user = User::factory()->create();
-        $user->assignRole('anggota');
+        $user = User::factory()->create(['role' => 'member', 'status' => 'active']);
         $member = Member::factory()->create(['user_id' => $user->id]);
 
         $donation = Donation::factory()->create([
             'target_amount' => 1000000,
             'collected_amount' => 0,
         ]);
+
+        Setting::updateOrCreate(
+            ['key' => 'role_permissions_anggota'],
+            ['value' => json_encode(['view_donations']), 'type' => 'json']
+        );
 
         $file = UploadedFile::fake()->image('receipt.jpg');
 
@@ -69,8 +62,7 @@ class DonationFlowTest extends TestCase
 
     public function test_admin_can_verify_donation()
     {
-        $admin = User::factory()->create();
-        $admin->assignRole('admin');
+        $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);
 
         $donation = Donation::factory()->create([
             'target_amount' => 1000000,

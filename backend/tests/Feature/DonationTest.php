@@ -20,9 +20,14 @@ class DonationTest extends TestCase
     {
         Storage::fake('public');
 
-        $user = User::factory()->create(['role' => 'anggota', 'status' => 'active']);
+        $user = User::factory()->create(['role' => 'member', 'status' => 'active']);
         $member = Member::factory()->create(['user_id' => $user->id]);
         $donation = Donation::factory()->create();
+
+        \App\Models\Setting::updateOrCreate(
+            ['key' => 'role_permissions_anggota'],
+            ['value' => json_encode(['view_donations']), 'type' => 'json']
+        );
 
         $response = $this->actingAs($user)->post(route('donations.pay', $donation), [
             'amount' => 50000,
@@ -107,7 +112,7 @@ class DonationTest extends TestCase
 
     public function test_member_cannot_verify_transaction()
     {
-        $user = User::factory()->create(['role' => 'anggota']);
+        $user = User::factory()->create(['role' => 'member', 'status' => 'active']);
         $transaction = DonationTransaction::factory()->create(['status' => 'pending']);
 
         $response = $this->actingAs($user)->post(route('donations.transactions.verify', $transaction), [

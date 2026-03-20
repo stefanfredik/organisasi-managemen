@@ -54,9 +54,8 @@ class AnnouncementController extends Controller
         return Inertia::render('Announcements/Index', [
             'announcements' => $announcements,
             'filters' => $request->only(['search', 'status', 'audience']),
-            'roleOptions' => [
+            'positionOptions' => [
                 ['value' => 'all', 'label' => 'Semua'],
-                ['value' => 'admin', 'label' => 'Admin'],
                 ['value' => 'ketua', 'label' => 'Ketua'],
                 ['value' => 'bendahara', 'label' => 'Bendahara'],
                 ['value' => 'sekretaris', 'label' => 'Sekretaris'],
@@ -70,7 +69,7 @@ class AnnouncementController extends Controller
         $this->authorize('create', Announcement::class);
 
         return Inertia::render('Announcements/Create', [
-            'roleOptions' => ['admin', 'ketua', 'bendahara', 'sekretaris', 'anggota'],
+            'positionOptions' => ['ketua', 'bendahara', 'sekretaris', 'anggota'],
         ]);
     }
 
@@ -93,7 +92,7 @@ class AnnouncementController extends Controller
         $this->authorize('update', $announcement);
         return Inertia::render('Announcements/Edit', [
             'announcement' => $announcement,
-            'roleOptions' => ['admin', 'ketua', 'bendahara', 'sekretaris', 'anggota'],
+            'positionOptions' => ['ketua', 'bendahara', 'sekretaris', 'anggota'],
         ]);
     }
 

@@ -103,6 +103,7 @@ const userName = computed(() => page.props.auth.user.name);
 const userInitial = computed(() => userName.value.charAt(0).toUpperCase());
 const userEmail = computed(() => page.props.auth.user.email);
 const userRole = computed(() => page.props.auth.user.role);
+const userPosition = computed(() => page.props.auth.user.position);
 const isAdmin = computed(() => userRole.value === "admin");
 const appName = computed(() => page.props.appSettings.name);
 const appNameFirst = computed(() => appName.value.split(" ")[0]);
@@ -134,7 +135,7 @@ const navGroups = computed(() => [
             { icon: PiggyBank, label: "Monitoring Iuran", route: "contributions.monitoring.index", pattern: "contributions.monitoring.*", show: hasPermission("view_contribution_monitoring") },
             {
                 icon: Coins,
-                label: userRole.value === "anggota" ? "Iuran Saya" : "Pembayaran Iuran",
+                label: userPosition.value === "anggota" ? "Iuran Saya" : "Pembayaran Iuran",
                 route: "contributions.index",
                 pattern: "contributions.index",
                 activeCheck: () => route().current("contributions.index") || route().current("contributions.verification"),

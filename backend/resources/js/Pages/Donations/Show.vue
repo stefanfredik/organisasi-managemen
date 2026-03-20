@@ -35,8 +35,8 @@ const props = defineProps({
 });
 
 const page = usePage();
-const isAdmin = computed(() => ['admin', 'bendahara'].includes(page.props.auth.user.role));
-const isMember = computed(() => page.props.auth.user.role === 'anggota');
+const isAdmin = computed(() => page.props.auth.user.role === 'admin' || page.props.auth.user.position === 'bendahara');
+const isMember = computed(() => page.props.auth.user.position === 'anggota');
 
 const showingModal = ref(false);
 const showingPaymentModal = ref(false);

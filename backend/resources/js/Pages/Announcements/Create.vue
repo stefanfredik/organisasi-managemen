@@ -13,7 +13,7 @@ import {
 import { ArrowLeft, Loader2, Megaphone } from "lucide-vue-next";
 
 const props = defineProps({
-    roleOptions: Array,
+    positionOptions: Array,
 });
 
 const form = ref({
@@ -116,7 +116,7 @@ const toggleRole = (role, checked) => {
                         <div v-if="form.target_audience === 'roles'" class="bg-muted/50 rounded-lg p-3 border">
                             <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pilih Role</Label>
                             <div class="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                <label v-for="r in roleOptions" :key="r" class="inline-flex items-center gap-2 cursor-pointer">
+                                <label v-for="r in positionOptions" :key="r" class="inline-flex items-center gap-2 cursor-pointer">
                                     <Checkbox
                                         :checked="form.target_roles.includes(r)"
                                         @update:checked="toggleRole(r, $event)"

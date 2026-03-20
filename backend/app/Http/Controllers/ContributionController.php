@@ -22,7 +22,7 @@ class ContributionController extends Controller
         
         try {
             // If admin is viewing a member's status (optional feature), allow generic member selection
-            if ($request->has('member_id') && in_array($user->role, ['admin', 'bendahara'])) {
+            if ($request->has('member_id') && ($user->isAdmin() || $user->isBendahara())) {
                  $member = Member::findOrFail($request->member_id);
             } else {
                  $member = Member::where('user_id', $user->id)->first();
@@ -154,7 +154,7 @@ class ContributionController extends Controller
             $query->withTrashed();
         }, 'type', 'wallet', 'verifier']);
 
-        if (in_array(auth()->user()->role, ['member', 'anggota'])) {
+        if (auth()->user()->isAnggota()) {
             $member = Member::where('user_id', auth()->id())->first();
             if ($member) {
                 $query->where('member_id', $member->id);
@@ -201,7 +201,7 @@ class ContributionController extends Controller
 
         $types = ContributionType::where('is_active', true)->get();
 
-        if (in_array(auth()->user()->role, ['member', 'anggota'])) {
+        if (auth()->user()->isAnggota()) {
              $member = Member::where('user_id', auth()->id())->first();
              if ($member) {
                  foreach ($types as $type) {
@@ -293,9 +293,9 @@ class ContributionController extends Controller
 
     public function store(Request $request)
     {
-        $userRole = auth()->user()->role;
+        $user = auth()->user();
         $validated = $request->validate([
-            'member_id' => in_array($userRole, ['member', 'anggota']) ? 'nullable|exists:members,id' : 'required|exists:members,id',
+            'member_id' => $user->isAnggota() ? 'nullable|exists:members,id' : 'required|exists:members,id',
             'contribution_type_id' => 'required|exists:contribution_types,id',
             'amount' => 'required|numeric|min:0',
             'payment_date' => 'required|date',
@@ -306,7 +306,7 @@ class ContributionController extends Controller
             'receipt' => 'nullable|image|max:2048',
         ]);
 
-        if (in_array($userRole, ['member', 'anggota'])) {
+        if ($user->isAnggota()) {
             $member = Member::where('user_id', auth()->id())->first();
             if (!$member) {
                 return redirect()->back()->with('error', 'Akun anggota Anda belum terhubung ke data Member. Silakan hubungi admin.');
@@ -321,7 +321,7 @@ class ContributionController extends Controller
             $validated['wallet_id'] = $contributionType->wallet_id;
         } else {
             // Allow admin/treasurer to choose wallet when type is not linked
-            if (in_array(auth()->user()->role, ['admin', 'bendahara']) && $request->wallet_id) {
+            if (($user->isAdmin() || $user->isBendahara()) && $request->wallet_id) {
                 $validated['wallet_id'] = $request->wallet_id;
             } else {
                 return redirect()->back()->with('error', 'Jenis iuran ini belum memiliki dompet tujuan. Silakan hubungi administrator.');
@@ -329,7 +329,7 @@ class ContributionController extends Controller
         }
 
         // Force member/anggota to transfer method; allow admin/treasurer choice
-        if (in_array($userRole, ['member', 'anggota'])) {
+        if ($user->isAnggota()) {
             $validated['payment_method'] = 'transfer';
         } else {
             $validated['payment_method'] = $validated['payment_method'] ?? 'cash';
@@ -424,10 +424,10 @@ class ContributionController extends Controller
 
     public function storeBulk(Request $request)
     {
-        $userRole = auth()->user()->role;
-        
+        $user = auth()->user();
+
         // Auto-fill member_ids for member/anggota role
-        if (in_array($userRole, ['member', 'anggota']) && !$request->has('member_ids')) {
+        if ($user->isAnggota() && !$request->has('member_ids')) {
             $member = Member::where('user_id', auth()->id())->first();
             if ($member) {
                 $request->merge(['member_ids' => [$member->id]]);
@@ -453,7 +453,7 @@ class ContributionController extends Controller
 
         if (!$contributionType->wallet_id) {
             // Allow admin/treasurer to choose wallet for bulk when type not linked
-            if (!(in_array(auth()->user()->role, ['admin', 'bendahara']) && $request->wallet_id)) {
+            if (!(($user->isAdmin() || $user->isBendahara()) && $request->wallet_id)) {
                 return redirect()->back()->with('error', 'Jenis iuran ini belum memiliki dompet tujuan. Silakan pilih dompet atau hubungi administrator.');
             }
         }
@@ -465,7 +465,7 @@ class ContributionController extends Controller
 
         $periods = $validated['periods'] ?? [$validated['payment_period'] ?? null];
 
-        DB::transaction(function () use ($validated, $contributionType, $receiptPath, $periods, $userRole) {
+        DB::transaction(function () use ($validated, $contributionType, $receiptPath, $periods, $user) {
             foreach ($validated['member_ids'] as $memberId) {
                 foreach ($periods as $period) {
                     if ($period !== null) {
@@ -484,7 +484,7 @@ class ContributionController extends Controller
                         'amount' => $contributionType->amount,
                         'payment_date' => $validated['payment_date'],
                         'payment_period' => $period,
-                        'payment_method' => in_array($userRole, ['admin', 'bendahara']) ? ($validated['payment_method'] ?? 'cash') : 'transfer',
+                        'payment_method' => ($user->isAdmin() || $user->isBendahara()) ? ($validated['payment_method'] ?? 'cash') : 'transfer',
                         'notes' => $validated['notes'] ?? null,
                         'receipt_path' => $receiptPath,
                         'wallet_id' => $contributionType->wallet_id ?? $validated['wallet_id'],

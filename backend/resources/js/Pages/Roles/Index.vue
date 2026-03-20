@@ -11,6 +11,7 @@ import {
 
 const props = defineProps({
     roles: Object,
+    positions: Object,
     userCounts: Object,
     rolePermissions: Object,
 });
@@ -109,10 +110,9 @@ const permissionGroups = [
     },
 ];
 
-// Non-admin roles
+// Position-based roles (ketua, bendahara, sekretaris, anggota)
 const editableRoles = computed(() => {
-    return Object.entries(props.roles)
-        .filter(([key]) => key !== "admin")
+    return Object.entries(props.positions)
         .map(([key, label]) => ({ key, label }));
 });
 
@@ -273,14 +273,14 @@ const getRoleAccent = (role) => {
                         <div class="flex items-center justify-between mb-4">
                             <div>
                                 <h3 class="text-sm sm:text-base font-semibold text-foreground">
-                                    Permission — {{ roles[selectedRole] }}
+                                    Permission — {{ positions[selectedRole] }}
                                 </h3>
                                 <p class="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
                                     {{ permCount(selectedRole) }} dari {{ totalPermissions }} permission aktif
                                 </p>
                             </div>
                             <Badge :class="getRoleColor(selectedRole)" class="text-[10px] sm:text-xs uppercase font-semibold border">
-                                {{ roles[selectedRole] }}
+                                {{ positions[selectedRole] }}
                             </Badge>
                         </div>
 

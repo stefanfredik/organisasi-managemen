@@ -23,7 +23,7 @@ const emit = defineEmits(['close', 'success']);
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
-const member = computed(() => user.value.role === 'anggota' ? user.value.member : null);
+const member = computed(() => user.value.position === 'anggota' ? user.value.member : null);
 
 const loading = ref(false);
 const statusData = ref(null);

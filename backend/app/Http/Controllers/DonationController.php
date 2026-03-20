@@ -236,7 +236,7 @@ class DonationController extends Controller
         ];
 
         // If user is a member
-        if ($request->user()->role === 'anggota') {
+        if ($request->user()->isAnggota()) {
              $member = Member::where('user_id', $request->user()->id)->first();
              if ($member) {
                  $data['member_id'] = $member->id;

@@ -51,7 +51,7 @@ class DashboardController extends Controller
         
         // Get member's personal data (for anggota)
         $personalData = null;
-        if ($user->role === 'anggota' && $user->member) {
+        if ($user->isMember() && $user->member) {
             $personalData = $this->getPersonalData($user->member);
         }
 

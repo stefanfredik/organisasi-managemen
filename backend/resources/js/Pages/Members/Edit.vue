@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 
 const props = defineProps({
     member: Object,
+    positions: Object,
 });
 
 const form = useForm({
@@ -36,6 +37,7 @@ const form = useForm({
     bpjs_employment_active: !!props.member.bpjs_employment_active,
     date_of_birth: props.member.date_of_birth,
     join_date: props.member.join_date,
+    position_id: props.member.position_id || (props.positions ? Object.keys(props.positions)[0] : ''),
     status: props.member.status,
     photo: null,
     ktp_photo: null,
@@ -497,18 +499,32 @@ onMounted(() => {
                             <InputError class="mt-2" :message="form.errors.ktp_photo" />
                         </div>
 
-                        <div>
-                            <Label for="status">Status *</Label>
-                            <select
-                                id="status"
-                                v-model="form.status"
-                                class="mt-1 block w-full border-input focus:border-ring focus:ring-ring rounded-md shadow-sm"
-                                required
-                            >
-                                <option value="active">Aktif</option>
-                                <option value="inactive">Tidak Aktif</option>
-                            </select>
-                            <InputError class="mt-2" :message="form.errors.status" />
+                        <div class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
+                            <div>
+                                <Label for="position_id">Posisi / Jabatan *</Label>
+                                <select
+                                    id="position_id"
+                                    v-model="form.position_id"
+                                    class="mt-1 block w-full border-input focus:border-ring focus:ring-ring rounded-md shadow-sm"
+                                    required
+                                >
+                                    <option v-for="(label, key) in positions" :key="key" :value="key">{{ label }}</option>
+                                </select>
+                                <InputError class="mt-2" :message="form.errors.position_id" />
+                            </div>
+                            <div>
+                                <Label for="status">Status *</Label>
+                                <select
+                                    id="status"
+                                    v-model="form.status"
+                                    class="mt-1 block w-full border-input focus:border-ring focus:ring-ring rounded-md shadow-sm"
+                                    required
+                                >
+                                    <option value="active">Aktif</option>
+                                    <option value="inactive">Tidak Aktif</option>
+                                </select>
+                                <InputError class="mt-2" :message="form.errors.status" />
+                            </div>
                         </div>
 
                         <div>

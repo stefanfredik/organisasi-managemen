@@ -14,6 +14,8 @@ class Member extends Model
 {
     use HasFactory, SoftDeletes;
 
+    // Removed position constants since positions are dynamic now
+
     /**
      * The accessors to append to the model's array form.
      *
@@ -31,6 +33,7 @@ class Member extends Model
      */
     protected $fillable = [
         'user_id',
+        'position_id',
         'member_code',
         'nik',
         'full_name',
@@ -205,5 +208,33 @@ class Member extends Model
     public function isActive(): bool
     {
         return $this->status === 'active';
+    }
+
+    /**
+     * Get the position associated with the member.
+     */
+    public function position()
+    {
+        return $this->belongsTo(Position::class);
+    }
+
+    public function isKetua(): bool
+    {
+        return $this->position && $this->position->code === 'ketua';
+    }
+
+    public function isBendahara(): bool
+    {
+        return $this->position && $this->position->code === 'bendahara';
+    }
+
+    public function isSekretaris(): bool
+    {
+        return $this->position && $this->position->code === 'sekretaris';
+    }
+
+    public function isAnggota(): bool
+    {
+        return $this->position && $this->position->code === 'anggota';
     }
 }

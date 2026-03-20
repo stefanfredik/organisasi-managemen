@@ -101,13 +101,13 @@ const confirmDelete = () => {
             <div class="flex items-center justify-between gap-3">
                 <h2 class="text-lg font-semibold leading-tight text-foreground">Donasi</h2>
                 <div class="flex gap-2">
-                    <Button v-if="$page.props.auth.user.role !== 'anggota'" variant="outline" size="sm" as-child>
+                    <Button v-if="$page.props.auth.user.position !== 'anggota'" variant="outline" size="sm" as-child>
                         <Link :href="route('donations.report')">
                             <TrendingUp class="w-4 h-4 mr-1" />
                             <span class="hidden sm:inline">Laporan</span>
                         </Link>
                     </Button>
-                    <Button v-if="$page.props.auth.user.role !== 'anggota'" size="sm" as-child>
+                    <Button v-if="$page.props.auth.user.position !== 'anggota'" size="sm" as-child>
                         <Link :href="route('donations.create')">
                             <Plus class="w-4 h-4 mr-1" />
                             <span class="hidden sm:inline">Buat Program</span>
@@ -176,7 +176,7 @@ const confirmDelete = () => {
                             </div>
 
                             <!-- Action menu -->
-                            <DropdownMenu v-if="$page.props.auth.user.role !== 'anggota'">
+                            <DropdownMenu v-if="$page.props.auth.user.position !== 'anggota'">
                                 <DropdownMenuTrigger as-child @click.stop>
                                     <Button variant="ghost" size="sm" class="h-7 w-7 p-0 shrink-0">
                                         <MoreVertical class="w-4 h-4" />
@@ -225,7 +225,7 @@ const confirmDelete = () => {
                                         Publik
                                     </span>
                                 </div>
-                                <DropdownMenu v-if="$page.props.auth.user.role !== 'anggota'">
+                                <DropdownMenu v-if="$page.props.auth.user.position !== 'anggota'">
                                     <DropdownMenuTrigger as-child @click.stop>
                                         <Button variant="ghost" size="sm" class="h-7 w-7 p-0">
                                             <MoreVertical class="w-4 h-4" />

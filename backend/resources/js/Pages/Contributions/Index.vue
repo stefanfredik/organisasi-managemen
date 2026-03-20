@@ -35,6 +35,7 @@ const props = defineProps({
 
 const page = usePage();
 const userRole = computed(() => page.props.auth.user.role);
+const userPosition = computed(() => page.props.auth.user.position);
 
 // ─── Formatting Helpers ─────────────────────────────────────────────
 const formatCurrency = (value) => {
@@ -246,7 +247,7 @@ const selectedPaymentType = ref(null);
 
 const startPayment = (type) => {
     selectedPaymentType.value = type;
-    if (userRole.value === "anggota") {
+    if (userPosition.value === "anggota") {
         showMemberModal.value = true;
     } else {
         showManualModal.value = true;
@@ -289,23 +290,23 @@ const closeDetailSheet = () => { showDetailSheet.value = false; detailRow.value 
 
 <template>
     <Head
-        :title="userRole === 'anggota' ? 'Iuran Saya' : 'Manajemen Iuran'"
+        :title="userPosition === 'anggota' ? 'Iuran Saya' : 'Manajemen Iuran'"
     />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between gap-3">
                 <h2 class="text-lg font-semibold leading-tight text-foreground">
-                    {{ userRole === "anggota" ? "Iuran Saya" : "Manajemen Iuran" }}
+                    {{ userPosition === "anggota" ? "Iuran Saya" : "Manajemen Iuran" }}
                 </h2>
                 <Button
-                    v-if="['admin', 'bendahara', 'anggota'].includes(userRole)"
+                    v-if="userRole === 'admin' || userPosition === 'bendahara' || userPosition === 'anggota'"
                     size="sm"
-                    @click="userRole === 'anggota' ? (showMemberModal = true) : (showManualModal = true)"
+                    @click="userPosition === 'anggota' ? (showMemberModal = true) : (showManualModal = true)"
                 >
                     <Plus class="w-4 h-4 mr-1" />
                     <span class="hidden sm:inline">
-                        {{ userRole === "anggota" ? "Bayar Iuran" : "Input Pembayaran" }}
+                        {{ userPosition === "anggota" ? "Bayar Iuran" : "Input Pembayaran" }}
                     </span>
                 </Button>
             </div>
@@ -317,7 +318,7 @@ const closeDetailSheet = () => { showDetailSheet.value = false; detailRow.value 
                 <!-- Active Contribution Types -->
                 <ActiveContributionCards
                     :types="types"
-                    :user-role="userRole"
+                    :user-role="userPosition"
                     :format-currency="formatCurrency"
                     @pay="startPayment"
                 />
@@ -519,7 +520,7 @@ const closeDetailSheet = () => { showDetailSheet.value = false; detailRow.value 
                             <template #actions="{ row }">
                                 <div class="inline-flex items-center gap-1 justify-end w-full">
                                     <Button
-                                        v-if="row.status === 'pending' && (userRole === 'admin' || userRole === 'bendahara')"
+                                        v-if="row.status === 'pending' && (userRole === 'admin' || userPosition === 'bendahara')"
                                         variant="ghost"
                                         size="icon"
                                         class="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950/30"
@@ -661,7 +662,7 @@ const closeDetailSheet = () => { showDetailSheet.value = false; detailRow.value 
                     <!-- Actions -->
                     <div class="space-y-2 border-t pt-3">
                         <Button
-                            v-if="detailRow.status === 'pending' && (userRole === 'admin' || userRole === 'bendahara')"
+                            v-if="detailRow.status === 'pending' && (userRole === 'admin' || userPosition === 'bendahara')"
                             variant="outline"
                             size="sm"
                             class="w-full justify-start"
