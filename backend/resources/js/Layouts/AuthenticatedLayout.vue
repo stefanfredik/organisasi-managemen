@@ -123,6 +123,7 @@ const isAdmin = computed(() => userRole.value === "admin");
 const appName = computed(() => page.props.appSettings.name);
 const appNameFirst = computed(() => appName.value.split(" ")[0]);
 const appNameRest = computed(() => appName.value.split(" ").slice(1).join(" "));
+const appShortName = computed(() => page.props.appSettings.short_name || appNameFirst.value);
 
 // Navigation items config
 const navGroups = computed(() => [
@@ -248,10 +249,9 @@ const isMoreActive = computed(() => {
                         <ApplicationLogo class="h-8 w-8 shrink-0 fill-current text-primary" />
                         <span
                             v-show="isSidebarOpen"
-                            class="font-black text-xs uppercase tracking-tighter text-foreground truncate leading-tight"
+                            class="font-black text-sm uppercase tracking-tight text-foreground truncate leading-tight"
                         >
-                            {{ appNameFirst }}<br />
-                            <span class="text-primary">{{ appNameRest }}</span>
+                            {{ appShortName }}
                         </span>
                     </Link>
                 </div>
@@ -349,7 +349,7 @@ const isMoreActive = computed(() => {
                         <Link :href="route('dashboard')" class="flex items-center gap-2">
                             <ApplicationLogo class="h-6 w-6 shrink-0 fill-current text-primary" />
                             <span class="font-black text-xs uppercase tracking-tight text-foreground">
-                                {{ appNameFirst }}
+                                {{ appShortName }}
                             </span>
                         </Link>
                     </div>
@@ -418,9 +418,8 @@ const isMoreActive = computed(() => {
                         <div class="h-14 flex items-center px-4 border-b shrink-0">
                             <Link :href="route('dashboard')" class="flex items-center gap-3 min-w-0" @click="mobileOpen = false">
                                 <ApplicationLogo class="h-7 w-7 shrink-0 fill-current text-primary" />
-                                <span class="font-black text-[10px] uppercase tracking-tighter text-foreground leading-none truncate">
-                                    {{ appNameFirst }}<br />
-                                    <span class="text-primary">{{ appNameRest }}</span>
+                                <span class="font-black text-sm uppercase tracking-tight text-foreground leading-none truncate">
+                                    {{ appShortName }}
                                 </span>
                             </Link>
                         </div>
