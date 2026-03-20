@@ -82,22 +82,13 @@ const getProgress = (donation) => {
                         :data-reveal-delay="index * 100"
                         class="bg-card rounded-2xl shadow-sm border overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-500 group flex flex-col"
                     >
-                        <div class="shrink-0 relative aspect-[16/10] overflow-hidden">
-                            <img
-                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                                :src="donation.banner_url || 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'"
-                                alt=""
-                            >
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
-                            <div class="absolute bottom-3 left-4">
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/15 backdrop-blur-md text-white border border-white/20 rounded-full text-xs font-semibold tracking-wide shadow-sm">
+                        <div class="flex-1 p-5 flex flex-col">
+                            <div class="flex items-center justify-between gap-2 mb-3">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold tracking-wide">
                                     <Heart class="w-3 h-3" />
                                     {{ getProgress(donation).toFixed(0) }}% Terpenuhi
                                 </span>
                             </div>
-                        </div>
-
-                        <div class="flex-1 p-5 flex flex-col">
                             <div class="flex-1">
                                 <Link :href="route('public.donations.show', donation.slug)" class="block group/link">
                                     <h3 class="text-lg font-bold text-foreground line-clamp-2 group-hover/link:text-primary transition-colors mb-2 tracking-tight">
