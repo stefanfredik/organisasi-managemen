@@ -1,9 +1,18 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { useToast } from '@/composables/useToast';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import axios from 'axios';
+import {
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import {
+    Database, Download, Trash2, ShieldAlert, Loader2, Play
+} from "lucide-vue-next";
 
 const toast = useToast();
 
@@ -11,23 +20,100 @@ const props = defineProps({
     backups: Array,
 });
 
-const showCreateConfirm = ref(false);
-const deleteTargetFile = ref(null);
+const isCreating = ref(false);
+const statusMessage = ref('Memeriksa status...');
+let pollInterval = null;
+
+const checkStatus = async () => {
+    try {
+        const response = await axios.get(route('backups.status'));
+        return response.data;
+    } catch (error) {
+        console.error('Error polling backup status', error);
+        return null;
+    }
+};
+
+const startPolling = () => {
+    if (pollInterval) clearInterval(pollInterval);
+
+    pollInterval = setInterval(async () => {
+        const data = await checkStatus();
+        if (!data) return;
+
+        if (data.status === 'running') {
+            isCreating.value = true;
+            statusMessage.value = data.message || 'Mencadangkan...';
+        } else if (data.status === 'completed' || data.status === 'failed') {
+            isCreating.value = false;
+            clearInterval(pollInterval);
+            pollInterval = null;
+
+            if (data.status === 'completed') {
+                toast.success(data.message || 'Pencadangan selesai.');
+            } else {
+                toast.error(data.message || 'Pencadangan gagal.');
+            }
+
+            router.reload({ only: ['backups'] });
+        } else {
+            // idle - stop polling
+            isCreating.value = false;
+            statusMessage.value = '';
+            clearInterval(pollInterval);
+            pollInterval = null;
+        }
+    }, 2000);
+};
+
+onMounted(async () => {
+    // Check initial status — only start polling if a backup is already running
+    const data = await checkStatus();
+    if (data && data.status === 'running') {
+        isCreating.value = true;
+        statusMessage.value = data.message || 'Mencadangkan...';
+        startPolling();
+    }
+});
+
+onUnmounted(() => {
+    if (pollInterval) clearInterval(pollInterval);
+});
 
 const createBackup = () => {
-    showCreateConfirm.value = true;
-};
-const confirmCreateBackup = () => {
-    showCreateConfirm.value = false;
-    router.post(route('backups.create'));
+    if (isCreating.value) return;
+    
+    isCreating.value = true;
+    statusMessage.value = 'Memulai inisialisasi modul pencadangan...';
+    
+    router.post(route('backups.create'), {}, {
+        preserveScroll: true,
+        onSuccess: (page) => {
+            if (page.props.flash?.success) {
+                toast.success(page.props.flash.success);
+            }
+            if (page.props.flash?.error) toast.error(page.props.flash.error);
+            // After successful form submit, start polling
+            startPolling();
+        },
+        onError: () => {
+            toast.error('Gagal memulai backup.');
+            isCreating.value = false;
+        }
+        // removing onFinish so it doesn't instantly disable `isCreating` while background processes are running
+    });
 };
 
-const deleteBackup = (fileName) => {
-    deleteTargetFile.value = fileName;
-};
+const deleteTargetFile = ref(null);
+
 const confirmDeleteBackup = () => {
     if (deleteTargetFile.value) {
         router.delete(route('backups.destroy', deleteTargetFile.value), {
+            preserveScroll: true,
+            onSuccess: (page) => {
+                if (page.props.flash?.success) toast.success(page.props.flash.success);
+                if (page.props.flash?.error) toast.error(page.props.flash.error);
+            },
             onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus backup.'),
             onFinish: () => (deleteTargetFile.value = null),
         });
@@ -50,115 +136,123 @@ const formatDate = (dateString) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h2 class="text-2xl font-black text-foreground uppercase tracking-tight">Backup & Restore</h2>
-                    <p class="text-muted-foreground text-sm font-medium mt-1">Amankan data organisasi Anda dengan mencadangkan database secara rutin.</p>
+            <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                    <Database class="w-5 h-5 text-primary" />
+                    <h2 class="text-lg font-semibold leading-tight text-foreground">Backup & Restore</h2>
                 </div>
-                <button
-                    @click="createBackup"
-                    class="inline-flex items-center px-6 py-3 bg-primary hover:bg-primary/90 text-white text-sm font-bold rounded-xl shadow-lg shadow-sm transition-all active:scale-95 uppercase tracking-widest"
-                >
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    Buat Backup Baru
-                </button>
+                <Button size="sm" :disabled="isCreating" @click="createBackup" class="hidden sm:flex min-w-[160px]">
+                    <Loader2 v-if="isCreating" class="w-4 h-4 mr-2 animate-spin shrink-0" />
+                    <Play v-else class="w-4 h-4 mr-2 shrink-0" />
+                    <span class="truncate">{{ isCreating ? statusMessage : 'Buat Backup Baru' }}</span>
+                </Button>
             </div>
         </template>
 
-        <div class="py-6 sm:py-8">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <div class="py-3 sm:py-6">
+            <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 space-y-4">
+
+                <!-- Mobile Header Actions -->
+                <div class="sm:hidden mb-4">
+                    <Button class="w-full" :disabled="isCreating" @click="createBackup">
+                        <Loader2 v-if="isCreating" class="w-4 h-4 mr-2 animate-spin shrink-0" />
+                        <Play v-else class="w-4 h-4 mr-2 shrink-0" />
+                        <span class="truncate">{{ isCreating ? statusMessage : 'Buat Backup Sekarang' }}</span>
+                    </Button>
+                </div>
+
                 <!-- Info Alert -->
-                <div class="bg-primary/10 border border-primary-100 rounded-[2rem] p-8 flex items-start gap-6 shadow-sm">
-                    <div class="w-14 h-14 rounded-2xl bg-card flex items-center justify-center text-primary shadow-sm shrink-0">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                <div class="bg-primary/5 border border-primary/20 rounded-xl p-4 sm:p-5 flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                        <ShieldAlert class="w-5 h-5" />
                     </div>
                     <div>
-                        <h3 class="text-primary-900 font-black uppercase tracking-widest text-sm mb-2">Informasi Cadangan</h3>
-                        <p class="text-primary text-sm leading-relaxed max-w-3xl">
-                            Backup ini hanya mencakup database sistem. File fisik (gambar, dokumen) disimpan secara terpisah dalam folder storage. 
-                            Disarankan untuk melakukan backup secara berkala dan mengunduh file backup ke penyimpanan eksternal yang aman.
+                        <h3 class="text-sm font-bold text-foreground mb-1">Informasi Pencadangan Data</h3>
+                        <p class="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">
+                            Backup ini hanya mencakup <b>database sistem (SQL)</b>. File media fisik seperti gambar atau dokumen disimpan secara terpisah di dalam folder storage. 
+                            Gunakan secara rutin dan segera unduh file cadangan Anda menggunakan tombol unduh untuk menjaganya tetap aman di penyimpanan luring.
                         </p>
                     </div>
                 </div>
 
                 <!-- Backup List Table -->
-                <div class="bg-card overflow-hidden shadow-xl shadow-muted/50 sm:rounded-[2rem] border border">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-muted/50 border-b border">
-                                    <th class="px-8 py-5 text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">File Backup</th>
-                                    <th class="px-8 py-5 text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">Ukuran</th>
-                                    <th class="px-8 py-5 text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">Dibuat Pada</th>
-                                    <th class="px-8 py-5 text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground text-right">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-border">
-                                <tr v-for="backup in backups" :key="backup.file_name" class="hover:bg-muted/50 transition-colors group">
-                                    <td class="px-8 py-5">
-                                        <div class="flex items-center gap-4">
-                                            <div class="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600 shadow-sm border border-orange-100">
-                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <div class="font-bold text-foreground truncate max-w-xs md:max-w-md">{{ backup.file_name }}</div>
-                                                <div class="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-0.5">ZIP Archive</div>
-                                            </div>
+                <div class="bg-card rounded-xl border overflow-hidden">
+                    <Table>
+                        <TableHeader>
+                            <TableRow class="bg-muted/50 hover:bg-muted/50">
+                                <TableHead class="text-[11px] uppercase tracking-wide font-medium">File Backup</TableHead>
+                                <TableHead class="text-[11px] uppercase tracking-wide font-medium">Ukuran</TableHead>
+                                <TableHead class="text-[11px] uppercase tracking-wide font-medium">Tanggal Dibuat</TableHead>
+                                <TableHead class="text-[11px] uppercase tracking-wide font-medium text-right">Aksi</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="backup in backups" :key="backup.file_name" class="hover:bg-muted/30 transition-colors">
+                                <TableCell>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-lg bg-green-50 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 shrink-0 border border-green-100 dark:border-green-800">
+                                            <Database class="w-4 h-4" />
                                         </div>
-                                    </td>
-                                    <td class="px-8 py-5">
-                                        <span class="text-sm font-bold text-muted-foreground bg-muted px-3 py-1 rounded-lg">{{ backup.file_size }}</span>
-                                    </td>
-                                    <td class="px-8 py-5 text-sm font-medium text-muted-foreground">
+                                        <div class="min-w-0">
+                                            <p class="text-sm font-semibold text-foreground truncate max-w-[150px] sm:max-w-sm">{{ backup.file_name }}</p>
+                                            <p class="text-[10px] text-muted-foreground mt-0.5">ZIP Archive</p>
+                                        </div>
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <Badge variant="secondary" class="font-mono text-[10px] px-1.5 py-0.5">
+                                        {{ backup.file_size }}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell>
+                                    <span class="text-[11px] sm:text-xs text-muted-foreground font-medium">
                                         {{ formatDate(backup.last_modified) }}
-                                    </td>
-                                    <td class="px-8 py-5 text-right">
-                                        <div class="flex justify-end gap-3 translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0 transition-all">
-                                            <a 
-                                                :href="route('backups.download', backup.file_name)"
-                                                class="p-2 text-primary hover:bg-primary/10 rounded-xl transition-colors"
-                                                title="Download Backup"
-                                            >
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                                </svg>
+                                    </span>
+                                </TableCell>
+                                <TableCell class="text-right">
+                                    <div class="flex justify-end gap-1">
+                                        <Button variant="ghost" size="icon" class="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10" as-child>
+                                            <a :href="route('backups.download', backup.file_name)">
+                                                <Download class="w-4 h-4" />
                                             </a>
-                                            <button 
-                                                @click="deleteBackup(backup.file_name)"
-                                                class="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-colors"
-                                                title="Hapus Backup"
-                                            >
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr v-if="backups.length === 0">
-                                    <td colspan="4" class="px-8 py-24 text-center">
-                                        <div class="flex flex-col items-center">
-                                            <div class="w-24 h-24 bg-muted rounded-[2rem] flex items-center justify-center text-muted-foreground mb-6">
-                                                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
-                                                </svg>
-                                            </div>
-                                            <h3 class="text-xl font-bold text-foreground uppercase tracking-tight">Belum Ada Backup</h3>
-                                            <p class="text-muted-foreground text-sm mt-2 max-w-sm">Klik tombol "Buat Backup Baru" di atas untuk mencadangkan database Anda.</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                                        </Button>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon" 
+                                            class="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                            @click="deleteTargetFile = backup.file_name"
+                                        >
+                                            <Trash2 class="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+
+                            <!-- Empty State -->
+                            <TableRow v-if="backups.length === 0">
+                                <TableCell colspan="4" class="h-32 text-center">
+                                    <div class="flex flex-col items-center justify-center text-muted-foreground">
+                                        <Database class="w-8 h-8 mb-3 opacity-20" />
+                                        <p class="text-sm font-medium text-foreground">Sistem Belum Memiliki Cadangan</p>
+                                        <p class="text-xs mt-1">Silakan klik "Buat Backup Baru" untuk memulai pencadangan pertama.</p>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
                 </div>
+
             </div>
         </div>
+
+        <!-- Delete Confirmation -->
+        <DeleteConfirmDialog
+            :open="!!deleteTargetFile"
+            title="Hapus File Backup"
+            :description="`Apakah Anda yakin ingin menghapus backup ${deleteTargetFile}? Tindakan ini tidak dapat dibatalkan dan file cadangan ini akan hilang permanen.`"
+            @confirm="confirmDeleteBackup"
+            @cancel="deleteTargetFile = null"
+        />
+
     </AuthenticatedLayout>
 </template>

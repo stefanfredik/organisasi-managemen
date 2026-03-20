@@ -212,11 +212,21 @@ Route::middleware('auth')->group(function () {
     Route::get('settings', [\App\Http\Controllers\SettingController::class, 'index'])->name('settings.index');
     Route::post('settings', [\App\Http\Controllers\SettingController::class, 'update'])->name('settings.update');
 
+    // Administration - Arisan
+    Route::resource('arisans', \App\Http\Controllers\ArisanController::class);
+    Route::post('arisans/{arisan}/participants', [\App\Http\Controllers\ArisanParticipantController::class, 'store'])->name('arisans.participants.store');
+    Route::delete('arisans/{arisan}/participants/{participant}', [\App\Http\Controllers\ArisanParticipantController::class, 'destroy'])->name('arisans.participants.destroy');
+    Route::post('arisans/{arisan}/draws', [\App\Http\Controllers\ArisanDrawController::class, 'store'])->name('arisans.draws.store');
+    Route::delete('arisans/{arisan}/draws/{draw}', [\App\Http\Controllers\ArisanDrawController::class, 'destroy'])->name('arisans.draws.destroy');
+    Route::post('arisans/{arisan}/payments', [\App\Http\Controllers\ArisanPaymentController::class, 'store'])->name('arisans.payments.store');
+    Route::delete('arisans/{arisan}/payments/{payment}', [\App\Http\Controllers\ArisanPaymentController::class, 'destroy'])->name('arisans.payments.destroy');
+
     // Administration - Backups
+    Route::get('backups/status', [\App\Http\Controllers\BackupController::class, 'status'])->name('backups.status');
     Route::get('backups', [\App\Http\Controllers\BackupController::class, 'index'])->name('backups.index');
     Route::post('backups', [\App\Http\Controllers\BackupController::class, 'create'])->name('backups.create');
-    Route::get('backups/{fileName}/download', [\App\Http\Controllers\BackupController::class, 'download'])->name('backups.download');
-    Route::delete('backups/{fileName}', [\App\Http\Controllers\BackupController::class, 'destroy'])->name('backups.destroy');
+    Route::get('backups/{file}/download', [\App\Http\Controllers\BackupController::class, 'download'])->where('file', '[a-zA-Z0-9\-\_\.]+')->name('backups.download');
+    Route::delete('backups/{file}', [\App\Http\Controllers\BackupController::class, 'destroy'])->where('file', '[a-zA-Z0-9\-\_\.]+')->name('backups.destroy');
 
     // Administration - Documents
     Route::resource('documents', \App\Http\Controllers\DocumentController::class);

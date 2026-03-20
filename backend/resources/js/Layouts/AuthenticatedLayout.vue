@@ -58,6 +58,7 @@ import {
     X,
     Shield,
     Briefcase,
+    Trophy,
 } from "lucide-vue-next";
 
 const page = usePage();
@@ -144,6 +145,7 @@ const navGroups = computed(() => [
             },
             { icon: Settings2, label: "Manajemen Iuran", route: "contribution-types.index", pattern: "contribution-types.*", show: hasPermission("view_contribution_types") },
             { icon: HandCoins, label: "Donasi", route: "donations.index", pattern: "donations.*", show: route().has("donations.index") && hasPermission("view_donations") },
+            { icon: Trophy, label: "Program Arisan", route: "arisans.index", pattern: "arisans.*", show: true },
         ],
     },
     {

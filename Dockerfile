@@ -11,6 +11,7 @@ WORKDIR /var/www/html
 RUN apt-get update && apt-get install -y \
     git \
     curl \
+    mariadb-client \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
