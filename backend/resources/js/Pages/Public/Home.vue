@@ -1,5 +1,6 @@
 <script setup>
 import ActionLink from '@/Components/ActionLink.vue';
+import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
 import OrgTreeNode from '@/Components/OrgTreeNode.vue';
@@ -151,8 +152,40 @@ const donationProgress = (donation) => {
 
             <div class="relative z-10 h-full max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 flex flex-col justify-center items-center text-center">
                 <div class="max-w-3xl">
+                    <!-- Logo Organisasi -->
+                    <Transition appear enter-active-class="transition duration-1000 delay-100" enter-from-class="opacity-0 scale-75" enter-to-class="opacity-100 scale-100">
+                        <div class="flex justify-center mb-6">
+                            <div class="logo-container relative">
+                                <!-- Rotating gradient ring -->
+                                <div class="logo-ring-outer"></div>
+                                <div class="logo-ring-inner"></div>
+
+                                <!-- Glow backdrop -->
+                                <div class="absolute inset-0 rounded-full bg-white/10 blur-xl scale-125 animate-pulse"></div>
+
+                                <!-- Orbit dots -->
+                                <div class="logo-orbit">
+                                    <span class="logo-dot logo-dot-1"></span>
+                                    <span class="logo-dot logo-dot-2"></span>
+                                    <span class="logo-dot logo-dot-3"></span>
+                                </div>
+
+                                <!-- Logo itself -->
+                                <div class="logo-inner logo-float">
+                                    <img
+                                        v-if="app.logo"
+                                        :src="app.logo"
+                                        :alt="app.name"
+                                        class="h-20 sm:h-24 w-auto object-contain"
+                                    />
+                                    <ApplicationLogo v-else class="h-16 sm:h-20 w-auto text-white" />
+                                </div>
+                            </div>
+                        </div>
+                    </Transition>
+
                     <Transition appear enter-active-class="transition duration-700 delay-300" enter-from-class="opacity-0 translate-y-8" enter-to-class="opacity-100 translate-y-0">
-                        <h1 class="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.05] text-white break-words drop-shadow-lg">
+                        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.05] text-white break-words drop-shadow-lg">
                             {{ app.name }}
                         </h1>
                     </Transition>
@@ -186,9 +219,17 @@ const donationProgress = (donation) => {
             </div>
 
             <!-- Scroll indicator -->
-            <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1 animate-bounce">
-                <span class="text-white/50 text-[10px] uppercase tracking-widest font-medium">Scroll</span>
-                <ChevronDown class="w-5 h-5 text-white/50" />
+            <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-3">
+                <span class="text-white/70 text-[11px] uppercase tracking-[0.2em] font-semibold">Scroll</span>
+                <!-- Mouse shape -->
+                <div class="scroll-mouse">
+                    <div class="scroll-wheel"></div>
+                </div>
+                <!-- Arrows -->
+                <div class="flex flex-col items-center gap-0.5 -mt-1">
+                    <ChevronDown class="w-4 h-4 text-white/80 animate-[scroll-arrow_1.4s_ease-in-out_infinite]" />
+                    <ChevronDown class="w-4 h-4 text-white/50 animate-[scroll-arrow_1.4s_ease-in-out_0.2s_infinite]" />
+                </div>
             </div>
         </section>
 
@@ -198,57 +239,54 @@ const donationProgress = (donation) => {
         </div>
 
         <!-- ==================== TENTANG ==================== -->
-        <section id="tentang" class="scroll-mt-16 relative bg-card py-14 sm:py-20 overflow-hidden">
+        <section id="tentang" class="snap-start scroll-mt-16 relative bg-card py-10 overflow-hidden min-h-screen flex items-center">
             <!-- Decorative orb -->
             <div class="absolute -top-20 -right-20 w-80 h-80 bg-primary/5 rounded-full blur-[100px]"></div>
             <div class="absolute -bottom-20 -left-20 w-60 h-60 bg-primary/5 rounded-full blur-[80px]"></div>
 
             <div class="w-full mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-                <!-- History -->
-                <div class="mx-auto max-w-3xl mb-14">
-                    <div class="flex items-center gap-3 mb-5" data-reveal="left">
-                        <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-primary ring-1 ring-primary/10">
-                            <BookOpen class="w-5 h-5" />
-                        </div>
-                        <p class="text-primary font-bold text-sm uppercase tracking-wider">Tentang Kami</p>
-                    </div>
-                    <h2 class="text-3xl sm:text-4xl font-black text-foreground tracking-tight mb-5" data-reveal data-reveal-delay="100">
-                        {{ app.name }}
-                    </h2>
-                    <p v-if="app.motto" class="text-lg italic text-primary/80 font-medium mb-5 border-l-4 border-primary/30 pl-4" data-reveal data-reveal-delay="150">
-                        "{{ app.motto }}"
-                    </p>
-                    <p class="text-base text-muted-foreground leading-relaxed" data-reveal data-reveal-delay="200">
-                        {{ portal.about_text || 'Organisasi ini didirikan dengan semangat kebersamaan dan keinginan untuk memberikan kontribusi nyata bagi masyarakat. Berawal dari komunitas kecil, kini kami telah tumbuh menjadi sebuah wadah profesional yang mengelola berbagai bidang kegiatan.' }}
-                    </p>
-                    <div v-if="app.founded_date" class="mt-6 inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl border border-primary/10" data-reveal data-reveal-delay="300">
-                        <span class="text-sm text-muted-foreground">Berdiri sejak</span>
-                        <span class="text-sm font-black text-primary">{{ app.founded_date }}</span>
-                    </div>
-                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-center">
 
-                <!-- Values -->
-                <div class="text-center mb-10" data-reveal>
-                    <p class="text-primary font-bold text-sm uppercase tracking-wider mb-2">Prinsip</p>
-                    <h3 class="text-2xl sm:text-3xl font-black text-foreground tracking-tight">Nilai-Nilai Kami</h3>
-                    <div class="w-16 h-1 bg-gradient-to-r from-primary to-primary/30 rounded-full mx-auto mt-3"></div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 max-w-5xl mx-auto">
-                    <div
-                        v-for="(value, idx) in values"
-                        :key="value.title"
-                        data-reveal
-                        :data-reveal-delay="idx * 100"
-                        class="group relative bg-card rounded-2xl p-6 border hover:border-primary/30 shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-2 transition-all duration-500 overflow-hidden"
-                    >
-                        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700"></div>
-                        <div class="absolute bottom-0 left-0 w-20 h-20 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                        <div class="relative z-10">
-                            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center text-primary mb-4 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-primary/10 transition-all duration-300 ring-1 ring-primary/10">
-                                <component :is="value.icon" class="w-5 h-5" />
+                    <!-- Left: Text Block -->
+                    <div>
+                        <div class="flex items-center gap-3 mb-3" data-reveal="left">
+                            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-primary ring-1 ring-primary/10">
+                                <BookOpen class="w-4 h-4" />
                             </div>
-                            <h4 class="text-base font-bold text-foreground mb-2 group-hover:text-primary transition-colors duration-300">{{ value.title }}</h4>
-                            <p class="text-sm text-muted-foreground leading-relaxed">{{ value.description }}</p>
+                            <p class="text-primary font-bold text-xs uppercase tracking-wider">Tentang Kami</p>
+                        </div>
+                        <h2 class="text-2xl sm:text-3xl font-black text-foreground tracking-tight mb-3" data-reveal data-reveal-delay="100">
+                            {{ app.name }}
+                        </h2>
+                        <p v-if="app.motto" class="text-sm italic text-primary/80 font-medium mb-3 border-l-4 border-primary/30 pl-3" data-reveal data-reveal-delay="150">
+                            "{{ app.motto }}"
+                        </p>
+                        <p class="text-sm text-muted-foreground leading-relaxed mb-4" data-reveal data-reveal-delay="200">
+                            {{ portal.about_text || 'Organisasi ini didirikan dengan semangat kebersamaan dan keinginan untuk memberikan kontribusi nyata bagi masyarakat. Berawal dari komunitas kecil, kini kami telah tumbuh menjadi sebuah wadah profesional yang mengelola berbagai bidang kegiatan.' }}
+                        </p>
+                        <div v-if="app.founded_date" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl border border-primary/10" data-reveal data-reveal-delay="300">
+                            <span class="text-xs text-muted-foreground">Berdiri sejak</span>
+                            <span class="text-xs font-black text-primary">{{ app.founded_date }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Right: Values Grid 2x2 -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div
+                            v-for="(value, idx) in values"
+                            :key="value.title"
+                            data-reveal
+                            :data-reveal-delay="idx * 80"
+                            class="group relative bg-muted/40 rounded-2xl p-4 border hover:border-primary/30 hover:bg-primary/5 hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+                        >
+                            <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-primary/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-500"></div>
+                            <div class="relative z-10">
+                                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center text-primary mb-2.5 group-hover:scale-110 transition-transform duration-300 ring-1 ring-primary/10">
+                                    <component :is="value.icon" class="w-4 h-4" />
+                                </div>
+                                <h4 class="text-sm font-bold text-foreground mb-1 group-hover:text-primary transition-colors duration-300">{{ value.title }}</h4>
+                                <p class="text-xs text-muted-foreground leading-relaxed">{{ value.description }}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -696,5 +734,145 @@ const donationProgress = (donation) => {
 }
 .animate-shimmer {
     animation: shimmer 2s ease-in-out infinite;
+}
+
+/* ========== Logo Hero Animations ========== */
+.logo-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 140px;
+    height: 140px;
+}
+
+@media (min-width: 640px) {
+    .logo-container { width: 168px; height: 168px; }
+}
+
+/* Rotating outer ring */
+.logo-ring-outer {
+    position: absolute;
+    inset: -4px;
+    border-radius: 9999px;
+    background: conic-gradient(from 0deg, transparent 30%, rgba(255,255,255,0.7) 50%, transparent 70%);
+    animation: logo-ring-spin 3s linear infinite;
+    filter: blur(1px);
+}
+
+/* Rotating inner ring (counter) */
+.logo-ring-inner {
+    position: absolute;
+    inset: 4px;
+    border-radius: 9999px;
+    background: conic-gradient(from 180deg, transparent 40%, rgba(255,255,255,0.25) 55%, transparent 70%);
+    animation: logo-ring-spin 5s linear infinite reverse;
+}
+
+@keyframes logo-ring-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Logo inner circle (clipping area) */
+.logo-inner {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 110px;
+    height: 110px;
+    border-radius: 9999px;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.2);
+    box-shadow: 0 0 30px rgba(255,255,255,0.15), inset 0 1px 1px rgba(255,255,255,0.2);
+}
+
+@media (min-width: 640px) {
+    .logo-inner { width: 130px; height: 130px; }
+}
+
+/* Float animation */
+.logo-float {
+    animation: logo-float 4s ease-in-out infinite;
+}
+
+@keyframes logo-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+/* Orbit dots */
+.logo-orbit {
+    position: absolute;
+    inset: 0;
+    animation: logo-ring-spin 8s linear infinite;
+}
+
+.logo-dot {
+    position: absolute;
+    border-radius: 9999px;
+    background: white;
+}
+
+.logo-dot-1 {
+    width: 7px; height: 7px;
+    top: 0; left: 50%;
+    margin-left: -3.5px;
+    opacity: 0.85;
+    box-shadow: 0 0 6px 2px rgba(255,255,255,0.6);
+}
+
+.logo-dot-2 {
+    width: 5px; height: 5px;
+    bottom: 6px; right: 10px;
+    opacity: 0.6;
+    box-shadow: 0 0 4px 1px rgba(255,255,255,0.4);
+}
+
+.logo-dot-3 {
+    width: 4px; height: 4px;
+    bottom: 10px; left: 8px;
+    opacity: 0.45;
+    box-shadow: 0 0 4px 1px rgba(255,255,255,0.3);
+}
+/* ========== Scroll Indicator ========== */
+.scroll-mouse {
+    width: 26px;
+    height: 42px;
+    border: 2px solid rgba(255, 255, 255, 0.75);
+    border-radius: 13px;
+    display: flex;
+    justify-content: center;
+    padding-top: 6px;
+    box-shadow: 0 0 12px rgba(255,255,255,0.2);
+    animation: scroll-mouse-glow 2s ease-in-out infinite;
+}
+
+.scroll-wheel {
+    width: 4px;
+    height: 8px;
+    background: white;
+    border-radius: 2px;
+    animation: scroll-wheel-move 1.4s ease-in-out infinite;
+}
+
+@keyframes scroll-wheel-move {
+    0%   { opacity: 1; transform: translateY(0); }
+    60%  { opacity: 0; transform: translateY(10px); }
+    61%  { opacity: 0; transform: translateY(0); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scroll-mouse-glow {
+    0%, 100% { box-shadow: 0 0 8px rgba(255,255,255,0.2); }
+    50%       { box-shadow: 0 0 18px rgba(255,255,255,0.5); }
+}
+
+@keyframes scroll-arrow {
+    0%   { opacity: 0; transform: translateY(-4px); }
+    50%  { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(4px); }
 }
 </style>

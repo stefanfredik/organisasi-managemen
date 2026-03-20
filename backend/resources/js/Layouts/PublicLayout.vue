@@ -212,7 +212,7 @@ onUnmounted(() => {
         <!-- Footer -->
         <footer class="bg-foreground mt-12 sm:mt-16">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
-                <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+                <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
                     <!-- About -->
                     <div class="lg:col-span-2">
                         <div class="flex items-center gap-2.5 mb-3 overflow-hidden">
@@ -249,18 +249,6 @@ onUnmounted(() => {
                         </div>
                     </div>
 
-                    <!-- Quick Links -->
-                    <div>
-                        <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Link Cepat</h3>
-                        <ul class="space-y-2">
-                            <li v-for="item in navigation.slice(0, 5)" :key="item.name">
-                                <a :href="item.href" @click="scrollToSection(item, $event)" class="text-sm text-muted hover:text-background transition-colors cursor-pointer">
-                                    {{ item.name }}
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-
                     <!-- Contact -->
                     <div>
                         <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Kontak</h3>
@@ -287,8 +275,36 @@ onUnmounted(() => {
                 </p>
 
                 <!-- Copyright -->
-                <div class="mt-6 pt-6 border-t border-muted-foreground/10 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
+                <div class="mt-6 pt-6 border-t border-muted-foreground/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
                     <p>&copy; {{ new Date().getFullYear() }} {{ $page.props.appSettings.name }}</p>
+                    <div class="flex items-center gap-3">
+                        <a
+                            href="https://kopiflores.my.id"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="flex items-center gap-1.5 text-muted hover:text-white transition-colors duration-200 group"
+                        >
+                            <span>Developed with</span>
+                            <svg class="w-3.5 h-3.5 text-rose-400 group-hover:text-rose-300 group-hover:scale-110 transition-all duration-200" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/>
+                            </svg>
+                            <span>by</span>
+                            <span class="font-semibold text-white/70 group-hover:text-white transition-colors">Fredik Stefan</span>
+                        </a>
+                        <span class="text-muted-foreground/30">·</span>
+                        <a
+                            href="http://instagram.com/stefanfredik"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="flex items-center gap-1 text-muted hover:text-[#E4405F] transition-colors duration-200 group"
+                            title="Instagram @stefanfredik"
+                        >
+                            <svg class="w-3.5 h-3.5 group-hover:scale-110 transition-transform duration-200" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.791-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.209-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                            </svg>
+                            <span class="font-medium">@stefanfredik</span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </footer>
