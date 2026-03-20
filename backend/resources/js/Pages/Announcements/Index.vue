@@ -6,13 +6,14 @@ import SearchBar from "@/Components/SearchBar.vue";
 import FilterDropdown from "@/Components/FilterDropdown.vue";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from '@/components/ui/card';
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import {
     Plus, Eye, Pencil, Trash2, Megaphone, CalendarDays, Users, Inbox,
-    ChevronLeft, ChevronRight, MoreVertical,
+    ChevronLeft, ChevronRight, MoreVertical, CheckCircle,
 } from "lucide-vue-next";
 import {
     Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
@@ -25,6 +26,7 @@ const props = defineProps({
     announcements: Object,
     filters: Object,
     positionOptions: Array,
+    announcementStats: Object,
 });
 
 const search = ref(props.filters?.search || "");
@@ -83,7 +85,10 @@ const closeDetail = () => { showDetailSheet.value = false; detailItem.value = nu
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between gap-3">
-                <h2 class="text-lg font-semibold leading-tight text-foreground">Pengumuman</h2>
+                <div class="flex items-center gap-2.5">
+                    <Megaphone class="w-5 h-5 text-primary" />
+                    <h2 class="text-lg font-semibold leading-tight text-foreground">Pengumuman</h2>
+                </div>
                 <Button v-if="hasPermission('manage_announcements')" size="sm" as-child>
                     <Link :href="route('announcements.create')">
                         <Plus class="w-4 h-4 mr-1" />
@@ -95,6 +100,43 @@ const closeDetail = () => { showDetailSheet.value = false; detailItem.value = nu
 
         <div class="py-3 sm:py-6">
             <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 space-y-3 sm:space-y-4">
+
+                <!-- Stats Summary -->
+                <div v-if="announcementStats" class="grid grid-cols-3 gap-2 sm:gap-3">
+                    <Card>
+                        <CardContent class="p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
+                            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                                <Megaphone class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-xl sm:text-2xl font-bold text-foreground leading-none">{{ announcementStats.total }}</p>
+                                <p class="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">Total</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent class="p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
+                            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                                <CheckCircle class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" />
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-xl sm:text-2xl font-bold text-foreground leading-none">{{ announcementStats.published }}</p>
+                                <p class="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">Dipublikasikan</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent class="p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
+                            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+                                <CalendarDays class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-xl sm:text-2xl font-bold text-foreground leading-none">{{ announcementStats.draft }}</p>
+                                <p class="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">Draft</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
 
                 <!-- Filters -->
                 <div class="flex flex-col sm:flex-row gap-2">

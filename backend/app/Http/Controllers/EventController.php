@@ -45,6 +45,11 @@ class EventController extends Controller
         return Inertia::render('Events/Index', [
             'events' => $events,
             'filters' => $request->only(['search', 'status']),
+            'eventStats' => [
+                'total' => Event::count(),
+                'upcoming' => Event::whereIn('status', ['published', 'ongoing'])->count(),
+                'completed' => Event::where('status', 'completed')->count(),
+            ],
         ]);
     }
 

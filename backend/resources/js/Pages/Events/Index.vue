@@ -6,11 +6,15 @@ import SearchBar from '@/Components/SearchBar.vue';
 import FilterDropdown from '@/Components/FilterDropdown.vue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
 import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
-import { Plus, Search, Calendar, MapPin, MoreVertical, Eye, Pencil, Trash2, SlidersHorizontal, Clock, User } from 'lucide-vue-next';
+import { Plus, Search, Calendar, MapPin, MoreVertical, Eye, Pencil, Trash2, SlidersHorizontal, Clock, User, TrendingUp, CheckCircle } from 'lucide-vue-next';
 import { useToast } from '@/composables/useToast';
 
 const toast = useToast();
@@ -18,6 +22,7 @@ const toast = useToast();
 const props = defineProps({
     events: Object,
     filters: Object,
+    eventStats: Object,
 });
 
 const search = ref(props.filters.search || '');
@@ -70,7 +75,10 @@ const doDelete = () => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between gap-3">
-                <h2 class="text-lg font-semibold leading-tight text-foreground">Kegiatan</h2>
+                <div class="flex items-center gap-2.5">
+                    <Calendar class="w-5 h-5 text-primary" />
+                    <h2 class="text-lg font-semibold leading-tight text-foreground">Kegiatan</h2>
+                </div>
                 <Button v-if="hasPermission('manage_events')" size="sm" as-child>
                     <Link :href="route('events.create')">
                         <Plus class="w-4 h-4 mr-1" />
@@ -80,8 +88,45 @@ const doDelete = () => {
             </div>
         </template>
 
-        <div class="py-4 sm:py-6">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="py-3 sm:py-6">
+            <div class="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 space-y-4">
+
+                <!-- Stats Summary -->
+                <div v-if="eventStats" class="grid grid-cols-3 gap-2 sm:gap-3">
+                    <Card>
+                        <CardContent class="p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
+                            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                                <Calendar class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-xl sm:text-2xl font-bold text-foreground leading-none">{{ eventStats.total }}</p>
+                                <p class="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">Total Kegiatan</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent class="p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
+                            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                                <TrendingUp class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" />
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-xl sm:text-2xl font-bold text-foreground leading-none">{{ eventStats.upcoming }}</p>
+                                <p class="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">Mendatang</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent class="p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
+                            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
+                                <CheckCircle class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500" />
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-xl sm:text-2xl font-bold text-foreground leading-none">{{ eventStats.completed }}</p>
+                                <p class="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">Selesai</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
 
                 <!-- Mobile: Card-based list -->
                 <div class="md:hidden">
@@ -208,54 +253,85 @@ const doDelete = () => {
                     </div>
 
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-border">
-                            <thead class="bg-muted/50">
-                                <tr>
-                                    <th class="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Kegiatan</th>
-                                    <th class="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Waktu</th>
-                                    <th class="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Lokasi</th>
-                                    <th class="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">PIC</th>
-                                    <th class="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-                                    <th class="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-border">
-                                <tr v-for="event in events.data" :key="event.id" class="hover:bg-muted/30">
-                                    <td class="px-4 py-3">
-                                        <div class="text-sm font-medium text-foreground">{{ event.name }}</div>
-                                    </td>
-                                    <td class="px-4 py-3 text-sm text-muted-foreground">{{ formatDate(event.start_date) }}</td>
-                                    <td class="px-4 py-3 text-sm text-muted-foreground hidden lg:table-cell">{{ event.location || '-' }}</td>
-                                    <td class="px-4 py-3 text-sm text-muted-foreground hidden lg:table-cell">{{ event.pic ? event.pic.full_name : '-' }}</td>
-                                    <td class="px-4 py-3">
+                        <Table>
+                            <TableHeader>
+                                <TableRow class="bg-muted/50">
+                                    <TableHead class="text-[11px] uppercase tracking-wider">Kegiatan</TableHead>
+                                    <TableHead class="text-[11px] uppercase tracking-wider">Waktu</TableHead>
+                                    <TableHead class="text-[11px] uppercase tracking-wider hidden lg:table-cell">Lokasi</TableHead>
+                                    <TableHead class="text-[11px] uppercase tracking-wider hidden lg:table-cell">PIC</TableHead>
+                                    <TableHead class="text-[11px] uppercase tracking-wider text-center">Status</TableHead>
+                                    <TableHead class="text-[11px] uppercase tracking-wider text-right">Aksi</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                <TableRow v-for="event in events.data" :key="event.id" class="hover:bg-muted/30 transition-colors group">
+                                    <TableCell>
+                                        <Link :href="route('events.show', event)" class="block">
+                                            <p class="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate max-w-[220px]">{{ event.name }}</p>
+                                        </Link>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div>
+                                            <p class="text-sm text-foreground">{{ formatDate(event.start_date) }}</p>
+                                            <p class="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                                                <Clock class="w-3 h-3" />
+                                                {{ formatTime(event.start_date) }}
+                                            </p>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell class="hidden lg:table-cell">
+                                        <span v-if="event.location" class="text-sm text-muted-foreground flex items-center gap-1">
+                                            <MapPin class="w-3 h-3 shrink-0" />
+                                            <span class="truncate max-w-[150px]">{{ event.location }}</span>
+                                        </span>
+                                        <span v-else class="text-sm text-muted-foreground">-</span>
+                                    </TableCell>
+                                    <TableCell class="hidden lg:table-cell">
+                                        <span class="text-sm text-muted-foreground">{{ event.pic ? event.pic.full_name : '-' }}</span>
+                                    </TableCell>
+                                    <TableCell class="text-center">
                                         <Badge :variant="getStatusBadge(event.status)" class="text-xs">{{ getStatusLabel(event.status) }}</Badge>
-                                    </td>
-                                    <td class="px-4 py-3 text-right">
+                                    </TableCell>
+                                    <TableCell class="text-right">
                                         <div class="flex justify-end gap-1">
-                                            <Button variant="ghost" size="sm" class="h-7 px-2 text-xs" as-child>
-                                                <Link :href="route('events.show', event)">Detail</Link>
+                                            <Button variant="ghost" size="icon" class="h-8 w-8" as-child>
+                                                <Link :href="route('events.show', event)">
+                                                    <Eye class="w-4 h-4" />
+                                                </Link>
                                             </Button>
-                                            <Button v-if="hasPermission('manage_events')" variant="ghost" size="sm" class="h-7 px-2 text-xs" as-child>
-                                                <Link :href="route('events.edit', event)">Edit</Link>
+                                            <Button v-if="hasPermission('manage_events')" variant="ghost" size="icon" class="h-8 w-8" as-child>
+                                                <Link :href="route('events.edit', event)">
+                                                    <Pencil class="w-4 h-4" />
+                                                </Link>
                                             </Button>
-                                            <Button v-if="hasPermission('manage_events')" variant="ghost" size="sm" class="h-7 px-2 text-xs text-destructive" @click="confirmDelete(event)">
-                                                Hapus
+                                            <Button v-if="hasPermission('manage_events')" variant="ghost" size="icon" class="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" @click="confirmDelete(event)">
+                                                <Trash2 class="w-4 h-4" />
                                             </Button>
                                         </div>
-                                    </td>
-                                </tr>
-                                <tr v-if="events.data.length === 0">
-                                    <td colspan="6" class="px-4 py-8 text-center text-sm text-muted-foreground">Tidak ada data kegiatan.</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow v-if="events.data.length === 0">
+                                    <TableCell colspan="6" class="h-24 text-center">
+                                        <div class="flex flex-col items-center gap-2 text-muted-foreground">
+                                            <Calendar class="w-8 h-8 opacity-50" />
+                                            <span class="text-sm">Tidak ada data kegiatan.</span>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
                     </div>
 
-                    <div v-if="events.data.length > 0" class="p-3 sm:p-4 border-t flex items-center justify-between text-sm">
-                        <span class="text-xs text-muted-foreground">{{ events.from }}-{{ events.to }} / {{ events.total }}</span>
-                        <div class="flex gap-2">
-                            <Button v-if="events.prev_page_url" variant="outline" size="sm" class="h-7 text-xs" as-child><Link :href="events.prev_page_url">Prev</Link></Button>
-                            <Button v-if="events.next_page_url" variant="outline" size="sm" class="h-7 text-xs" as-child><Link :href="events.next_page_url">Next</Link></Button>
+                    <div v-if="events.data.length > 0" class="p-3 sm:p-4 border-t flex items-center justify-between bg-muted/30">
+                        <span class="text-xs text-muted-foreground">{{ events.from }}-{{ events.to }} dari {{ events.total }}</span>
+                        <div class="flex gap-1.5">
+                            <Button v-if="events.prev_page_url" variant="outline" size="sm" class="h-8" as-child>
+                                <Link :href="events.prev_page_url">Sebelumnya</Link>
+                            </Button>
+                            <Button v-if="events.next_page_url" variant="outline" size="sm" class="h-8" as-child>
+                                <Link :href="events.next_page_url">Selanjutnya</Link>
+                            </Button>
                         </div>
                     </div>
                 </div>

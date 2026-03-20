@@ -5,6 +5,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import DataTable from '@/Components/DataTable.vue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import {
     Sheet,
     SheetContent,
@@ -22,7 +23,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import FilterDropdown from '@/Components/FilterDropdown.vue';
-import { Plus, MoreHorizontal, MoreVertical, Eye, Pencil, Trash2, SlidersHorizontal, X, Search, Phone, ChevronRight } from 'lucide-vue-next';
+import { Plus, MoreHorizontal, MoreVertical, Eye, Pencil, Trash2, SlidersHorizontal, X, Search, Phone, ChevronRight, Users, CheckCircle, UserX } from 'lucide-vue-next';
 import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 import { useToast } from '@/composables/useToast';
 
@@ -32,6 +33,7 @@ const props = defineProps({
     members: Object,
     filters: Object,
     positions: Object,
+    memberStats: Object,
 });
 
 // Filter state
@@ -177,7 +179,10 @@ const getPositionBadgeClass = (pos) => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between gap-3">
-                <h2 class="text-lg font-semibold leading-tight text-foreground">Daftar Anggota</h2>
+                <div class="flex items-center gap-2.5">
+                    <Users class="w-5 h-5 text-primary" />
+                    <h2 class="text-lg font-semibold leading-tight text-foreground">Daftar Anggota</h2>
+                </div>
                 <Link v-if="hasPermission('manage_members')" href="/members/create">
                     <Button size="sm">
                         <Plus class="w-4 h-4 mr-1" />
@@ -187,8 +192,46 @@ const getPositionBadgeClass = (pos) => {
             </div>
         </template>
 
-        <div class="py-4 sm:py-6">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="py-3 sm:py-6">
+            <div class="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 space-y-4">
+
+                <!-- Stats Summary -->
+                <div v-if="memberStats" class="grid grid-cols-3 gap-2 sm:gap-3">
+                    <Card>
+                        <CardContent class="p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
+                            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                                <Users class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-xl sm:text-2xl font-bold text-foreground leading-none">{{ memberStats.total }}</p>
+                                <p class="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">Total Anggota</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent class="p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
+                            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                                <CheckCircle class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" />
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-xl sm:text-2xl font-bold text-foreground leading-none">{{ memberStats.active }}</p>
+                                <p class="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">Aktif</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent class="p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
+                            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-red-500/10 flex items-center justify-center shrink-0">
+                                <UserX class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-500" />
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-xl sm:text-2xl font-bold text-foreground leading-none">{{ memberStats.inactive }}</p>
+                                <p class="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">Tidak Aktif</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
                 <!-- Mobile: WhatsApp-style contact list -->
                 <div class="md:hidden">
                     <!-- Mobile Search & Filter Bar -->

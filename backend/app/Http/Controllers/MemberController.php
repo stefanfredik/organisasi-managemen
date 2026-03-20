@@ -151,6 +151,11 @@ class MemberController extends Controller
                 'sort_by',
                 'sort_dir',
             ]),
+            'memberStats' => [
+                'total' => Member::count(),
+                'active' => Member::active()->count(),
+                'inactive' => Member::inactive()->count(),
+            ],
         ]);
     }
 

@@ -61,6 +61,11 @@ class AnnouncementController extends Controller
                 ['value' => 'sekretaris', 'label' => 'Sekretaris'],
                 ['value' => 'anggota', 'label' => 'Anggota'],
             ],
+            'announcementStats' => [
+                'total' => Announcement::count(),
+                'published' => Announcement::where('status', 'published')->count(),
+                'draft' => Announcement::where('status', 'draft')->count(),
+            ],
         ]);
     }
 

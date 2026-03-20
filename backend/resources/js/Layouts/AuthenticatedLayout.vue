@@ -176,15 +176,15 @@ const navGroups = computed(() => [
     },
 ]);
 
-// Bottom nav: show max 4 primary items + "more" button
+// Bottom nav: show max 4 primary items
 const bottomNavItems = computed(() => {
     const primary = [
-        { icon: LayoutDashboard, label: "Home", route: "dashboard", pattern: "dashboard", show: true },
         { icon: Users, label: "Anggota", route: "members.index", pattern: "members.*", show: hasPermission("view_members") },
         { icon: CalendarDays, label: "Kegiatan", route: "events.index", pattern: "events.*", show: hasPermission("view_events") },
-        { icon: Wallet, label: "Keuangan", route: "finances.index", pattern: "finances.*", show: hasPermission("view_finance") },
+        { icon: BarChart3, label: "Transaksi", route: "finances.index", pattern: "finances.*", show: hasPermission("view_finance") },
+        { icon: Wallet, label: "Keuangan", route: "wallets.index", pattern: "wallets.*", show: hasPermission("view_finance") },
     ];
-    return primary.filter(i => i.show).slice(0, 4);
+    return primary.filter(i => i.show).slice(0, 5);
 });
 
 // Items for "More" bottom sheet (everything not in bottom nav)
@@ -486,16 +486,16 @@ const isMoreActive = computed(() => {
                 <Sheet :open="moreMenuOpen" @update:open="moreMenuOpen = $event">
                     <SheetContent side="bottom" class="rounded-t-3xl p-0 max-h-[75vh] flex flex-col" :show-close="false">
                         <SheetHeader class="sr-only">
-                            <SheetTitle>Menu Lainnya</SheetTitle>
-                            <SheetDescription>Menu navigasi tambahan</SheetDescription>
+                            <SheetTitle>Menu</SheetTitle>
+                            <SheetDescription>Daftar semua menu</SheetDescription>
                         </SheetHeader>
 
                         <!-- Bottom sheet handle -->
                         <div class="bottom-sheet-handle" />
 
                         <!-- Header -->
-                        <div class="flex items-center justify-between px-5 pb-3">
-                            <h3 class="text-base font-bold text-foreground">Menu Lainnya</h3>
+                        <div class="flex items-center justify-between px-5 pb-3 pt-4">
+                            <h3 class="text-base font-bold text-foreground">Menu Navigasi</h3>
                             <button
                                 @click="moreMenuOpen = false"
                                 class="p-2 -mr-2 rounded-full text-muted-foreground active:bg-accent tap-highlight"
@@ -577,6 +577,19 @@ const isMoreActive = computed(() => {
                 ]"
             >
                 <div class="flex items-stretch h-[var(--bottom-nav-height)]">
+                    <!-- Menu button -->
+                    <button
+                        :class="[
+                            'mobile-bottom-nav-item',
+                            isMoreActive ? 'active' : '',
+                        ]"
+                        @click="moreMenuOpen = !moreMenuOpen"
+                    >
+                        <Menu class="nav-icon" />
+                        <span class="nav-label">Menu</span>
+                        <div v-if="isMoreActive" class="nav-dot" />
+                    </button>
+
                     <!-- Primary nav items -->
                     <Link
                         v-for="item in bottomNavItems"
@@ -591,19 +604,6 @@ const isMoreActive = computed(() => {
                         <span class="nav-label">{{ item.label }}</span>
                         <div v-if="isActive(item)" class="nav-dot" />
                     </Link>
-
-                    <!-- More button -->
-                    <button
-                        :class="[
-                            'mobile-bottom-nav-item',
-                            isMoreActive ? 'active' : '',
-                        ]"
-                        @click="moreMenuOpen = !moreMenuOpen"
-                    >
-                        <MoreHorizontal class="nav-icon" />
-                        <span class="nav-label">Lainnya</span>
-                        <div v-if="isMoreActive" class="nav-dot" />
-                    </button>
                 </div>
             </nav>
         </div>
