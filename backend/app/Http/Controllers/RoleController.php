@@ -32,11 +32,15 @@ class RoleController extends Controller
             $rolePermissions[$key] = Setting::getValue("role_permissions_{$key}", []);
         }
 
+        // Get full position models for the unified management tab
+        $positionsList = \App\Models\Position::withCount('members')->orderBy('id', 'asc')->get();
+
         return Inertia::render('Roles/Index', [
             'roles' => $roles,
             'userCounts' => $userCounts,
             'rolePermissions' => $rolePermissions,
             'positions' => $positions,
+            'positionsList' => $positionsList,
         ]);
     }
 

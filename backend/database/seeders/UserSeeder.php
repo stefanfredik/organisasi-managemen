@@ -46,10 +46,12 @@ class UserSeeder extends Seeder
                 ]
             );
 
+            $positionId = \App\Models\Position::where('code', $data['position'])->value('id') ?? 4;
+
             Member::firstOrCreate(
                 ['user_id' => $user->id],
                 [
-                    'position' => $data['position'],
+                    'position_id' => $positionId,
                     'full_name' => $data['name'],
                     'email' => $data['email'],
                     'member_code' => Member::generateMemberCode(),

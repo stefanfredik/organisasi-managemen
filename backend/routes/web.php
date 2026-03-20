@@ -201,6 +201,9 @@ Route::middleware('auth')->group(function () {
     // Role Management (admin only)
     Route::get('roles', [\App\Http\Controllers\RoleController::class, 'index'])->name('roles.index');
     Route::post('roles', [\App\Http\Controllers\RoleController::class, 'update'])->name('roles.update');
+    
+    // Position Management (admin only)
+    Route::resource('positions', \App\Http\Controllers\PositionController::class)->except(['index', 'show']);
 
     // Administration - Activity Logs
     Route::get('activity-logs', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-logs.index');
