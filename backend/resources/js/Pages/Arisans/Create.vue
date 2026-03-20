@@ -46,9 +46,6 @@ const selectAll = () => {
 
 const submit = () => {
     form.post(route('arisans.store'), {
-        onSuccess: (page) => {
-            if (page.props.flash?.success) toast.success(page.props.flash.success);
-        },
         onError: () => toast.error('Gagal membuat program arisan.'),
     });
 };

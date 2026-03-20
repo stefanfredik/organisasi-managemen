@@ -285,17 +285,23 @@ onMounted(() => {
                                     <option value="">-</option>
                                     <option value="kos">Kos</option>
                                     <option value="rumah">Rumah</option>
+                                    <option value="mess">Mess</option>
                                 </select>
                                 <InputError class="mt-2" :message="form.errors.living_status" />
                             </div>
                             <div>
                                 <Label for="marital_status">Status Pernikahan</Label>
-                                <Input
+                                <select
                                     id="marital_status"
                                     v-model="form.marital_status"
-                                    type="text"
-                                    class="mt-1 block w-full"
-                                />
+                                    class="mt-1 block w-full border-input focus:border-ring focus:ring-ring rounded-md shadow-sm"
+                                >
+                                    <option value="">-</option>
+                                    <option value="Belum Menikah">Belum Menikah</option>
+                                    <option value="Menikah">Menikah</option>
+                                    <option value="Cerai">Cerai</option>
+                                    <option value="Janda/Duda">Janda/Duda</option>
+                                </select>
                                 <InputError class="mt-2" :message="form.errors.marital_status" />
                             </div>
                         </div>

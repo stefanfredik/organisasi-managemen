@@ -1,9 +1,9 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import ApplicationLogo from "@/Components/ApplicationLogo.vue";
 import { Link, usePage } from "@inertiajs/vue3";
-import FlashMessage from "@/Components/FlashMessage.vue";
 import Toaster from "@/Components/Toaster.vue";
+import { useToast } from "@/composables/useToast";
 import NotificationPanel from "@/Components/NotificationPanel.vue";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -62,7 +62,16 @@ import {
 } from "lucide-vue-next";
 
 const page = usePage();
+const toast = useToast();
 const notifications = computed(() => page.props.notifications || []);
+
+// Redirect flash messages dari server ke Toaster (bawah)
+const flashMessage = computed(() => page.props.flash?.success || page.props.flash?.error || null);
+watch(flashMessage, (msg) => {
+    if (!msg) return;
+    if (page.props.flash?.success) toast.success(page.props.flash.success);
+    else if (page.props.flash?.error) toast.error(page.props.flash.error);
+});
 const mobileOpen = ref(false);
 const moreMenuOpen = ref(false);
 const isSidebarOpen = ref(true);
@@ -214,7 +223,6 @@ const isMoreActive = computed(() => {
 <template>
     <TooltipProvider :delay-duration="0">
         <div class="min-h-screen bg-background flex">
-            <FlashMessage />
             <Toaster />
 
             <!-- ========================================

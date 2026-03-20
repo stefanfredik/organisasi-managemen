@@ -22,10 +22,7 @@ const targetDeleteId = ref(null);
 const confirmDelete = () => {
     if (!targetDeleteId.value) return;
     router.delete(route('arisans.destroy', targetDeleteId.value), {
-        onSuccess: (page) => {
-            if (page.props.flash?.success) toast.success(page.props.flash.success);
-            targetDeleteId.value = null;
-        },
+        onSuccess: () => { targetDeleteId.value = null; },
         onError: () => toast.error('Gagal menghapus arisan.'),
     });
 };

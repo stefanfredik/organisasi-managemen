@@ -88,19 +88,14 @@ const createBackup = () => {
     
     router.post(route('backups.create'), {}, {
         preserveScroll: true,
-        onSuccess: (page) => {
-            if (page.props.flash?.success) {
-                toast.success(page.props.flash.success);
-            }
-            if (page.props.flash?.error) toast.error(page.props.flash.error);
-            // After successful form submit, start polling
+        onSuccess: () => {
+            // Flash message sudah ditangani oleh FlashMessage global
             startPolling();
         },
         onError: () => {
             toast.error('Gagal memulai backup.');
             isCreating.value = false;
         }
-        // removing onFinish so it doesn't instantly disable `isCreating` while background processes are running
     });
 };
 
@@ -110,10 +105,6 @@ const confirmDeleteBackup = () => {
     if (deleteTargetFile.value) {
         router.delete(route('backups.destroy', deleteTargetFile.value), {
             preserveScroll: true,
-            onSuccess: (page) => {
-                if (page.props.flash?.success) toast.success(page.props.flash.success);
-                if (page.props.flash?.error) toast.error(page.props.flash.error);
-            },
             onError: (errors) => toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus backup.'),
             onFinish: () => (deleteTargetFile.value = null),
         });

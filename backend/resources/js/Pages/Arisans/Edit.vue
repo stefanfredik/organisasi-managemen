@@ -29,9 +29,6 @@ const form = useForm({
 
 const submit = () => {
     form.put(route('arisans.update', props.arisan.id), {
-        onSuccess: (page) => {
-            if (page.props.flash?.success) toast.success(page.props.flash.success);
-        },
         onError: () => toast.error('Gagal memperbarui program arisan.'),
     });
 };

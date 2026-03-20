@@ -31,7 +31,7 @@ class StoreMemberRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:20'],
             'address' => ['nullable', 'string'],
             'domicile_address' => ['nullable', 'string'],
-            'living_status' => ['nullable', 'in:kos,rumah'],
+            'living_status' => ['nullable', 'in:kos,rumah,mess'],
             'marital_status' => ['nullable', 'string', 'max:50'],
             'occupation' => ['nullable', 'string', 'max:100'],
             'arrival_date_bali' => ['nullable', 'date'],

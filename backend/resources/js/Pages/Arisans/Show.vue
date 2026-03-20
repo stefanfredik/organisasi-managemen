@@ -44,7 +44,7 @@ const availableMembers = computed(() => {
 
 const submitParticipant = () => {
     addParticipantForm.post(route('arisans.participants.store', props.arisan.id), {
-        onSuccess: (page) => { if (page.props.flash?.success) toast.success(page.props.flash.success); addParticipantForm.reset(); },
+        onSuccess: () => { addParticipantForm.reset(); },
         onError: () => toast.error('Gagal menambahkan peserta.'),
     });
 };
@@ -53,7 +53,7 @@ const targetParticipantDelete = ref(null);
 const confirmDeleteParticipant = () => {
     if (!targetParticipantDelete.value) return;
     router.delete(route('arisans.participants.destroy', [props.arisan.id, targetParticipantDelete.value]), {
-        onSuccess: (page) => { if (page.props.flash?.success) toast.success(page.props.flash.success); targetParticipantDelete.value = null; }
+        onSuccess: () => { targetParticipantDelete.value = null; }
     });
 };
 
@@ -83,7 +83,7 @@ const filteredEligible = computed(() => {
 const submitDraw = () => {
     if (drawForm.winner_ids.length === 0) { toast.error('Pilih minimal 1 pemenang.'); return; }
     drawForm.post(route('arisans.draws.store', props.arisan.id), {
-        onSuccess: (page) => { if (page.props.flash?.success) toast.success(page.props.flash.success); drawForm.reset(); winnerSearch.value = ''; drawWinnerModalOpen.value = false; },
+        onSuccess: () => { drawForm.reset(); winnerSearch.value = ''; drawWinnerModalOpen.value = false; },
         onError: () => toast.error('Gagal mencatat penerima arisan.'),
     });
 };
@@ -92,7 +92,7 @@ const targetDrawDelete = ref(null);
 const confirmDeleteDraw = () => {
     if (!targetDrawDelete.value) return;
     router.delete(route('arisans.draws.destroy', [props.arisan.id, targetDrawDelete.value]), {
-        onSuccess: (page) => { if (page.props.flash?.success) toast.success(page.props.flash.success); targetDrawDelete.value = null; }
+        onSuccess: () => { targetDrawDelete.value = null; }
     });
 };
 
@@ -136,14 +136,12 @@ const togglePayment = (memberId, month) => {
     if (existingId) {
         router.delete(route('arisans.payments.destroy', [props.arisan.id, existingId]), {
             preserveScroll: true,
-            onSuccess: (page) => { if (page.props.flash?.success) toast.success(page.props.flash.success); paymentProcessing.value = null; },
-            onError: () => { paymentProcessing.value = null; },
+            onFinish: () => { paymentProcessing.value = null; },
         });
     } else {
         router.post(route('arisans.payments.store', props.arisan.id), { member_id: memberId, month }, {
             preserveScroll: true,
-            onSuccess: (page) => { if (page.props.flash?.success) toast.success(page.props.flash.success); paymentProcessing.value = null; },
-            onError: () => { paymentProcessing.value = null; },
+            onFinish: () => { paymentProcessing.value = null; },
         });
     }
 };

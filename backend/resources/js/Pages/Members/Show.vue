@@ -312,7 +312,7 @@ const getStatusLabel = (status) => {
                                         </div>
                                         <div class="flex justify-between items-center px-4 py-3">
                                             <span class="text-sm text-muted-foreground">Tempat Tinggal</span>
-                                            <span class="text-sm font-medium text-foreground">{{ member.living_status || '-' }}</span>
+                                            <span class="text-sm font-medium text-foreground">{{ { 'kos': 'Kos', 'rumah': 'Rumah', 'mess': 'Mess' }[member.living_status] || member.living_status || '-' }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -435,7 +435,7 @@ const getStatusLabel = (status) => {
                                 </div>
                                 <div>
                                     <h4 class="text-sm font-medium text-muted-foreground">Status Tempat Tinggal</h4>
-                                    <p class="mt-1 text-sm text-foreground">{{ member.living_status || '-' }}</p>
+                                    <p class="mt-1 text-sm text-foreground">{{ { 'kos': 'Kos', 'rumah': 'Rumah', 'mess': 'Mess' }[member.living_status] || member.living_status || '-' }}</p>
                                 </div>
                                 <div>
                                     <h4 class="text-sm font-medium text-muted-foreground">Status Pernikahan</h4>
