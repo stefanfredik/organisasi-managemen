@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed } from 'vue';
 
 useScrollReveal();
 
@@ -38,20 +38,7 @@ const props = defineProps({
     structures: Array,
 });
 
-// Photo slider
-const currentSlide = ref(0);
-let slideTimer = null;
-const startSlide = () => {
-    slideTimer = setInterval(() => {
-        if (props.latestPhotos?.length > 0) {
-            currentSlide.value = (currentSlide.value + 1) % props.latestPhotos.length;
-        }
-    }, 5000);
-};
-const stopSlide = () => { if (slideTimer) clearInterval(slideTimer); };
 
-onMounted(() => { startSlide(); });
-onUnmounted(() => { stopSlide(); });
 
 // Org tree
 const tree = computed(() => {
@@ -111,27 +98,8 @@ const donationProgress = (donation) => {
         <!-- ==================== BERANDA (Hero) ==================== -->
         <section id="beranda" class="scroll-mt-16 relative bg-black overflow-hidden h-screen min-h-[480px]">
             <div class="absolute inset-0">
-                <TransitionGroup
-                    enter-active-class="transition duration-1000 ease-out"
-                    enter-from-class="opacity-0"
-                    enter-to-class="opacity-100"
-                    leave-active-class="transition duration-1000 ease-in absolute inset-0"
-                    leave-from-class="opacity-100"
-                    leave-to-class="opacity-0"
-                >
-                    <div v-for="(photo, index) in latestPhotos" :key="photo.id" v-show="currentSlide === index" class="absolute inset-0 overflow-hidden">
-                        <img
-                            :src="photo.url"
-                            class="w-full h-full object-cover"
-                            :class="{ 'animate-kenburns': currentSlide === index }"
-                            loading="eager"
-                        >
-                        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/30"></div>
-                    </div>
-                    <div v-if="!latestPhotos || latestPhotos.length === 0" class="absolute inset-0">
-                        <div class="absolute inset-0 bg-gradient-to-br from-primary-900 via-primary-950 to-black"></div>
-                    </div>
-                </TransitionGroup>
+                <!-- Static dark gradient background -->
+                <div class="absolute inset-0 bg-gradient-to-br from-gray-950 via-primary-950/80 to-black"></div>
 
                 <!-- Decorative floating orbs -->
                 <div class="absolute top-1/4 left-10 w-72 h-72 bg-primary/20 rounded-full blur-[120px] animate-float"></div>
@@ -207,16 +175,7 @@ const donationProgress = (donation) => {
                 </div>
             </div>
 
-            <!-- Photo dots -->
-            <div v-if="latestPhotos?.length > 1" class="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
-                <button
-                    v-for="(_, index) in latestPhotos"
-                    :key="index"
-                    @click="currentSlide = index; stopSlide(); startSlide();"
-                    class="h-2 rounded-full transition-all duration-300"
-                    :class="currentSlide === index ? 'w-8 bg-primary' : 'w-2 bg-white/40 hover:bg-white/60'"
-                />
-            </div>
+
 
             <!-- Scroll indicator -->
             <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-3">
