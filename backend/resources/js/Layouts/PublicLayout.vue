@@ -114,7 +114,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-background">
+    <div class="min-h-screen bg-background max-w-full overflow-x-hidden relative">
         <!-- Header -->
         <header
             class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
@@ -122,13 +122,13 @@ onUnmounted(() => {
                 ? 'bg-card/90 backdrop-blur-xl border-b shadow-sm'
                 : 'bg-transparent'"
         >
-            <nav class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div class="flex w-full items-center justify-between h-14 sm:h-16">
+            <nav class="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8 text-foreground transition-colors">
+                <div class="flex items-center justify-between h-14 sm:h-16">
                     <!-- Logo -->
                     <Link href="/" class="flex items-center gap-2.5 shrink-0">
                         <ApplicationLogo class="h-7 sm:h-8 w-auto text-primary" />
                         <span
-                            class="text-sm sm:text-base font-bold truncate max-w-[160px] sm:max-w-none transition-colors"
+                            class="text-sm sm:text-base font-bold truncate max-w-[140px] sm:max-w-none transition-colors"
                             :class="isScrolled ? 'text-foreground' : 'text-white'"
                         >
                             {{ $page.props.appSettings.name }}
@@ -160,9 +160,11 @@ onUnmounted(() => {
                     </div>
 
                     <!-- Mobile menu -->
-                    <Button variant="ghost" size="icon" class="lg:hidden h-9 w-9 transition-colors" :class="isScrolled ? 'text-foreground' : 'text-white'" @click="mobileMenuOpen = true">
-                        <Menu class="h-5 w-5" />
-                    </Button>
+                    <div class="lg:hidden flex items-center shrink-0 ml-auto">
+                        <Button variant="ghost" size="icon" class="h-9 w-9 transition-colors" :class="isScrolled ? 'text-foreground' : 'text-white'" @click="mobileMenuOpen = true">
+                            <Menu class="h-5 w-5" />
+                        </Button>
+                    </div>
                 </div>
             </nav>
         </header>
@@ -213,9 +215,9 @@ onUnmounted(() => {
                 <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
                     <!-- About -->
                     <div class="lg:col-span-2">
-                        <div class="flex items-center gap-2.5 mb-3">
-                            <ApplicationLogo class="h-7 w-auto text-primary-400" />
-                            <span class="text-base font-bold text-background">{{ $page.props.appSettings.name }}</span>
+                        <div class="flex items-center gap-2.5 mb-3 overflow-hidden">
+                            <ApplicationLogo class="h-7 w-auto text-primary-400 shrink-0" />
+                            <span class="text-base font-bold text-background truncate">{{ $page.props.appSettings.name }}</span>
                         </div>
                         <p class="text-sm text-muted leading-relaxed max-w-sm">
                             {{ $page.props.appSettings.description || `${$page.props.appSettings.name} — sistem manajemen organisasi yang transparan dan terstruktur.` }}

@@ -3,6 +3,7 @@ import ActionLink from '@/Components/ActionLink.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
 import OrgTreeNode from '@/Components/OrgTreeNode.vue';
+import NetworkBackground from '@/Components/NetworkBackground.vue';
 import { useScrollReveal } from '@/composables/useScrollReveal';
 import {
     Megaphone, ChevronRight, ArrowRight, Plus, Heart, CreditCard,
@@ -106,40 +107,57 @@ const donationProgress = (donation) => {
 
     <PublicLayout>
         <!-- ==================== BERANDA (Hero) ==================== -->
-        <section id="beranda" class="scroll-mt-16 relative bg-black overflow-hidden h-[80vh] min-h-[480px] max-h-[800px]">
+        <section id="beranda" class="scroll-mt-16 relative bg-black overflow-hidden h-screen sm:h-[80vh] min-h-[480px] max-h-[1000px]">
             <div class="absolute inset-0">
                 <TransitionGroup
                     enter-active-class="transition duration-1000 ease-out"
-                    enter-from-class="opacity-0 scale-105"
-                    enter-to-class="opacity-100 scale-100"
+                    enter-from-class="opacity-0"
+                    enter-to-class="opacity-100"
                     leave-active-class="transition duration-1000 ease-in absolute inset-0"
-                    leave-from-class="opacity-100 scale-100"
-                    leave-to-class="opacity-0 scale-95"
+                    leave-from-class="opacity-100"
+                    leave-to-class="opacity-0"
                 >
-                    <div v-for="(photo, index) in latestPhotos" :key="photo.id" v-show="currentSlide === index" class="absolute inset-0">
-                        <img :src="photo.url" class="w-full h-full object-cover" loading="eager">
+                    <div v-for="(photo, index) in latestPhotos" :key="photo.id" v-show="currentSlide === index" class="absolute inset-0 overflow-hidden">
+                        <img 
+                            :src="photo.url" 
+                            class="w-full h-full object-cover" 
+                            :class="{ 'animate-kenburns': currentSlide === index }"
+                            loading="eager"
+                        >
                         <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20"></div>
                     </div>
                     <div v-if="!latestPhotos || latestPhotos.length === 0" class="absolute inset-0">
                         <div class="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-black"></div>
                     </div>
                 </TransitionGroup>
+                
+                <!-- Network Background Overlay -->
+                <div class="absolute inset-0 z-[5]">
+                    <NetworkBackground 
+                        color="rgba(255, 255, 255, 0.5)" 
+                        :count="60" 
+                        :distance="180" 
+                        :speed="0.4"
+                        :opacity="0.3" 
+                        class="w-full h-full"
+                    />
+                </div>
             </div>
 
-            <div class="relative z-10 h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-end pb-16 sm:pb-20">
-                <div class="max-w-2xl">
+            <div class="relative z-10 h-full max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 flex flex-col justify-center items-center text-center">
+                <div class="max-w-3xl">
                     <Transition appear enter-active-class="transition duration-700 delay-300" enter-from-class="opacity-0 translate-y-8" enter-to-class="opacity-100 translate-y-0">
-                        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.05] text-white">
+                        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.05] text-white break-words">
                             {{ app.name }}
                         </h1>
                     </Transition>
                     <Transition appear enter-active-class="transition duration-700 delay-500" enter-from-class="opacity-0 translate-y-8" enter-to-class="opacity-100 translate-y-0">
-                        <p class="mt-4 text-base sm:text-lg text-white/70 leading-relaxed max-w-lg">
+                        <p class="mt-4 text-base sm:text-lg text-white/70 leading-relaxed max-w-xl mx-auto">
                             {{ portal.welcome_text || 'Selamat Datang di Portal Resmi Organisasi Kami' }}
                         </p>
                     </Transition>
                     <Transition appear enter-active-class="transition duration-700 delay-700" enter-from-class="opacity-0 translate-y-8" enter-to-class="opacity-100 translate-y-0">
-                        <div class="mt-6 flex flex-wrap gap-3">
+                        <div class="mt-10 flex flex-wrap justify-center gap-4">
                             <ActionLink :href="$page.props.auth.user ? route('dashboard') : route('login')" size="md">
                                 {{ $page.props.auth.user ? 'Ke Dashboard' : 'Mulai Sekarang' }}
                             </ActionLink>
@@ -572,5 +590,13 @@ const donationProgress = (donation) => {
 }
 .tree-container li > .relative > ul:has(> li:only-child)::before {
     display: none;
+}
+
+@keyframes kenburns {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.1); }
+}
+.animate-kenburns {
+    animation: kenburns 12s linear forwards;
 }
 </style>
