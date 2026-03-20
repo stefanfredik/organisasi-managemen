@@ -128,14 +128,14 @@ const navGroups = computed(() => [
             { icon: LayoutDashboard, label: "Dashboard", route: "dashboard", pattern: "dashboard", show: true },
             { icon: Users, label: "Anggota", route: "members.index", pattern: "members.*", show: hasPermission("view_members") },
             { icon: CalendarDays, label: "Kegiatan", route: "events.index", pattern: "events.*", show: hasPermission("view_events") },
-            { icon: Network, label: "Struktur Organisasi", route: "organization-structures.index", pattern: "organization-structures.*", show: true },
+            { icon: Network, label: "Struktur Organisasi", route: "organization-structures.index", pattern: "organization-structures.*", show: hasPermission("view_organization_structures") },
         ],
     },
     {
         label: "Konten",
         items: [
-            { icon: Image, label: "Album", route: "albums.index", pattern: "albums.*", show: true },
-            { icon: Eye, label: "Visi & Misi", route: "vision-missions.index", pattern: "vision-missions.*", show: true },
+            { icon: Image, label: "Album", route: "albums.index", pattern: "albums.*", show: hasPermission("view_albums") },
+            { icon: Eye, label: "Visi & Misi", route: "vision-missions.index", pattern: "vision-missions.*", show: hasPermission("view_vision_missions") },
         ],
     },
     {
@@ -143,7 +143,7 @@ const navGroups = computed(() => [
         items: [
             { icon: Wallet, label: "Kas (Dompet)", route: "wallets.index", pattern: "wallets.*", show: hasPermission("view_finance") },
             { icon: BarChart3, label: "Transaksi", route: "finances.index", pattern: "finances.*", show: hasPermission("view_finance") },
-            { icon: PiggyBank, label: "Monitoring Iuran", route: "contributions.monitoring.index", pattern: "contributions.monitoring.*", show: hasPermission("view_contribution_monitoring") },
+            { icon: PiggyBank, label: "Kelola Iuran", route: "contributions.monitoring.index", pattern: "contributions.monitoring.*", show: hasPermission("view_contribution_monitoring") },
             {
                 icon: Coins,
                 label: userPosition.value === "anggota" ? "Iuran Saya" : "Pembayaran Iuran",
@@ -152,16 +152,15 @@ const navGroups = computed(() => [
                 activeCheck: () => route().current("contributions.index") || route().current("contributions.verification"),
                 show: hasPermission("view_contributions"),
             },
-            { icon: Settings2, label: "Manajemen Iuran", route: "contribution-types.index", pattern: "contribution-types.*", show: hasPermission("view_contribution_types") },
             { icon: HandCoins, label: "Donasi", route: "donations.index", pattern: "donations.*", show: route().has("donations.index") && hasPermission("view_donations") },
-            { icon: Trophy, label: "Program Arisan", route: "arisans.index", pattern: "arisans.*", show: true },
+            { icon: Trophy, label: "Program Arisan", route: "arisans.index", pattern: "arisans.*", show: hasPermission("view_arisans") },
         ],
     },
     {
         label: "Administrasi",
         items: [
-            { icon: Megaphone, label: "Pengumuman", route: "announcements.index", pattern: "announcements.*", show: true },
-            { icon: FileText, label: "Notulensi Rapat", route: "meeting-minutes.index", pattern: "meeting-minutes.*", show: true },
+            { icon: Megaphone, label: "Pengumuman", route: "announcements.index", pattern: "announcements.*", show: hasPermission("view_announcements") },
+            { icon: FileText, label: "Notulensi Rapat", route: "meeting-minutes.index", pattern: "meeting-minutes.*", show: hasPermission("view_meeting_minutes") },
             { icon: UserCog, label: "Manajemen User", route: "users.index", pattern: "users.*", show: isAdmin.value },
             { icon: Shield, label: "Role & Jabatan", route: "roles.index", activeCheck: () => route().current("roles.*") || route().current("positions.*"), show: isAdmin.value },
             { icon: Clock, label: "Log Aktivitas", route: "activity-logs.index", pattern: "activity-logs.*", show: isAdmin.value },

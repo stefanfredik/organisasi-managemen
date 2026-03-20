@@ -584,28 +584,28 @@ class SettingSeeder extends Seeder
             // ============================================
             [
                 'key' => 'role_permissions_ketua',
-                'value' => json_encode(['view_dashboard', 'manage_members', 'manage_finance', 'manage_events', 'view_reports', 'manage_contributions', 'manage_contribution_types', 'manage_announcements', 'view_announcements', 'view_meeting_minutes', 'manage_vision_missions', 'manage_organization_structures', 'manage_albums', 'view_donations']),
+                'value' => json_encode(['view_dashboard', 'manage_members', 'manage_finance', 'manage_events', 'view_reports', 'manage_contributions', 'manage_contribution_types', 'manage_announcements', 'view_announcements', 'view_meeting_minutes', 'manage_vision_missions', 'manage_organization_structures', 'manage_albums', 'view_donations', 'manage_arisans', 'view_arisans']),
                 'group' => 'access_control',
                 'type' => 'json',
                 'description' => 'Hak akses untuk role Ketua.',
             ],
             [
                 'key' => 'role_permissions_bendahara',
-                'value' => json_encode(['view_dashboard', 'manage_finance', 'view_reports', 'manage_contributions', 'manage_contribution_types', 'view_announcements', 'view_meeting_minutes', 'view_vision_missions', 'view_albums', 'view_donations', 'view_members']),
+                'value' => json_encode(['view_dashboard', 'manage_finance', 'view_reports', 'manage_contributions', 'manage_contribution_types', 'view_announcements', 'view_meeting_minutes', 'view_vision_missions', 'view_albums', 'view_donations', 'view_members', 'manage_arisans', 'view_arisans']),
                 'group' => 'access_control',
                 'type' => 'json',
                 'description' => 'Hak akses untuk role Bendahara.',
             ],
             [
                 'key' => 'role_permissions_sekretaris',
-                'value' => json_encode(['view_dashboard', 'manage_members', 'manage_events', 'view_contributions', 'view_contribution_types', 'manage_announcements', 'view_announcements', 'manage_meeting_minutes', 'view_vision_missions', 'manage_organization_structures', 'manage_albums', 'view_donations', 'view_reports']),
+                'value' => json_encode(['view_dashboard', 'manage_members', 'manage_events', 'view_contributions', 'view_contribution_types', 'manage_announcements', 'view_announcements', 'manage_meeting_minutes', 'view_vision_missions', 'manage_organization_structures', 'manage_albums', 'view_donations', 'view_reports', 'view_arisans']),
                 'group' => 'access_control',
                 'type' => 'json',
                 'description' => 'Hak akses untuk role Sekretaris.',
             ],
             [
                 'key' => 'role_permissions_anggota',
-                'value' => json_encode(['view_dashboard', 'view_events', 'view_donations', 'view_contributions', 'view_announcements', 'view_meeting_minutes', 'view_vision_missions', 'view_albums']),
+                'value' => json_encode(['view_dashboard', 'view_events', 'view_donations', 'view_contributions', 'view_announcements', 'view_meeting_minutes', 'view_vision_missions', 'view_albums', 'view_arisans']),
                 'group' => 'access_control',
                 'type' => 'json',
                 'description' => 'Hak akses untuk role Anggota.',

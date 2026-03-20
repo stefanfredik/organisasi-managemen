@@ -1,14 +1,13 @@
 <script setup>
 import { ref, computed } from "vue";
-import { Head, Link, useForm, router } from "@inertiajs/vue3";
+import { Head, useForm, router } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
-    Building2, Coins, Hash, Globe, Settings, ShieldCheck, Loader2, Check,
-    Upload, X, Image as ImageIcon, Info, Palette,
+    Building2, Coins, Hash, Globe, Settings, Loader2, Check,
+    Upload, X, Image as ImageIcon, Palette,
 } from "lucide-vue-next";
 import { getThemes, applyTheme } from "@/composables/useTheme";
 
@@ -103,7 +102,6 @@ const getGroupConfig = (group) => {
         social: { label: "Media Sosial", icon: Hash, desc: "Link media sosial organisasi" },
         portal: { label: "Portal Publik", icon: Globe, desc: "Pengaturan tampilan & SEO portal publik" },
         system: { label: "Sistem", icon: Settings, desc: "Konfigurasi fitur & perilaku sistem" },
-        access_control: { label: "Akses Role", icon: ShieldCheck, desc: "Permission per role" },
     };
     return config[group] || { label: group, icon: Settings, desc: "" };
 };
@@ -249,58 +247,6 @@ const getSettingByKey = (key) => {
     return form.settings.find(s => s.key === key);
 };
 
-// ===== Permission Matrix (access_control tab) =====
-const parsePermissions = () => [
-    { key: "view_dashboard", label: "Lihat Dashboard" },
-    { key: "manage_members", label: "Kelola Anggota (CRUD)" },
-    { key: "view_members", label: "Lihat Daftar Anggota" },
-    { key: "manage_finance", label: "Kelola Keuangan" },
-    { key: "view_finance", label: "Lihat Data Keuangan" },
-    { key: "manage_events", label: "Kelola Kegiatan" },
-    { key: "view_events", label: "Lihat Daftar Kegiatan" },
-    { key: "view_reports", label: "Lihat Laporan" },
-    { key: "manage_contributions", label: "Kelola Iuran" },
-    { key: "view_contributions", label: "Lihat Data Iuran" },
-    { key: "view_contribution_monitoring", label: "Lihat Monitoring Iuran" },
-    { key: "manage_contribution_types", label: "Kelola Jenis Iuran" },
-    { key: "view_contribution_types", label: "Lihat Jenis Iuran" },
-    { key: "view_donations", label: "Lihat Data Donasi" },
-    { key: "manage_announcements", label: "Kelola Pengumuman" },
-    { key: "view_announcements", label: "Lihat Pengumuman" },
-    { key: "manage_meeting_minutes", label: "Kelola Notulensi" },
-    { key: "view_meeting_minutes", label: "Lihat Notulensi" },
-    { key: "manage_vision_missions", label: "Kelola Visi & Misi" },
-    { key: "view_vision_missions", label: "Lihat Visi & Misi" },
-    { key: "manage_organization_structures", label: "Kelola Struktur Org" },
-    { key: "view_organization_structures", label: "Lihat Struktur Org" },
-    { key: "manage_albums", label: "Kelola Album Foto" },
-    { key: "view_albums", label: "Lihat Album Foto" },
-    { key: "manage_settings", label: "Kelola Pengaturan" },
-];
-
-const hasPermission = (role, permKey) => {
-    const setting = form.settings.find(s => s.key === `role_permissions_${role}`);
-    if (!setting || !setting.value) return false;
-    try {
-        const perms = JSON.parse(setting.value);
-        return Array.isArray(perms) && perms.includes(permKey);
-    } catch { return false; }
-};
-
-const togglePermission = (role, permKey) => {
-    const idx = form.settings.findIndex(s => s.key === `role_permissions_${role}`);
-    if (idx === -1) return;
-    const setting = form.settings[idx];
-    let perms = [];
-    try { perms = JSON.parse(setting.value) || []; } catch { perms = []; }
-    if (perms.includes(permKey)) {
-        perms = perms.filter(p => p !== permKey);
-    } else {
-        perms.push(permKey);
-    }
-    setting.value = JSON.stringify(perms);
-};
-
 // ===== Theme Color Picker =====
 const themePresets = getThemes();
 
@@ -314,13 +260,6 @@ const selectTheme = (key) => {
     applyTheme(key);
 };
 
-const roleLabels = { ketua: "Ketua", bendahara: "Bendahara", sekretaris: "Sekretaris", anggota: "Anggota" };
-const roleColors = {
-    ketua: "text-blue-700 dark:text-blue-400",
-    bendahara: "text-green-700 dark:text-green-400",
-    sekretaris: "text-orange-700 dark:text-orange-400",
-    anggota: "text-gray-700 dark:text-gray-400",
-};
 </script>
 
 <template>
@@ -378,7 +317,7 @@ const roleColors = {
                                 </div>
 
                                 <!-- Sectioned Settings Fields -->
-                                <div v-if="activeTab !== 'access_control' && getSections(activeTab)" class="space-y-6 sm:space-y-8">
+                                <div v-if="getSections(activeTab)" class="space-y-6 sm:space-y-8">
                                     <div v-for="(section, sIdx) in getSections(activeTab)" :key="sIdx">
                                         <!-- Section Header -->
                                         <div class="flex items-center gap-2 mb-3">
@@ -530,7 +469,7 @@ const roleColors = {
                                 </div>
 
                                 <!-- Fallback: flat list for groups without sections defined -->
-                                <div v-else-if="activeTab !== 'access_control'" class="space-y-4 sm:space-y-5">
+                                <div v-else class="space-y-4 sm:space-y-5">
                                     <div
                                         v-for="setting in form.settings"
                                         :key="setting.key"
@@ -567,68 +506,6 @@ const roleColors = {
                                                     :class="setting.value === '1' ? 'translate-x-5' : 'translate-x-0'"
                                                 />
                                             </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Permissions Matrix (access_control tab) -->
-                                <div v-if="activeTab === 'access_control'">
-                                    <div class="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-3 mb-4">
-                                        <p class="text-[10px] sm:text-xs text-purple-700 dark:text-purple-300">
-                                            Admin memiliki akses penuh ke seluruh fitur. Untuk pengaturan lebih detail, gunakan halaman
-                                            <Link :href="route('roles.index')" class="font-semibold underline">Manajemen Role</Link>.
-                                        </p>
-                                    </div>
-
-                                    <!-- Desktop Matrix Table -->
-                                    <div class="hidden sm:block overflow-x-auto">
-                                        <table class="w-full text-left">
-                                            <thead>
-                                                <tr class="border-b">
-                                                    <th class="px-3 py-2.5 text-[11px] uppercase tracking-wide font-medium text-muted-foreground">Permission</th>
-                                                    <th
-                                                        v-for="(label, role) in roleLabels"
-                                                        :key="role"
-                                                        class="px-3 py-2.5 text-[11px] uppercase tracking-wide font-medium text-center"
-                                                        :class="roleColors[role]"
-                                                    >
-                                                        {{ label }}
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody class="divide-y divide-border">
-                                                <tr v-for="perm in parsePermissions()" :key="perm.key" class="hover:bg-muted/30 transition-colors">
-                                                    <td class="px-3 py-2 text-xs sm:text-sm text-foreground">{{ perm.label }}</td>
-                                                    <td v-for="(label, role) in roleLabels" :key="role" class="px-3 py-2 text-center">
-                                                        <Checkbox
-                                                            :checked="hasPermission(role, perm.key)"
-                                                            @update:checked="togglePermission(role, perm.key)"
-                                                        />
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                    <!-- Mobile: Stacked per role -->
-                                    <div class="sm:hidden space-y-3">
-                                        <div v-for="(label, role) in roleLabels" :key="role" class="border rounded-lg overflow-hidden">
-                                            <div class="px-3 py-2 bg-muted/40 border-b">
-                                                <span class="text-xs font-semibold uppercase" :class="roleColors[role]">{{ label }}</span>
-                                            </div>
-                                            <div class="divide-y divide-border">
-                                                <label
-                                                    v-for="perm in parsePermissions()"
-                                                    :key="perm.key"
-                                                    class="flex items-center gap-2.5 px-3 py-2 hover:bg-muted/30 transition-colors cursor-pointer"
-                                                >
-                                                    <Checkbox
-                                                        :checked="hasPermission(role, perm.key)"
-                                                        @update:checked="togglePermission(role, perm.key)"
-                                                    />
-                                                    <span class="text-xs text-foreground">{{ perm.label }}</span>
-                                                </label>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>

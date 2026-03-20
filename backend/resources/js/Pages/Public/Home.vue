@@ -140,7 +140,9 @@ const donationProgress = (donation) => {
                     </Transition>
                     <Transition appear enter-active-class="transition duration-700 delay-700" enter-from-class="opacity-0 translate-y-8" enter-to-class="opacity-100 translate-y-0">
                         <div class="mt-6 flex flex-wrap gap-3">
-                            <ActionLink :href="route('login')" size="md">Mulai Sekarang</ActionLink>
+                            <ActionLink :href="$page.props.auth.user ? route('dashboard') : route('login')" size="md">
+                                {{ $page.props.auth.user ? 'Ke Dashboard' : 'Mulai Sekarang' }}
+                            </ActionLink>
                             <a href="#tentang" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-white/20 bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 h-10 px-5">
                                 Tentang Kami
                             </a>
@@ -525,7 +527,9 @@ const donationProgress = (donation) => {
                 </p>
                 <div class="flex flex-wrap justify-center gap-3">
                     <ActionLink v-if="features.donations" :href="route('public.donations.index')" variant="secondary" size="md">Donasi Program</ActionLink>
-                    <ActionLink :href="route('login')" size="md">Bayar Iuran</ActionLink>
+                    <ActionLink :href="$page.props.auth.user ? route('dashboard') : route('login')" size="md">
+                        {{ $page.props.auth.user ? 'Ke Dashboard' : 'Bayar Iuran' }}
+                    </ActionLink>
                 </div>
             </div>
         </section>

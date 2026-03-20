@@ -66,6 +66,13 @@ const permissionGroups = [
         ],
     },
     {
+        label: "Arisan",
+        permissions: [
+            { key: "manage_arisans", label: "Kelola Arisan" },
+            { key: "view_arisans", label: "Lihat Data Arisan" },
+        ],
+    },
+    {
         label: "Donasi",
         permissions: [
             { key: "view_donations", label: "Lihat Data Donasi" },

@@ -668,7 +668,7 @@ class ContributionController extends Controller
         // Let's assume Member has status or use count() for now as safer bet if status is standard.
         // Actually, previous code `Member::active()` suggests a scope exists.
         
-        $types = ContributionType::where('is_active', true)
+        $types = ContributionType::with('wallet:id,name')
             ->withCount([
                 'contributions as paid_count' => function ($query) {
                     $query->where('status', 'paid');
@@ -777,8 +777,11 @@ class ContributionController extends Controller
             return $type;
         });
         
+        $wallets = Wallet::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+
         return Inertia::render('Contributions/Monitoring/Index', [
             'types' => $types,
+            'wallets' => $wallets,
         ]);
     }
 
@@ -1149,22 +1152,53 @@ class ContributionController extends Controller
     }
     
     public function monitoringHistory(Request $request, ContributionType $contributionType) {
-        $query = Contribution::with(['member'])
+        $query = Contribution::with(['member' => function ($query) {
+                $query->withTrashed();
+            }, 'type', 'wallet', 'verifier'])
             ->where('contribution_type_id', $contributionType->id)
             ->latest();
 
-        if ($request->input('search')) {
+        if ($request->filled('search')) {
             $search = $request->input('search');
             $query->whereHas('member', function($q) use ($search) {
                 $q->where('full_name', 'like', "%{$search}%")
                   ->orWhere('member_code', 'like', "%{$search}%");
             });
         }
-        
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+        if ($request->filled('payment_method')) {
+            $query->where('payment_method', $request->input('payment_method'));
+        }
+        if ($request->filled('wallet_id')) {
+            $query->where('wallet_id', $request->input('wallet_id'));
+        }
+        if ($request->filled('payment_period')) {
+            $query->where('payment_period', $request->input('payment_period'));
+        }
+        if ($request->filled('start_date')) {
+            $query->whereDate('payment_date', '>=', $request->input('start_date'));
+        }
+        if ($request->filled('end_date')) {
+            $query->whereDate('payment_date', '<=', $request->input('end_date'));
+        }
+
         return Inertia::render('Contributions/Index', [
              'contributions' => $query->paginate(\App\Models\Setting::getValue('pagination_per_page', 15))->withQueryString(),
-             'filters' => $request->only(['search']),
-             'context' => 'admin-history', // Tell Index.vue to act as admin history
+             'types' => ContributionType::where('is_active', true)->get(),
+             'wallets' => Wallet::where('is_active', true)->get(),
+             'members' => Member::active()->get(['id', 'full_name', 'member_code']),
+             'filters' => [
+                 'search' => $request->input('search'),
+                 'status' => $request->input('status'),
+                 'payment_method' => $request->input('payment_method'),
+                 'wallet_id' => $request->input('wallet_id'),
+                 'payment_period' => $request->input('payment_period'),
+                 'start_date' => $request->input('start_date'),
+                 'end_date' => $request->input('end_date'),
+             ],
+             'context' => 'admin-history',
              'type' => $contributionType,
         ]);
     }

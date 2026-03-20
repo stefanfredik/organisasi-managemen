@@ -213,13 +213,19 @@ Route::middleware('auth')->group(function () {
     Route::post('settings', [\App\Http\Controllers\SettingController::class, 'update'])->name('settings.update');
 
     // Administration - Arisan
-    Route::resource('arisans', \App\Http\Controllers\ArisanController::class);
-    Route::post('arisans/{arisan}/participants', [\App\Http\Controllers\ArisanParticipantController::class, 'store'])->name('arisans.participants.store');
-    Route::delete('arisans/{arisan}/participants/{participant}', [\App\Http\Controllers\ArisanParticipantController::class, 'destroy'])->name('arisans.participants.destroy');
-    Route::post('arisans/{arisan}/draws', [\App\Http\Controllers\ArisanDrawController::class, 'store'])->name('arisans.draws.store');
-    Route::delete('arisans/{arisan}/draws/{draw}', [\App\Http\Controllers\ArisanDrawController::class, 'destroy'])->name('arisans.draws.destroy');
-    Route::post('arisans/{arisan}/payments', [\App\Http\Controllers\ArisanPaymentController::class, 'store'])->name('arisans.payments.store');
-    Route::delete('arisans/{arisan}/payments/{payment}', [\App\Http\Controllers\ArisanPaymentController::class, 'destroy'])->name('arisans.payments.destroy');
+    Route::get('arisans', [\App\Http\Controllers\ArisanController::class, 'index'])->middleware('permission:view_arisans')->name('arisans.index');
+    Route::get('arisans/create', [\App\Http\Controllers\ArisanController::class, 'create'])->middleware('permission:manage_arisans')->name('arisans.create');
+    Route::post('arisans', [\App\Http\Controllers\ArisanController::class, 'store'])->middleware('permission:manage_arisans')->name('arisans.store');
+    Route::get('arisans/{arisan}', [\App\Http\Controllers\ArisanController::class, 'show'])->middleware('permission:view_arisans')->name('arisans.show');
+    Route::get('arisans/{arisan}/edit', [\App\Http\Controllers\ArisanController::class, 'edit'])->middleware('permission:manage_arisans')->name('arisans.edit');
+    Route::put('arisans/{arisan}', [\App\Http\Controllers\ArisanController::class, 'update'])->middleware('permission:manage_arisans')->name('arisans.update');
+    Route::delete('arisans/{arisan}', [\App\Http\Controllers\ArisanController::class, 'destroy'])->middleware('permission:manage_arisans')->name('arisans.destroy');
+    Route::post('arisans/{arisan}/participants', [\App\Http\Controllers\ArisanParticipantController::class, 'store'])->middleware('permission:manage_arisans')->name('arisans.participants.store');
+    Route::delete('arisans/{arisan}/participants/{participant}', [\App\Http\Controllers\ArisanParticipantController::class, 'destroy'])->middleware('permission:manage_arisans')->name('arisans.participants.destroy');
+    Route::post('arisans/{arisan}/draws', [\App\Http\Controllers\ArisanDrawController::class, 'store'])->middleware('permission:manage_arisans')->name('arisans.draws.store');
+    Route::delete('arisans/{arisan}/draws/{draw}', [\App\Http\Controllers\ArisanDrawController::class, 'destroy'])->middleware('permission:manage_arisans')->name('arisans.draws.destroy');
+    Route::post('arisans/{arisan}/payments', [\App\Http\Controllers\ArisanPaymentController::class, 'store'])->middleware('permission:manage_arisans')->name('arisans.payments.store');
+    Route::delete('arisans/{arisan}/payments/{payment}', [\App\Http\Controllers\ArisanPaymentController::class, 'destroy'])->middleware('permission:manage_arisans')->name('arisans.payments.destroy');
 
     // Administration - Backups
     Route::get('backups/status', [\App\Http\Controllers\BackupController::class, 'status'])->name('backups.status');

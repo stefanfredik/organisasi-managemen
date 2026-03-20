@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Setting;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -31,12 +30,10 @@ class SettingController extends Controller
             ['value' => 'indigo', 'group' => 'system', 'type' => 'string', 'description' => 'Tema warna utama aplikasi.']
         );
 
-        $settings = Setting::all()->groupBy('group');
-        $roles = User::getRoles();
+        $settings = Setting::all()->groupBy('group')->forget('access_control');
 
         return Inertia::render('Administration/Settings/Index', [
             'settings' => $settings,
-            'roles' => $roles,
         ]);
     }
 

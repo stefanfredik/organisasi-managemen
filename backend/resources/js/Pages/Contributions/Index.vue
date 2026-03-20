@@ -11,6 +11,7 @@ import debounce from "lodash/debounce";
 import {
     Plus, Search, SlidersHorizontal, X, MoreVertical,
     CheckCircle, Clock, XCircle, CreditCard, Banknote, Eye, Receipt,
+    ArrowLeft, LayoutDashboard, Grid3x3,
 } from "lucide-vue-next";
 import {
     Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
@@ -36,6 +37,13 @@ const props = defineProps({
 const page = usePage();
 const userRole = computed(() => page.props.auth.user.role);
 const userPosition = computed(() => page.props.auth.user.position);
+const isHistory = computed(() => props.context === 'admin-history');
+
+const historyNavItems = [
+    { route: 'contributions.monitoring.dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { route: 'contributions.monitoring.matrix', label: 'Matrix', icon: Grid3x3 },
+    { route: 'contributions.monitoring.history', label: 'Riwayat', icon: Clock },
+];
 
 // ─── Formatting Helpers ─────────────────────────────────────────────
 const formatCurrency = (value) => {
@@ -245,11 +253,12 @@ const showManualModal = ref(false);
 const showMemberModal = ref(false);
 const selectedPaymentType = ref(null);
 
-const startPayment = (type) => {
-    selectedPaymentType.value = type;
+const startPayment = (type = null) => {
     if (userPosition.value === "anggota") {
+        selectedPaymentType.value = type || props.types?.[0] || null;
         showMemberModal.value = true;
     } else {
+        selectedPaymentType.value = type;
         showManualModal.value = true;
     }
 };
@@ -290,19 +299,24 @@ const closeDetailSheet = () => { showDetailSheet.value = false; detailRow.value 
 
 <template>
     <Head
-        :title="userPosition === 'anggota' ? 'Iuran Saya' : 'Manajemen Iuran'"
+        :title="isHistory ? `Riwayat - ${type?.name}` : (userPosition === 'anggota' ? 'Iuran Saya' : 'Pembayaran Iuran')"
     />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between gap-3">
-                <h2 class="text-lg font-semibold leading-tight text-foreground">
-                    {{ userPosition === "anggota" ? "Iuran Saya" : "Manajemen Iuran" }}
-                </h2>
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <Link v-if="isHistory" :href="route('contributions.monitoring.index')" class="shrink-0 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                        <ArrowLeft class="w-5 h-5" />
+                    </Link>
+                    <h2 class="text-lg font-semibold leading-tight text-foreground truncate">
+                        {{ isHistory ? type?.name : (userPosition === "anggota" ? "Iuran Saya" : "Pembayaran Iuran") }}
+                    </h2>
+                </div>
                 <Button
-                    v-if="userRole === 'admin' || userPosition === 'bendahara' || userPosition === 'anggota'"
+                    v-if="!isHistory && (userRole === 'admin' || userPosition === 'bendahara' || userPosition === 'anggota')"
                     size="sm"
-                    @click="userPosition === 'anggota' ? (showMemberModal = true) : (showManualModal = true)"
+                    @click="startPayment()"
                 >
                     <Plus class="w-4 h-4 mr-1" />
                     <span class="hidden sm:inline">
@@ -315,10 +329,27 @@ const closeDetailSheet = () => { showDetailSheet.value = false; detailRow.value 
         <div class="py-3 sm:py-6">
             <div class="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 space-y-3 sm:space-y-5">
 
+                <!-- Navigation Tabs (history context) -->
+                <div v-if="isHistory" class="inline-flex items-center gap-1 bg-muted p-1 rounded-lg">
+                    <Link
+                        v-for="item in historyNavItems"
+                        :key="item.route"
+                        :href="route(item.route, type.id)"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors"
+                        :class="route().current(item.route)
+                            ? 'bg-card text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'"
+                    >
+                        <component :is="item.icon" class="w-3.5 h-3.5" />
+                        {{ item.label }}
+                    </Link>
+                </div>
+
                 <!-- Active Contribution Types -->
                 <ActiveContributionCards
+                    v-if="!isHistory"
                     :types="types"
-                    :user-role="userPosition"
+                    :user-position="userPosition"
                     :format-currency="formatCurrency"
                     @pay="startPayment"
                 />

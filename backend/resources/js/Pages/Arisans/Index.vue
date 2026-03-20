@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,12 @@ import { ref, computed } from 'vue';
 
 const props = defineProps({
     arisans: Array,
+});
+
+const page = usePage();
+const canManage = computed(() => {
+    if (page.props.auth.user.role === 'admin') return true;
+    return page.props.auth.user.permissions?.includes('manage_arisans');
 });
 
 const toast = useToast();
@@ -53,7 +59,7 @@ const formatRupiah = (value) => {
                     <PiggyBank class="w-5 h-5 text-primary" />
                     <h2 class="text-lg font-semibold leading-tight text-foreground">Program Arisan</h2>
                 </div>
-                <Button size="sm" class="hidden sm:flex" as-child>
+                <Button v-if="canManage" size="sm" class="hidden sm:flex" as-child>
                     <Link :href="route('arisans.create')">
                         <Plus class="w-4 h-4 mr-1" />
                         Buat Arisan Baru
@@ -66,7 +72,7 @@ const formatRupiah = (value) => {
             <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 space-y-4">
 
                 <!-- Mobile CTA -->
-                <div class="sm:hidden">
+                <div v-if="canManage" class="sm:hidden">
                     <Button class="w-full" as-child>
                         <Link :href="route('arisans.create')">
                             <Plus class="w-4 h-4 mr-2" />
@@ -188,7 +194,7 @@ const formatRupiah = (value) => {
                                                     <Eye class="w-4 h-4" />
                                                 </Link>
                                             </Button>
-                                            <Button variant="ghost" size="icon" @click="targetDeleteId = arisan.id" class="text-destructive hover:text-destructive hover:bg-destructive/10">
+                                            <Button v-if="canManage" variant="ghost" size="icon" @click="targetDeleteId = arisan.id" class="text-destructive hover:text-destructive hover:bg-destructive/10">
                                                 <Trash2 class="w-4 h-4" />
                                             </Button>
                                         </div>
@@ -206,7 +212,7 @@ const formatRupiah = (value) => {
                     </div>
                     <p class="text-sm font-medium text-foreground">Belum Ada Program Arisan</p>
                     <p class="text-xs text-muted-foreground mt-1 max-w-[250px] mx-auto">Buat program arisan pertama untuk mulai mengelola iuran dan undian.</p>
-                    <Button size="sm" class="mt-4" as-child>
+                    <Button v-if="canManage" size="sm" class="mt-4" as-child>
                         <Link :href="route('arisans.create')">
                             <Plus class="w-4 h-4 mr-1" />
                             Buat Arisan

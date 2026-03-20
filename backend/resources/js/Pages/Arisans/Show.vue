@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link, useForm, router } from '@inertiajs/vue3';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,12 @@ import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
 const props = defineProps({
     arisan: Object,
     allMembers: Array,
+});
+
+const page = usePage();
+const canManage = computed(() => {
+    if (page.props.auth.user.role === 'admin') return true;
+    return page.props.auth.user.permissions?.includes('manage_arisans');
 });
 
 const toast = useToast();
@@ -224,7 +230,7 @@ const getDrawPaymentDetail = (draw) => {
                         </div>
                     </div>
                 </div>
-                <Button variant="outline" size="sm" as-child>
+                <Button v-if="canManage" variant="outline" size="sm" as-child>
                     <Link :href="route('arisans.edit', arisan.id)">
                         <Edit3 class="w-3.5 h-3.5 sm:mr-1.5" /> <span class="hidden sm:inline">Edit</span>
                     </Link>
@@ -322,7 +328,7 @@ const getDrawPaymentDetail = (draw) => {
                                 </div>
 
                                 <!-- Add Form -->
-                                <form @submit.prevent="submitParticipant" class="flex gap-2 mb-4">
+                                <form v-if="canManage" @submit.prevent="submitParticipant" class="flex gap-2 mb-4">
                                     <select v-model="addParticipantForm.member_id"
                                         class="flex h-9 w-full rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
                                         <option value="" disabled>Pilih Anggota...</option>
@@ -345,7 +351,7 @@ const getDrawPaymentDetail = (draw) => {
                                             <span class="truncate font-medium text-foreground">{{ part.member?.full_name || 'Anggota tidak ditemukan' }}</span>
                                             <Trophy v-if="part.member && isWinner(part.member.id)" class="w-3.5 h-3.5 text-amber-500 shrink-0" />
                                         </div>
-                                        <Button variant="ghost" size="icon" class="h-7 w-7 text-muted-foreground hover:text-destructive shrink-0" @click="targetParticipantDelete = part.id">
+                                        <Button v-if="canManage" variant="ghost" size="icon" class="h-7 w-7 text-muted-foreground hover:text-destructive shrink-0" @click="targetParticipantDelete = part.id">
                                             <Trash2 class="w-3.5 h-3.5" />
                                         </Button>
                                     </div>
@@ -368,7 +374,7 @@ const getDrawPaymentDetail = (draw) => {
                                                 <p class="text-[10px] sm:text-xs text-muted-foreground">{{ arisan.draws.length }} periode tercatat.</p>
                                             </div>
                                         </div>
-                                        <Button size="sm" @click="drawWinnerModalOpen = !drawWinnerModalOpen"
+                                        <Button v-if="canManage" size="sm" @click="drawWinnerModalOpen = !drawWinnerModalOpen"
                                             :variant="drawWinnerModalOpen ? 'secondary' : 'default'"
                                             :disabled="getEligibleMembers.length === 0 && !drawWinnerModalOpen">
                                             <Plus class="w-4 h-4 sm:mr-1" /> <span class="hidden sm:inline">Catat Penerima</span>
@@ -450,7 +456,7 @@ const getDrawPaymentDetail = (draw) => {
                                                 <Button variant="ghost" size="icon" class="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10" @click="openDrawDetail(draw.id)">
                                                     <Eye class="w-4 h-4" />
                                                 </Button>
-                                                <Button variant="ghost" size="icon" class="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10" @click="targetDrawDelete = draw.id">
+                                                <Button v-if="canManage" variant="ghost" size="icon" class="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10" @click="targetDrawDelete = draw.id">
                                                     <Trash2 class="w-3.5 h-3.5" />
                                                 </Button>
                                             </div>
@@ -549,8 +555,8 @@ const getDrawPaymentDetail = (draw) => {
                                                          title="Penerima arisan bulan ini">
                                                         <Trophy class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-500" />
                                                     </div>
-                                                    <!-- Peserta biasa, bisa setor -->
-                                                    <button v-else
+                                                    <!-- Peserta biasa, bisa setor (manage only) -->
+                                                    <button v-else-if="canManage"
                                                         @click="togglePayment(part.member_id, month)"
                                                         :disabled="paymentProcessing === `${part.member_id}-${month}`"
                                                         class="w-6 h-6 sm:w-7 sm:h-7 rounded-md border transition-all duration-150 flex items-center justify-center mx-auto cursor-pointer disabled:opacity-50"
@@ -559,6 +565,14 @@ const getDrawPaymentDetail = (draw) => {
                                                             : 'bg-background border-input hover:border-primary/50 hover:bg-muted/50'">
                                                         <Check v-if="hasPaid(part.member_id, month)" class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600 dark:text-emerald-400" />
                                                     </button>
+                                                    <!-- View only -->
+                                                    <div v-else
+                                                        class="w-6 h-6 sm:w-7 sm:h-7 rounded-md border flex items-center justify-center mx-auto"
+                                                        :class="hasPaid(part.member_id, month)
+                                                            ? 'bg-emerald-500/20 border-emerald-300 dark:border-emerald-700'
+                                                            : 'bg-background border-input'">
+                                                        <Check v-if="hasPaid(part.member_id, month)" class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600 dark:text-emerald-400" />
+                                                    </div>
                                                 </td>
                                                 <td class="text-center px-1 sm:px-2 py-1.5 sm:py-2">
                                                     <Badge variant="secondary" class="text-[9px] sm:text-[10px] font-mono">

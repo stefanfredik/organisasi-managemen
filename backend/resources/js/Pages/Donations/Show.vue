@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
 import { Head, Link, useForm, usePage, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Label } from '@/components/ui/label';
@@ -37,6 +37,12 @@ const props = defineProps({
 const page = usePage();
 const isAdmin = computed(() => page.props.auth.user.role === 'admin' || page.props.auth.user.position === 'bendahara');
 const isMember = computed(() => page.props.auth.user.position === 'anggota');
+
+const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1024);
+const onResize = () => { windowWidth.value = window.innerWidth; };
+onMounted(() => window.addEventListener('resize', onResize));
+onUnmounted(() => window.removeEventListener('resize', onResize));
+const isMobile = computed(() => windowWidth.value < 640);
 
 const showingModal = ref(false);
 const showingPaymentModal = ref(false);
@@ -220,9 +226,31 @@ const submitTransaction = () => {
     });
 };
 
+const showingThankYou = ref(false);
+const thankYouAmount = ref(0);
+const thankYouName = ref('');
+
+const thankYouMessages = [
+    'Setiap kebaikan yang kamu tanam hari ini, akan tumbuh menjadi sesuatu yang indah di kemudian hari.',
+    'Tangan yang memberi tidak pernah rugi. Terima kasih telah menjadi bagian dari kebaikan ini.',
+    'Kebaikanmu mungkin terasa kecil bagimu, tapi bagi seseorang di luar sana, itu segalanya.',
+    'Dunia menjadi tempat yang lebih baik karena orang-orang sepertimu. Terima kasih sudah peduli.',
+    'Memberi tidak pernah mengurangi apa yang kita miliki. Yang berkurang hanyalah kekhawatiran, yang bertambah adalah kebahagiaan.',
+];
+const currentThankYouMessage = ref('');
+
 const submitPayment = () => {
+    const submittedAmount = paymentForm.amount;
+    const submittedName = paymentForm.is_anonymous ? 'Hamba Allah' : paymentForm.donor_name;
     paymentForm.post(route('donations.pay', props.donation.id), {
-        onSuccess: () => { closePaymentModal(); paymentForm.reset(); },
+        onSuccess: () => {
+            closePaymentModal();
+            paymentForm.reset();
+            thankYouAmount.value = submittedAmount;
+            thankYouName.value = submittedName;
+            currentThankYouMessage.value = thankYouMessages[Math.floor(Math.random() * thankYouMessages.length)];
+            showingThankYou.value = true;
+        },
     });
 };
 
@@ -323,10 +351,156 @@ const confirmDeleteTransaction = () => {
 
         <div class="py-3 sm:py-6">
             <div class="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6">
+
+                <!-- ==================== Mobile Layout ==================== -->
+                <div class="sm:hidden space-y-3">
+
+                    <!-- Hero Card: Progress -->
+                    <div class="bg-card rounded-xl border overflow-hidden">
+                        <div
+                            class="h-1.5 w-full"
+                            :class="donation.status === 'active' ? 'bg-gradient-to-r from-primary to-emerald-500' : donation.status === 'completed' ? 'bg-blue-500' : 'bg-muted-foreground/30'"
+                        />
+                        <div class="p-3.5">
+                            <!-- Status + Visibility -->
+                            <div class="flex items-center gap-2 mb-2">
+                                <span :class="['px-2 py-0.5 rounded-full text-[10px] font-semibold', getStatusConfig(donation.status).class]">
+                                    {{ getStatusConfig(donation.status).label }}
+                                </span>
+                                <span class="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                    <Globe class="w-2.5 h-2.5" />
+                                    {{ donation.is_public ? 'Publik' : 'Internal' }}
+                                </span>
+                            </div>
+
+                            <!-- Description -->
+                            <p v-if="donation.description" class="text-xs text-muted-foreground line-clamp-2 mb-3">{{ donation.description }}</p>
+
+                            <!-- Amount Hero -->
+                            <div class="text-center py-3 mb-3">
+                                <p class="text-[10px] text-muted-foreground uppercase font-medium tracking-wide">Terkumpul</p>
+                                <p class="text-2xl font-extrabold text-primary tabular-nums leading-tight mt-0.5">{{ formatCurrency(donation.collected_amount) }}</p>
+                                <p class="text-[11px] text-muted-foreground mt-0.5">dari target {{ formatCurrency(donation.target_amount) }}</p>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div class="mb-3">
+                                <div class="w-full bg-muted rounded-full h-2.5 overflow-hidden">
+                                    <div
+                                        class="h-full rounded-full transition-all duration-700 ease-out"
+                                        :class="progress >= 100 ? 'bg-green-500' : progress >= 50 ? 'bg-primary' : 'bg-amber-500'"
+                                        :style="{ width: progress + '%' }"
+                                    />
+                                </div>
+                                <p class="text-right text-[11px] font-bold mt-1" :class="progress >= 100 ? 'text-green-600' : 'text-primary'">{{ progress }}% Tercapai</p>
+                            </div>
+
+                            <!-- Stats row -->
+                            <div class="grid grid-cols-3 gap-2">
+                                <div class="text-center p-2 bg-muted/50 rounded-lg">
+                                    <Users class="w-3.5 h-3.5 text-primary mx-auto mb-0.5" />
+                                    <p class="text-sm font-bold text-foreground">{{ donation.transactions.length }}</p>
+                                    <p class="text-[9px] text-muted-foreground">Donatur</p>
+                                </div>
+                                <div class="text-center p-2 bg-muted/50 rounded-lg">
+                                    <CalendarDays class="w-3.5 h-3.5 text-primary mx-auto mb-0.5" />
+                                    <p class="text-[11px] font-bold text-foreground leading-tight">{{ new Date(donation.start_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) }}</p>
+                                    <p class="text-[9px] text-muted-foreground">Mulai</p>
+                                </div>
+                                <div class="text-center p-2 bg-muted/50 rounded-lg">
+                                    <UserCircle class="w-3.5 h-3.5 text-primary mx-auto mb-0.5" />
+                                    <p class="text-[11px] font-bold text-foreground leading-tight truncate">{{ donation.creator.name.split(' ')[0] }}</p>
+                                    <p class="text-[9px] text-muted-foreground">Oleh</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CTA Donasi (member) -->
+                    <div v-if="isMember && donation.status === 'active'" @click="openPaymentModal"
+                         class="relative rounded-2xl overflow-hidden active:scale-[0.98] transition-transform">
+                        <!-- Gradient background -->
+                        <div class="absolute inset-0 bg-gradient-to-br from-primary via-primary to-primary/80" />
+                        <!-- Decorative circles -->
+                        <div class="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/10" />
+                        <div class="absolute -bottom-4 -left-4 w-16 h-16 rounded-full bg-white/10" />
+                        <!-- Content -->
+                        <div class="relative px-5 py-5 flex items-center gap-4">
+                            <div class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0 shadow-lg shadow-primary/30">
+                                <Heart class="w-7 h-7 text-white drop-shadow" />
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-base font-bold text-white tracking-tight">Donasi Sekarang</p>
+                                <p class="text-xs text-white/80 mt-0.5">Sisihkan sebagian rezeki untuk sesama</p>
+                            </div>
+                            <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                                <ArrowLeft class="w-4 h-4 text-white rotate-180" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Catat Donasi (admin) -->
+                    <Button v-if="isAdmin" class="w-full" @click="openModal">
+                        <Plus class="w-4 h-4 mr-1.5" />
+                        Catat Donasi Baru
+                    </Button>
+
+                    <!-- Transactions -->
+                    <div class="bg-card rounded-xl border overflow-hidden">
+                        <div class="px-3.5 py-2.5 border-b flex items-center justify-between gap-2">
+                            <h3 class="text-xs font-semibold text-foreground">Daftar Donatur</h3>
+                            <Badge variant="secondary" class="text-[10px] h-5 px-1.5">{{ donation.transactions.length }}</Badge>
+                        </div>
+
+                        <!-- Search -->
+                        <div v-if="donation.transactions.length > 3" class="px-3 py-2 border-b">
+                            <div class="relative">
+                                <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                <Input v-model="searchQuery" placeholder="Cari donatur..." class="pl-8 h-7 text-xs bg-muted/40 border-transparent focus:bg-card focus:border-input" />
+                            </div>
+                        </div>
+
+                        <div class="divide-y">
+                            <div v-for="tx in filteredTransactions" :key="tx.id" class="px-3.5 py-2.5 flex items-center gap-2.5 active:bg-muted/50 transition-colors" @click="openDetailSheet(tx)">
+                                <!-- Avatar circle -->
+                                <div
+                                    class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold"
+                                    :class="tx.status === 'paid' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : tx.status === 'pending' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'"
+                                >
+                                    {{ (tx.is_anonymous ? 'H' : (tx.donor_name || 'A').charAt(0)).toUpperCase() }}
+                                </div>
+                                <!-- Info -->
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <p class="text-xs font-semibold text-foreground truncate">
+                                            {{ tx.is_anonymous ? 'Hamba Allah' : (tx.donor_name || 'Anonim') }}
+                                        </p>
+                                        <span class="text-xs font-bold text-primary tabular-nums shrink-0">{{ formatCurrency(tx.amount) }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5 text-[10px] text-muted-foreground mt-0.5">
+                                        <span>{{ formatDate(tx.donation_date) }}</span>
+                                        <span class="text-border">&middot;</span>
+                                        <span :class="['font-medium', getTxStatusConfig(tx.status).class.replace(/bg-\S+/g, '').trim()]">
+                                            {{ getTxStatusConfig(tx.status).label }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <MoreVertical class="w-4 h-4 text-muted-foreground/40 shrink-0" />
+                            </div>
+                            <div v-if="filteredTransactions.length === 0" class="py-10 text-center">
+                                <Inbox class="w-7 h-7 text-muted-foreground/30 mx-auto mb-2" />
+                                <p class="text-xs font-medium text-foreground">Belum Ada Donatur</p>
+                                <p class="text-[11px] text-muted-foreground mt-0.5">Transaksi donasi akan muncul di sini.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== Desktop Layout ==================== -->
+                <div class="hidden sm:grid sm:grid-cols-1 lg:grid-cols-3 gap-6">
 
                     <!-- Left Column -->
-                    <div class="lg:col-span-2 space-y-3 sm:space-y-4">
+                    <div class="lg:col-span-2 space-y-4">
 
                         <!-- Main Info Card -->
                         <div class="bg-card rounded-xl border overflow-hidden">
@@ -334,59 +508,54 @@ const confirmDeleteTransaction = () => {
                                 class="h-1 w-full"
                                 :class="donation.status === 'active' ? 'bg-green-500' : donation.status === 'completed' ? 'bg-blue-500' : 'bg-muted-foreground/30'"
                             />
-                            <div class="p-3 sm:p-5">
-                                <div class="flex items-start justify-between gap-2 mb-2 sm:mb-3">
-                                    <h2 class="text-sm sm:text-lg font-bold text-foreground">{{ donation.program_name }}</h2>
-                                    <span :class="['px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold shrink-0', getStatusConfig(donation.status).class]">
+                            <div class="p-5">
+                                <div class="flex items-start justify-between gap-2 mb-3">
+                                    <h2 class="text-lg font-bold text-foreground">{{ donation.program_name }}</h2>
+                                    <span :class="['px-2 py-0.5 rounded-full text-[10px] font-semibold shrink-0', getStatusConfig(donation.status).class]">
                                         {{ getStatusConfig(donation.status).label }}
                                     </span>
                                 </div>
 
-                                <p class="text-xs sm:text-sm text-muted-foreground whitespace-pre-wrap mb-2.5 sm:mb-4 line-clamp-3 sm:line-clamp-none">
+                                <p class="text-sm text-muted-foreground whitespace-pre-wrap mb-4">
                                     {{ donation.description || 'Tidak ada deskripsi.' }}
                                 </p>
 
                                 <!-- Progress -->
-                                <div class="bg-muted/50 rounded-lg p-2.5 sm:p-4 border space-y-1.5 sm:space-y-2.5">
+                                <div class="bg-muted/50 rounded-lg p-4 border space-y-2.5">
                                     <div class="flex justify-between items-baseline">
                                         <div>
-                                            <p class="text-[9px] sm:text-[10px] text-muted-foreground uppercase font-medium">Terkumpul</p>
-                                            <p class="text-sm sm:text-lg font-bold text-primary tabular-nums">{{ formatCurrency(donation.collected_amount) }}</p>
+                                            <p class="text-[10px] text-muted-foreground uppercase font-medium">Terkumpul</p>
+                                            <p class="text-lg font-bold text-primary tabular-nums">{{ formatCurrency(donation.collected_amount) }}</p>
                                         </div>
                                         <div class="text-right">
-                                            <p class="text-[9px] sm:text-[10px] text-muted-foreground uppercase font-medium">Target</p>
-                                            <p class="text-xs sm:text-sm font-semibold text-foreground tabular-nums">{{ formatCurrency(donation.target_amount) }}</p>
+                                            <p class="text-[10px] text-muted-foreground uppercase font-medium">Target</p>
+                                            <p class="text-sm font-semibold text-foreground tabular-nums">{{ formatCurrency(donation.target_amount) }}</p>
                                         </div>
                                     </div>
-                                    <div class="w-full bg-muted rounded-full h-1.5 sm:h-2 overflow-hidden">
+                                    <div class="w-full bg-muted rounded-full h-2 overflow-hidden">
                                         <div
                                             class="h-full rounded-full transition-all duration-700 ease-out"
                                             :class="progress >= 100 ? 'bg-green-500' : progress >= 50 ? 'bg-primary' : 'bg-amber-500'"
                                             :style="{ width: progress + '%' }"
                                         />
                                     </div>
-                                    <p class="text-right text-[9px] sm:text-[10px] font-bold text-primary">{{ progress }}% Tercapai</p>
+                                    <p class="text-right text-[10px] font-bold text-primary">{{ progress }}% Tercapai</p>
                                 </div>
 
                                 <!-- Meta -->
-                                <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2.5 pt-2.5 sm:mt-4 sm:pt-4 border-t text-[11px] sm:text-sm">
-                                    <div class="flex items-center gap-1 text-muted-foreground sm:flex-col sm:items-start sm:gap-0">
-                                        <span class="sm:text-[10px] sm:uppercase sm:font-medium sm:tracking-wide">
-                                            <CalendarDays class="w-3 h-3 inline sm:hidden" />
-                                            <span class="hidden sm:inline">Tanggal Mulai</span>
-                                        </span>
-                                        <span class="font-medium text-foreground sm:mt-0.5">{{ formatDate(donation.start_date) }}</span>
+                                <div class="flex flex-wrap gap-x-4 gap-y-1 mt-4 pt-4 border-t text-sm">
+                                    <div class="flex flex-col items-start gap-0">
+                                        <span class="text-[10px] uppercase font-medium tracking-wide text-muted-foreground">Tanggal Mulai</span>
+                                        <span class="font-medium text-foreground mt-0.5">{{ formatDate(donation.start_date) }}</span>
                                     </div>
-                                    <div class="flex items-center gap-1 text-muted-foreground sm:flex-col sm:items-start sm:gap-0">
-                                        <span class="sm:hidden">-</span>
-                                        <span class="hidden sm:inline sm:text-[10px] sm:uppercase sm:font-medium sm:tracking-wide">Tanggal Selesai</span>
-                                        <span class="font-medium text-foreground sm:mt-0.5">{{ donation.end_date ? formatDate(donation.end_date) : 'Berlangsung' }}</span>
+                                    <div class="flex flex-col items-start gap-0">
+                                        <span class="text-[10px] uppercase font-medium tracking-wide text-muted-foreground">Tanggal Selesai</span>
+                                        <span class="font-medium text-foreground mt-0.5">{{ donation.end_date ? formatDate(donation.end_date) : 'Berlangsung' }}</span>
                                     </div>
-                                    <div class="flex items-center gap-1 text-muted-foreground sm:flex-col sm:items-start sm:gap-0">
-                                        <Globe class="w-3 h-3 sm:hidden" />
-                                        <span class="hidden sm:inline sm:text-[10px] sm:uppercase sm:font-medium sm:tracking-wide">Visibilitas</span>
-                                        <span class="font-medium text-foreground sm:mt-0.5 flex items-center gap-1">
-                                            <Globe class="w-3.5 h-3.5 hidden sm:inline" />
+                                    <div class="flex flex-col items-start gap-0">
+                                        <span class="text-[10px] uppercase font-medium tracking-wide text-muted-foreground">Visibilitas</span>
+                                        <span class="font-medium text-foreground mt-0.5 flex items-center gap-1">
+                                            <Globe class="w-3.5 h-3.5" />
                                             {{ donation.is_public ? 'Publik' : 'Internal' }}
                                         </span>
                                     </div>
@@ -396,57 +565,20 @@ const confirmDeleteTransaction = () => {
 
                         <!-- Transactions -->
                         <div class="bg-card rounded-xl border overflow-hidden">
-                            <div class="px-3 sm:px-5 py-2.5 sm:py-4 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
-                                <h3 class="text-xs sm:text-sm font-semibold text-foreground">Daftar Donatur</h3>
+                            <div class="px-5 py-4 border-b flex items-center justify-between gap-3">
+                                <h3 class="text-sm font-semibold text-foreground">Daftar Donatur</h3>
                                 <div class="flex gap-2">
-                                    <div class="relative flex-1 sm:w-56">
+                                    <div class="relative w-56">
                                         <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                                        <Input v-model="searchQuery" placeholder="Cari donatur..." class="pl-8 h-7 sm:h-8 text-xs sm:text-sm" />
+                                        <Input v-model="searchQuery" placeholder="Cari donatur..." class="pl-8 h-8 text-sm" />
                                     </div>
-                                    <Button v-if="isAdmin" size="sm" class="h-7 sm:h-8 text-xs shrink-0" @click="openModal">
-                                        <Plus class="w-3.5 h-3.5 sm:hidden" />
-                                        <span class="hidden sm:inline">Catat Donasi</span>
+                                    <Button v-if="isAdmin" size="sm" class="h-8 text-xs shrink-0" @click="openModal">
+                                        Catat Donasi
                                     </Button>
                                 </div>
                             </div>
 
-                            <!-- Mobile: Cards -->
-                            <div class="sm:hidden divide-y">
-                                <div v-for="tx in filteredTransactions" :key="tx.id" class="px-3 py-2 flex items-center gap-2.5" @click="openDetailSheet(tx)">
-                                    <!-- Left: status dot -->
-                                    <div
-                                        class="w-1.5 h-1.5 rounded-full shrink-0"
-                                        :class="tx.status === 'paid' ? 'bg-green-500' : tx.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'"
-                                    />
-                                    <!-- Middle: info -->
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center justify-between gap-1">
-                                            <p class="text-xs font-semibold text-foreground truncate">
-                                                {{ tx.is_anonymous ? 'Hamba Allah' : (tx.donor_name || 'Anonim') }}
-                                            </p>
-                                            <span class="text-xs font-bold text-primary tabular-nums shrink-0">{{ formatCurrency(tx.amount) }}</span>
-                                        </div>
-                                        <div class="flex items-center gap-1.5 text-[10px] text-muted-foreground mt-0.5">
-                                            <span>{{ formatDate(tx.donation_date) }}</span>
-                                            <span class="text-border">|</span>
-                                            <CreditCard v-if="tx.payment_method === 'transfer'" class="w-2.5 h-2.5" />
-                                            <Banknote v-else class="w-2.5 h-2.5" />
-                                            <span>{{ tx.payment_method === 'transfer' ? 'TF' : 'Cash' }}</span>
-                                        </div>
-                                    </div>
-                                    <!-- Right: hamburger -->
-                                    <Button variant="ghost" size="icon" class="h-7 w-7 shrink-0" @click.stop="openDetailSheet(tx)">
-                                        <MoreVertical class="w-4 h-4 text-muted-foreground" />
-                                    </Button>
-                                </div>
-                                <div v-if="filteredTransactions.length === 0" class="py-8 text-center">
-                                    <Inbox class="w-6 h-6 text-muted-foreground mx-auto mb-1.5" />
-                                    <p class="text-xs text-muted-foreground">Belum ada transaksi.</p>
-                                </div>
-                            </div>
-
-                            <!-- Desktop: Table -->
-                            <div class="hidden sm:block overflow-x-auto">
+                            <div class="overflow-x-auto">
                                 <table class="w-full text-sm">
                                     <thead>
                                         <tr class="border-b bg-muted/50 text-[11px] text-muted-foreground uppercase tracking-wide">
@@ -513,19 +645,19 @@ const confirmDeleteTransaction = () => {
                     </div>
 
                     <!-- Right Column: Sidebar -->
-                    <div class="space-y-3 sm:space-y-4">
+                    <div class="space-y-4">
                         <!-- CTA for Member -->
                         <div v-if="isMember && donation.status === 'active'" class="bg-card rounded-xl border overflow-hidden">
                             <div class="h-1 w-full bg-primary" />
-                            <div class="p-3 sm:p-5 flex sm:flex-col items-center sm:text-center gap-3 sm:space-y-3">
-                                <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-primary/10 flex items-center justify-center shrink-0 sm:mx-auto">
-                                    <Heart class="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                            <div class="p-5 flex flex-col items-center text-center space-y-3">
+                                <div class="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                                    <Heart class="w-5 h-5 text-primary" />
                                 </div>
-                                <div class="flex-1 min-w-0 sm:flex-none">
-                                    <h3 class="text-xs sm:text-sm font-bold text-foreground">Ingin Berdonasi?</h3>
-                                    <p class="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">Sisihkan sebagian rezeki untuk membantu sesama.</p>
+                                <div>
+                                    <h3 class="text-sm font-bold text-foreground">Ingin Berdonasi?</h3>
+                                    <p class="text-xs text-muted-foreground mt-1">Sisihkan sebagian rezeki untuk membantu sesama.</p>
                                 </div>
-                                <Button size="sm" class="shrink-0 sm:w-full" @click="openPaymentModal">
+                                <Button size="sm" class="w-full" @click="openPaymentModal">
                                     <Heart class="w-3.5 h-3.5 mr-1" />
                                     Donasi
                                 </Button>
@@ -533,24 +665,8 @@ const confirmDeleteTransaction = () => {
                         </div>
 
                         <!-- Info Sidebar -->
-                        <div class="bg-card rounded-xl border p-3 sm:p-5">
-                            <!-- Mobile: inline compact -->
-                            <div class="sm:hidden flex items-center gap-4 text-[11px]">
-                                <div class="flex items-center gap-1.5">
-                                    <UserCircle class="w-3.5 h-3.5 text-primary shrink-0" />
-                                    <span class="text-muted-foreground">{{ donation.creator.name }}</span>
-                                </div>
-                                <div class="flex items-center gap-1.5">
-                                    <Users class="w-3.5 h-3.5 text-primary shrink-0" />
-                                    <span class="text-muted-foreground">{{ donation.transactions.length }} Donatur</span>
-                                </div>
-                                <div class="flex items-center gap-1.5">
-                                    <CalendarDays class="w-3.5 h-3.5 text-primary shrink-0" />
-                                    <span class="text-muted-foreground">{{ formatDate(donation.created_at) }}</span>
-                                </div>
-                            </div>
-                            <!-- Desktop: full sidebar -->
-                            <div class="hidden sm:block space-y-4">
+                        <div class="bg-card rounded-xl border p-5">
+                            <div class="space-y-4">
                                 <h3 class="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Informasi</h3>
                                 <div class="space-y-3">
                                     <div class="flex items-center gap-3">
@@ -853,18 +969,121 @@ const confirmDeleteTransaction = () => {
             </DialogContent>
         </Dialog>
 
-        <!-- Member Payment Dialog -->
-        <Dialog :open="showingPaymentModal" @update:open="(val) => { if (!val) closePaymentModal(); }">
+        <!-- Member Payment: Mobile Sheet -->
+        <Sheet :open="showingPaymentModal && isMobile" @update:open="(val) => { if (!val) closePaymentModal(); }">
+            <SheetContent side="bottom" class="sm:hidden rounded-t-2xl max-h-[92vh] flex flex-col p-0">
+                <SheetHeader class="sr-only">
+                    <SheetTitle>Sumbang Donasi</SheetTitle>
+                    <SheetDescription>Isi detail donasi Anda</SheetDescription>
+                </SheetHeader>
+                <!-- Drag handle -->
+                <div class="flex justify-center pt-3 pb-1">
+                    <div class="w-10 h-1 rounded-full bg-muted-foreground/30" />
+                </div>
+                <!-- Hero header -->
+                <div class="px-5 pb-4 text-center">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mx-auto mb-3 shadow-lg shadow-primary/20">
+                        <Heart class="w-7 h-7 text-white" />
+                    </div>
+                    <h3 class="text-lg font-bold text-foreground">Sumbang Donasi</h3>
+                    <p class="text-xs text-muted-foreground mt-0.5">{{ donation.title }}</p>
+                </div>
+                <form @submit.prevent="submitPayment" class="flex-1 overflow-y-auto">
+                    <div class="px-5 pb-4 space-y-4">
+                        <!-- Donor name + anonymous -->
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <Label class="text-xs font-medium">Nama Donatur</Label>
+                                <div class="flex items-center gap-1.5">
+                                    <Checkbox :checked="paymentForm.is_anonymous" @update:checked="(v) => paymentForm.is_anonymous = v" />
+                                    <span class="text-[11px] text-muted-foreground">Anonim</span>
+                                </div>
+                            </div>
+                            <Input v-model="paymentForm.donor_name" :disabled="paymentForm.is_anonymous" placeholder="Nama lengkap" />
+                            <p v-if="paymentForm.errors.donor_name" class="text-xs text-destructive">{{ paymentForm.errors.donor_name }}</p>
+                        </div>
+
+                        <!-- Amount — prominent -->
+                        <div class="space-y-2">
+                            <Label class="text-xs font-medium">Jumlah Donasi</Label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">Rp</span>
+                                <Input v-model="paymentForm.amount" type="number" min="1" required class="pl-10 text-lg font-bold h-12" placeholder="0" />
+                            </div>
+                            <p v-if="paymentForm.errors.amount" class="text-xs text-destructive">{{ paymentForm.errors.amount }}</p>
+                        </div>
+
+                        <!-- Date -->
+                        <div class="space-y-2">
+                            <Label class="text-xs font-medium">Tanggal Transfer</Label>
+                            <Input v-model="paymentForm.donation_date" type="date" required />
+                            <p v-if="paymentForm.errors.donation_date" class="text-xs text-destructive">{{ paymentForm.errors.donation_date }}</p>
+                        </div>
+
+                        <!-- Receipt Upload -->
+                        <div class="space-y-2">
+                            <Label class="text-xs font-medium">Bukti Transfer</Label>
+                            <div
+                                @dragover.prevent="isDraggingPayReceipt = true"
+                                @dragleave.prevent="isDraggingPayReceipt = false"
+                                @drop.prevent="handlePayReceiptDrop($event)"
+                                @click="payReceiptInputRef?.click()"
+                                class="border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all"
+                                :class="isDraggingPayReceipt ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'"
+                            >
+                                <input ref="payReceiptInputRef" type="file" accept="image/*" class="hidden" @change="handlePayReceiptSelect($event)" />
+                                <template v-if="!payReceiptPreview">
+                                    <div class="w-10 h-10 rounded-full bg-muted flex items-center justify-center mx-auto mb-2">
+                                        <Upload class="w-5 h-5 text-muted-foreground" />
+                                    </div>
+                                    <p class="text-xs font-medium text-foreground">Tap untuk upload</p>
+                                    <p class="text-[11px] text-muted-foreground mt-0.5">PNG, JPG max 2MB</p>
+                                </template>
+                                <template v-else>
+                                    <div class="relative inline-block">
+                                        <img :src="payReceiptPreview" class="max-h-32 rounded-lg mx-auto shadow-sm" />
+                                        <button type="button" @click.stop="clearPayReceipt" class="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-white rounded-full flex items-center justify-center shadow">
+                                            <X class="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                            <p v-if="paymentForm.errors.receipt" class="text-xs text-destructive">{{ paymentForm.errors.receipt }}</p>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="space-y-2">
+                            <Label class="text-xs font-medium">Catatan / Doa</Label>
+                            <Textarea v-model="paymentForm.notes" rows="2" placeholder="Semoga berkah..." />
+                            <p v-if="paymentForm.errors.notes" class="text-xs text-destructive">{{ paymentForm.errors.notes }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Sticky footer -->
+                    <div class="sticky bottom-0 bg-background border-t px-5 py-4 space-y-2">
+                        <Button type="submit" class="w-full h-12 text-sm font-semibold gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20" :disabled="paymentForm.processing">
+                            <Loader2 v-if="paymentForm.processing" class="w-4 h-4 animate-spin" />
+                            <Heart v-else class="w-4 h-4" />
+                            {{ paymentForm.processing ? 'Mengirim...' : 'Kirim Donasi' }}
+                        </Button>
+                        <button type="button" @click="closePaymentModal" class="w-full text-center text-xs text-muted-foreground py-1">Batal</button>
+                    </div>
+                </form>
+            </SheetContent>
+        </Sheet>
+
+        <!-- Member Payment: Desktop Dialog -->
+        <Dialog :open="showingPaymentModal && !isMobile" @update:open="(val) => { if (!val) closePaymentModal(); }">
             <DialogContent class="max-w-lg p-0 overflow-hidden">
                 <div class="px-5 pt-5 pb-4 border-b">
                     <DialogHeader>
                         <DialogTitle class="flex items-center gap-2 text-base">
-                            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                                <Heart class="w-4 h-4 text-primary" />
+                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
+                                <Heart class="w-4 h-4 text-white" />
                             </div>
                             Sumbang Donasi
                         </DialogTitle>
-                        <DialogDescription class="text-xs mt-1">Isi detail donasi Anda di bawah.</DialogDescription>
+                        <DialogDescription class="text-xs mt-1">{{ donation.title }}</DialogDescription>
                     </DialogHeader>
                 </div>
                 <form @submit.prevent="submitPayment" class="divide-y">
@@ -886,7 +1105,10 @@ const confirmDeleteTransaction = () => {
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <Label class="text-xs">Jumlah (Rp)</Label>
-                                <Input v-model="paymentForm.amount" type="number" min="1" required class="mt-1" />
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">Rp</span>
+                                    <Input v-model="paymentForm.amount" type="number" min="1" required class="pl-9 font-bold" />
+                                </div>
                                 <p v-if="paymentForm.errors.amount" class="mt-1 text-xs text-destructive">{{ paymentForm.errors.amount }}</p>
                             </div>
                             <div>
@@ -937,8 +1159,9 @@ const confirmDeleteTransaction = () => {
 
                     <div class="px-5 py-3 flex items-center justify-end gap-2 bg-muted/30">
                         <Button variant="outline" size="sm" type="button" @click="closePaymentModal">Batal</Button>
-                        <Button size="sm" type="submit" :disabled="paymentForm.processing">
-                            <Loader2 v-if="paymentForm.processing" class="w-4 h-4 mr-1 animate-spin" />
+                        <Button size="sm" type="submit" class="gap-1.5 bg-primary hover:bg-primary/90" :disabled="paymentForm.processing">
+                            <Loader2 v-if="paymentForm.processing" class="w-4 h-4 animate-spin" />
+                            <Heart v-else class="w-3.5 h-3.5" />
                             {{ paymentForm.processing ? 'Mengirim...' : 'Kirim Donasi' }}
                         </Button>
                     </div>
@@ -1158,5 +1381,61 @@ const confirmDeleteTransaction = () => {
             @confirm="confirmDeleteTransaction"
             @cancel="deleteTransactionTarget = null"
         />
+        <!-- Thank You Modal -->
+        <Dialog :open="showingThankYou" @update:open="(val) => { if (!val) showingThankYou = false; }">
+            <DialogContent class="max-w-sm p-0 overflow-hidden border-0 shadow-2xl">
+                <!-- Gradient top -->
+                <div class="relative bg-gradient-to-br from-primary via-primary to-primary/80 px-6 pt-8 pb-10 text-center overflow-hidden">
+                    <!-- Decorative elements -->
+                    <div class="absolute -top-8 -left-8 w-28 h-28 rounded-full bg-white/10" />
+                    <div class="absolute -bottom-6 -right-6 w-20 h-20 rounded-full bg-white/10" />
+                    <div class="absolute top-4 right-8 w-8 h-8 rounded-full bg-white/10" />
+
+                    <DialogHeader class="space-y-0">
+                        <DialogTitle class="sr-only">Terima Kasih</DialogTitle>
+                        <DialogDescription class="sr-only">Donasi berhasil dikirim</DialogDescription>
+                    </DialogHeader>
+
+                    <!-- Animated heart -->
+                    <div class="relative inline-flex items-center justify-center mb-4">
+                        <div class="absolute w-20 h-20 rounded-full bg-white/20 animate-ping" style="animation-duration: 2s;" />
+                        <div class="relative w-16 h-16 rounded-full bg-white/25 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                            <Heart class="w-8 h-8 text-white drop-shadow" />
+                        </div>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-white">Terima Kasih Banyak!</h3>
+                    <p class="text-sm text-white/80 mt-1">{{ thankYouName }}</p>
+                </div>
+
+                <!-- Content -->
+                <div class="px-6 py-6 text-center space-y-4">
+                    <!-- Amount -->
+                    <div class="inline-flex items-center gap-2 bg-green-50 dark:bg-green-950/30 px-4 py-2 rounded-full">
+                        <CheckCircle2 class="w-4 h-4 text-green-600 dark:text-green-400" />
+                        <span class="text-sm font-bold text-green-700 dark:text-green-400">{{ formatCurrency(thankYouAmount) }}</span>
+                    </div>
+
+                    <!-- Quote -->
+                    <div class="relative px-2">
+                        <p class="text-sm text-muted-foreground leading-relaxed italic">
+                            "{{ currentThankYouMessage }}"
+                        </p>
+                    </div>
+
+                    <p class="text-xs text-muted-foreground/70 pt-1">
+                        Kebaikanmu akan selalu dikenang dan berarti bagi banyak orang.
+                    </p>
+                </div>
+
+                <!-- Footer -->
+                <div class="px-6 pb-6">
+                    <Button class="w-full h-11 gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20" @click="showingThankYou = false">
+                        <Heart class="w-4 h-4" />
+                        Terima Kasih
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
     </AuthenticatedLayout>
 </template>

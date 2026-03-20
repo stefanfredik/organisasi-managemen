@@ -151,10 +151,11 @@ onUnmounted(() => {
                         </a>
                     </div>
 
-                    <!-- Login Button -->
+                    <!-- Login/Dashboard Button -->
                     <div class="hidden lg:block ml-4">
                         <Button as-child size="sm" class="rounded-lg h-8 text-xs">
-                            <Link href="/login">Login</Link>
+                            <Link v-if="$page.props.auth.user" href="/dashboard">Dashboard</Link>
+                            <Link v-else href="/login">Login</Link>
                         </Button>
                     </div>
 
@@ -194,7 +195,8 @@ onUnmounted(() => {
 
                 <div class="p-3 border-t">
                     <Button class="w-full h-9 text-sm" as-child>
-                        <Link href="/login" @click="mobileMenuOpen = false">Login</Link>
+                        <Link v-if="$page.props.auth.user" href="/dashboard" @click="mobileMenuOpen = false">Dashboard</Link>
+                        <Link v-else href="/login" @click="mobileMenuOpen = false">Login</Link>
                     </Button>
                 </div>
             </SheetContent>

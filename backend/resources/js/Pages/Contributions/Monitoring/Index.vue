@@ -1,21 +1,40 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import {
-    Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+    Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
-import { Coins, CheckCircle, Clock, ChevronRight, Users, AlertCircle, Loader2, User } from 'lucide-vue-next';
-import { ref } from 'vue';
+import {
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import {
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import DeleteConfirmDialog from '@/Components/DeleteConfirmDialog.vue';
+import {
+    Coins, CheckCircle, Clock, ChevronRight, Users, AlertCircle, Loader2, User,
+    Plus, Pencil, Trash2, MoreVertical, Settings2,
+} from 'lucide-vue-next';
 import axios from 'axios';
+import { useToast } from '@/composables/useToast';
 
-defineProps({
+const toast = useToast();
+
+const props = defineProps({
     types: Array,
+    wallets: Array,
 });
 
 const formatCurrency = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
 
-// Members by status modal
+// ─── Members by status modal ─────────────────────────────────────────
 const showMembersModal = ref(false);
 const membersLoading = ref(false);
 const membersList = ref([]);
@@ -45,16 +64,113 @@ const fetchMembers = async (typeId, typeName, status) => {
         membersLoading.value = false;
     }
 };
+
+// ─── CRUD Jenis Iuran ────────────────────────────────────────────────
+const periods = {
+    once: 'Sekali Bayar',
+    daily: 'Harian',
+    weekly: 'Mingguan',
+    monthly: 'Bulanan',
+    yearly: 'Tahunan',
+};
+
+const showModal = ref(false);
+const editingType = ref(null);
+
+const form = useForm({
+    name: '',
+    wallet_id: '',
+    amount: '',
+    period: 'monthly',
+    description: '',
+    is_active: true,
+    start_date: '',
+    end_date: '',
+    due_date: '',
+    recurring_day: '',
+});
+
+const openCreate = () => {
+    editingType.value = null;
+    form.reset();
+    form.period = 'monthly';
+    form.is_active = true;
+    showModal.value = true;
+};
+
+const openEdit = (type) => {
+    editingType.value = type;
+    form.name = type.name;
+    form.wallet_id = type.wallet_id ? String(type.wallet_id) : '';
+    form.amount = type.amount;
+    form.period = type.period;
+    form.description = type.description || '';
+    form.is_active = !!type.is_active;
+    form.start_date = type.start_date ? type.start_date.split('T')[0] : '';
+    form.end_date = type.end_date ? type.end_date.split('T')[0] : '';
+    form.due_date = type.due_date ? type.due_date.split('T')[0] : '';
+    form.recurring_day = type.recurring_day ? String(type.recurring_day) : '';
+    showModal.value = true;
+};
+
+const closeModal = () => {
+    showModal.value = false;
+    form.reset();
+    editingType.value = null;
+};
+
+const submit = () => {
+    if (editingType.value) {
+        form.put(route('contribution-types.update', editingType.value.id), {
+            onSuccess: () => closeModal(),
+        });
+    } else {
+        form.post(route('contribution-types.store'), {
+            onSuccess: () => closeModal(),
+        });
+    }
+};
+
+// ─── Delete ──────────────────────────────────────────────────────────
+const showDeleteDialog = ref(false);
+const deletingType = ref(null);
+const deleteForm = useForm({});
+
+const confirmDelete = (type) => {
+    deletingType.value = type;
+    showDeleteDialog.value = true;
+};
+
+const executeDelete = () => {
+    if (!deletingType.value) return;
+    deleteForm.delete(route('contribution-types.destroy', deletingType.value.id), {
+        onSuccess: () => {
+            showDeleteDialog.value = false;
+            deletingType.value = null;
+        },
+        onError: (errors) => {
+            toast.error(Object.values(errors).flat().join(', ') || 'Gagal menghapus jenis iuran.');
+            showDeleteDialog.value = false;
+            deletingType.value = null;
+        },
+    });
+};
 </script>
 
 <template>
-    <Head title="Monitoring Iuran" />
+    <Head title="Kelola Iuran" />
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-foreground">
-                Monitoring & Verifikasi Iuran
-            </h2>
+            <div class="flex items-center justify-between gap-3">
+                <h2 class="text-xl font-semibold leading-tight text-foreground">
+                    Kelola Iuran
+                </h2>
+                <Button v-if="hasPermission('manage_contribution_types')" size="sm" @click="openCreate">
+                    <Plus class="w-4 h-4 mr-1" />
+                    <span class="hidden sm:inline">Tambah Jenis Iuran</span>
+                </Button>
+            </div>
         </template>
 
         <div class="py-4">
@@ -65,9 +181,37 @@ const fetchMembers = async (typeId, typeName, status) => {
                         v-for="type in types"
                         :key="type.id"
                         class="group relative bg-card rounded-xl border shadow-sm overflow-hidden"
+                        :class="{ 'opacity-50': !type.is_active }"
                     >
                         <!-- Gradient accent top -->
                         <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary to-primary/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                        <!-- Dropdown menu (edit/hapus) -->
+                        <div v-if="hasPermission('manage_contribution_types')" class="absolute top-3 right-3 z-10">
+                            <DropdownMenu>
+                                <DropdownMenuTrigger as-child>
+                                    <Button variant="ghost" size="icon" class="h-7 w-7 bg-card/80 backdrop-blur-sm shadow-sm border" @click.prevent.stop>
+                                        <MoreVertical class="w-3.5 h-3.5" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" class="w-40">
+                                    <DropdownMenuItem @click="openEdit(type)">
+                                        <Pencil class="w-4 h-4 mr-2" />
+                                        Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem class="text-destructive" @click="confirmDelete(type)">
+                                        <Trash2 class="w-4 h-4 mr-2" />
+                                        Hapus
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+
+                        <!-- Nonaktif badge -->
+                        <div v-if="!type.is_active" class="absolute top-3 left-3 z-10">
+                            <Badge variant="secondary" class="text-[10px] bg-muted text-muted-foreground">Nonaktif</Badge>
+                        </div>
 
                         <Link
                             :href="route('contributions.monitoring.dashboard', type.id)"
@@ -152,7 +296,11 @@ const fetchMembers = async (typeId, typeName, status) => {
 
                 <div v-if="types.length === 0" class="text-center py-12">
                     <Coins class="w-10 h-10 text-muted-foreground/50 mx-auto mb-3" />
-                    <p class="text-sm text-muted-foreground">Belum ada jenis iuran yang aktif.</p>
+                    <p class="text-sm text-muted-foreground mb-4">Belum ada jenis iuran.</p>
+                    <Button v-if="hasPermission('manage_contribution_types')" size="sm" @click="openCreate">
+                        <Plus class="w-4 h-4 mr-1" />
+                        Tambah Jenis Iuran
+                    </Button>
                 </div>
 
             </div>
@@ -180,13 +328,11 @@ const fetchMembers = async (typeId, typeName, status) => {
                     </DialogDescription>
                 </DialogHeader>
 
-                <!-- Loading -->
                 <div v-if="membersLoading" class="py-8 flex flex-col items-center gap-2 text-muted-foreground">
                     <Loader2 class="w-5 h-5 animate-spin" />
                     <p class="text-xs">Memuat data...</p>
                 </div>
 
-                <!-- Members List -->
                 <div v-else-if="membersList.length > 0" class="flex-1 overflow-y-auto -mx-1 px-1">
                     <div class="space-y-1">
                         <div
@@ -206,7 +352,6 @@ const fetchMembers = async (typeId, typeName, status) => {
                     </div>
                 </div>
 
-                <!-- Empty State -->
                 <div v-else class="py-8 text-center">
                     <div class="w-10 h-10 rounded-xl bg-muted flex items-center justify-center mx-auto mb-2">
                         <User class="w-5 h-5 text-muted-foreground" />
@@ -214,7 +359,6 @@ const fetchMembers = async (typeId, typeName, status) => {
                     <p class="text-sm text-muted-foreground">Tidak ada anggota dalam kategori ini.</p>
                 </div>
 
-                <!-- Footer count -->
                 <div v-if="!membersLoading && membersList.length > 0" class="pt-3 border-t mt-2">
                     <p class="text-xs text-muted-foreground text-center">
                         Total: <span class="font-bold text-foreground">{{ membersList.length }}</span> anggota
@@ -222,5 +366,144 @@ const fetchMembers = async (typeId, typeName, status) => {
                 </div>
             </DialogContent>
         </Dialog>
+
+        <!-- Create/Edit Dialog -->
+        <Dialog :open="showModal" @update:open="(val) => { if (!val) closeModal(); }">
+            <DialogContent class="max-w-lg max-h-[90vh] overflow-hidden flex flex-col p-0">
+                <div class="px-6 pt-6 pb-4 border-b bg-muted/30">
+                    <DialogHeader>
+                        <DialogTitle class="flex items-center gap-2 text-base">
+                            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                                <Settings2 class="w-4 h-4 text-primary" />
+                            </div>
+                            {{ editingType ? 'Edit Jenis Iuran' : 'Tambah Jenis Iuran' }}
+                        </DialogTitle>
+                        <DialogDescription class="mt-1">
+                            {{ editingType ? 'Perbarui detail jenis iuran ini.' : 'Buat jenis iuran baru untuk organisasi.' }}
+                        </DialogDescription>
+                    </DialogHeader>
+                </div>
+
+                <form @submit.prevent="submit" class="flex-1 overflow-y-auto">
+                    <div class="px-6 py-5 space-y-5">
+                        <div>
+                            <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Nama Iuran</Label>
+                            <Input type="text" class="mt-1.5 w-full" v-model="form.name" required placeholder="Contoh: Iuran Bulanan 2026" />
+                            <p v-if="form.errors.name" class="mt-1 text-xs text-destructive">{{ form.errors.name }}</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Besaran (Rp)</Label>
+                                <Input type="number" class="mt-1.5 w-full" v-model="form.amount" required placeholder="0" min="0" />
+                                <p v-if="form.errors.amount" class="mt-1 text-xs text-destructive">{{ form.errors.amount }}</p>
+                            </div>
+                            <div>
+                                <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Periode</Label>
+                                <Select v-model="form.period" required>
+                                    <SelectTrigger class="mt-1.5 w-full">
+                                        <SelectValue placeholder="Pilih Periode" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem v-for="(label, value) in periods" :key="value" :value="value">{{ label }}</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <p v-if="form.errors.period" class="mt-1 text-xs text-destructive">{{ form.errors.period }}</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Dompet Tujuan</Label>
+                            <Select v-model="form.wallet_id" required>
+                                <SelectTrigger class="mt-1.5 w-full">
+                                    <SelectValue placeholder="Pilih Dompet" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem v-for="w in wallets" :key="w.id" :value="w.id.toString()">
+                                        {{ w.name }}
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <p v-if="form.errors.wallet_id" class="mt-1 text-xs text-destructive">{{ form.errors.wallet_id }}</p>
+                            <p class="mt-1 text-xs text-muted-foreground">Iuran yang dibayar akan masuk ke dompet ini.</p>
+                        </div>
+
+                        <div>
+                            <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Deskripsi <span class="normal-case font-normal">(Opsional)</span></Label>
+                            <Textarea v-model="form.description" rows="2" class="mt-1.5" placeholder="Rincian mengenai iuran ini..." />
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Tanggal Mulai <span class="normal-case font-normal">(Opsional)</span></Label>
+                                <Input type="date" class="mt-1.5 w-full" v-model="form.start_date" />
+                                <p v-if="form.errors.start_date" class="mt-1 text-xs text-destructive">{{ form.errors.start_date }}</p>
+                            </div>
+                            <div>
+                                <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Batas Akhir <span class="normal-case font-normal">(Opsional)</span></Label>
+                                <Input type="date" class="mt-1.5 w-full" v-model="form.end_date" />
+                                <p v-if="form.errors.end_date" class="mt-1 text-xs text-destructive">{{ form.errors.end_date }}</p>
+                            </div>
+                        </div>
+
+                        <div v-if="form.period === 'monthly'">
+                            <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Tanggal Jatuh Tempo</Label>
+                            <Input type="number" min="1" max="31" class="mt-1.5 w-full" v-model="form.recurring_day" placeholder="Contoh: 10 (Setiap tanggal 10)" />
+                            <p v-if="form.errors.recurring_day" class="mt-1 text-xs text-destructive">{{ form.errors.recurring_day }}</p>
+                        </div>
+
+                        <div v-if="form.period === 'weekly'">
+                            <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Hari Pembayaran</Label>
+                            <Select v-model="form.recurring_day">
+                                <SelectTrigger class="mt-1.5 w-full">
+                                    <SelectValue placeholder="Pilih Hari" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="1">Senin</SelectItem>
+                                    <SelectItem value="2">Selasa</SelectItem>
+                                    <SelectItem value="3">Rabu</SelectItem>
+                                    <SelectItem value="4">Kamis</SelectItem>
+                                    <SelectItem value="5">Jumat</SelectItem>
+                                    <SelectItem value="6">Sabtu</SelectItem>
+                                    <SelectItem value="7">Minggu</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <p v-if="form.errors.recurring_day" class="mt-1 text-xs text-destructive">{{ form.errors.recurring_day }}</p>
+                        </div>
+
+                        <div v-if="['once', 'yearly'].includes(form.period)">
+                            <Label class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Tanggal Jatuh Tempo</Label>
+                            <Input type="date" class="mt-1.5 w-full" v-model="form.due_date" />
+                            <p v-if="form.errors.due_date" class="mt-1 text-xs text-destructive">{{ form.errors.due_date }}</p>
+                        </div>
+
+                        <div class="flex items-center gap-3 p-3.5 rounded-xl bg-muted/50 border">
+                            <Checkbox id="is_active_type" :checked="form.is_active" @update:checked="(val) => form.is_active = val" />
+                            <div>
+                                <Label for="is_active_type" class="text-sm font-semibold text-foreground cursor-pointer">Status Aktif</Label>
+                                <p class="text-xs text-muted-foreground">Iuran nonaktif tidak bisa dipilih saat mencatat pembayaran.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="px-6 py-4 border-t bg-card flex items-center justify-end gap-2">
+                        <Button variant="outline" type="button" @click="closeModal">Batal</Button>
+                        <Button type="submit" :disabled="form.processing">
+                            <Loader2 v-if="form.processing" class="w-4 h-4 mr-1.5 animate-spin" />
+                            {{ editingType ? 'Simpan Perubahan' : 'Buat Jenis Iuran' }}
+                        </Button>
+                    </div>
+                </form>
+            </DialogContent>
+        </Dialog>
+
+        <!-- Delete Confirmation -->
+        <DeleteConfirmDialog
+            :open="showDeleteDialog"
+            title="Hapus Jenis Iuran?"
+            :description="`Jenis iuran ${deletingType?.name} akan dihapus. Tindakan ini tidak bisa dibatalkan.`"
+            @confirm="executeDelete"
+            @cancel="showDeleteDialog = false; deletingType = null"
+        />
     </AuthenticatedLayout>
 </template>
