@@ -129,7 +129,7 @@ onUnmounted(() => {
                         <ApplicationLogo class="h-7 sm:h-8 w-auto text-primary" />
                         <span
                             class="text-sm sm:text-base font-bold truncate max-w-[160px] sm:max-w-none transition-colors"
-                            :class="isScrolled ? 'text-foreground' : 'text-foreground'"
+                            :class="isScrolled ? 'text-foreground' : 'text-white'"
                         >
                             {{ $page.props.appSettings.name }}
                         </span>
@@ -144,8 +144,8 @@ onUnmounted(() => {
                             @click="scrollToSection(item, $event)"
                             class="px-3 py-1.5 text-[13px] font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer"
                             :class="isHomePage && activeSection === item.anchor
-                                ? 'text-primary bg-primary/5'
-                                : 'text-muted-foreground hover:text-primary hover:bg-primary/5'"
+                                ? (isScrolled ? 'text-primary bg-primary/5' : 'text-white bg-white/10')
+                                : (isScrolled ? 'text-muted-foreground hover:text-primary hover:bg-primary/5' : 'text-white/80 hover:text-white hover:bg-white/10')"
                         >
                             {{ item.name }}
                         </a>
@@ -160,7 +160,7 @@ onUnmounted(() => {
                     </div>
 
                     <!-- Mobile menu -->
-                    <Button variant="ghost" size="icon" class="lg:hidden h-9 w-9" @click="mobileMenuOpen = true">
+                    <Button variant="ghost" size="icon" class="lg:hidden h-9 w-9 transition-colors" :class="isScrolled ? 'text-foreground' : 'text-white'" @click="mobileMenuOpen = true">
                         <Menu class="h-5 w-5" />
                     </Button>
                 </div>
