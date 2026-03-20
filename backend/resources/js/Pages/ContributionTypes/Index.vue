@@ -193,152 +193,142 @@ const executeDelete = () => {
             </div>
         </template>
 
-        <div class="py-4 sm:py-6">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
+        <div class="py-3 sm:py-5">
+            <div class="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 space-y-4">
 
-                <!-- Stats Cards -->
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                    <div class="bg-card border rounded-xl p-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                                <Settings2 class="w-4.5 h-4.5 text-primary" />
-                            </div>
-                            <div class="min-w-0">
-                                <p class="text-xs text-muted-foreground font-medium">Total Jenis</p>
-                                <p class="text-lg font-bold text-foreground tabular-nums">{{ stats.total }}</p>
-                            </div>
+                <!-- Stats row — slim horizontal -->
+                <div class="grid grid-cols-4 gap-2 sm:gap-3">
+                    <div class="bg-card border rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 flex items-center gap-2.5">
+                        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                            <Settings2 class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-[10px] sm:text-xs text-muted-foreground leading-tight">Total</p>
+                            <p class="text-base sm:text-lg font-bold text-foreground tabular-nums leading-tight">{{ stats.total }}</p>
                         </div>
                     </div>
-                    <div class="bg-card border rounded-xl p-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
-                                <CircleDot class="w-4.5 h-4.5 text-green-600 dark:text-green-400" />
-                            </div>
-                            <div class="min-w-0">
-                                <p class="text-xs text-muted-foreground font-medium">Aktif</p>
-                                <p class="text-lg font-bold text-foreground tabular-nums">{{ stats.active }}</p>
-                            </div>
+                    <div class="bg-card border rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 flex items-center gap-2.5">
+                        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
+                            <CircleDot class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-600 dark:text-green-400" />
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-[10px] sm:text-xs text-muted-foreground leading-tight">Aktif</p>
+                            <p class="text-base sm:text-lg font-bold text-green-600 dark:text-green-400 tabular-nums leading-tight">{{ stats.active }}</p>
                         </div>
                     </div>
-                    <div class="bg-card border rounded-xl p-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
-                                <Users class="w-4.5 h-4.5 text-blue-600 dark:text-blue-400" />
-                            </div>
-                            <div class="min-w-0">
-                                <p class="text-xs text-muted-foreground font-medium">Pembayaran</p>
-                                <p class="text-lg font-bold text-foreground tabular-nums">{{ stats.totalPayments.toLocaleString('id-ID') }}</p>
-                            </div>
+                    <div class="bg-card border rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 flex items-center gap-2.5">
+                        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
+                            <Users class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-[10px] sm:text-xs text-muted-foreground leading-tight">Trx</p>
+                            <p class="text-base sm:text-lg font-bold text-foreground tabular-nums leading-tight">{{ stats.totalPayments.toLocaleString('id-ID') }}</p>
                         </div>
                     </div>
-                    <div class="bg-card border rounded-xl p-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
-                                <TrendingUp class="w-4.5 h-4.5 text-amber-600 dark:text-amber-400" />
-                            </div>
-                            <div class="min-w-0">
-                                <p class="text-xs text-muted-foreground font-medium">Terkumpul</p>
-                                <p class="text-lg font-bold text-foreground tabular-nums truncate">{{ formatCurrency(stats.totalCollected) }}</p>
-                            </div>
+                    <div class="bg-card border rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 flex items-center gap-2.5 col-span-1">
+                        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+                            <TrendingUp class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600 dark:text-amber-400" />
+                        </div>
+                        <div class="min-w-0 overflow-hidden">
+                            <p class="text-[10px] sm:text-xs text-muted-foreground leading-tight">Terkumpul</p>
+                            <p class="text-base sm:text-lg font-bold text-foreground tabular-nums leading-tight truncate">{{ formatCurrency(stats.totalCollected) }}</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Search -->
-                <div class="relative">
-                    <Search class="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                    <Input
-                        v-model="searchQuery"
-                        placeholder="Cari jenis iuran..."
-                        class="pl-10 h-10 bg-card border"
-                    />
+                <!-- Search + count row -->
+                <div class="flex items-center gap-2">
+                    <div class="relative flex-1">
+                        <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                        <Input
+                            v-model="searchQuery"
+                            placeholder="Cari jenis iuran..."
+                            class="pl-9 h-9 text-sm bg-card border"
+                        />
+                    </div>
+                    <span class="text-xs text-muted-foreground shrink-0 tabular-nums">{{ filteredTypes.length }} jenis</span>
                 </div>
 
                 <!-- Type Cards Grid -->
-                <div v-if="filteredTypes.length" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div v-if="filteredTypes.length" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                     <div
                         v-for="t in filteredTypes"
                         :key="t.id"
-                        class="bg-card border rounded-xl overflow-hidden transition-shadow hover:shadow-md"
+                        class="bg-card border rounded-xl overflow-hidden hover:shadow-md transition-all duration-200 flex flex-col"
+                        :class="!t.is_active ? 'opacity-70' : ''"
                     >
-                        <!-- Card Header -->
-                        <div class="px-5 pt-5 pb-4">
-                            <div class="flex items-start justify-between gap-3">
-                                <div class="flex items-start gap-3 min-w-0">
-                                    <div
-                                        class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                                        :class="t.is_active ? 'bg-primary/10' : 'bg-muted'"
-                                    >
-                                        <component
-                                            :is="periodIcons[t.period] || CalendarClock"
-                                            class="w-5 h-5"
-                                            :class="t.is_active ? 'text-primary' : 'text-muted-foreground'"
-                                        />
-                                    </div>
-                                    <div class="min-w-0">
-                                        <h3 class="text-sm font-semibold text-foreground leading-tight truncate">{{ t.name }}</h3>
-                                        <div class="flex items-center gap-1.5 mt-1">
-                                            <Badge
-                                                variant="secondary"
-                                                class="text-xs border-0 px-1.5 py-0"
-                                                :class="t.is_active
-                                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                                    : 'bg-muted text-muted-foreground'"
-                                            >
-                                                {{ t.is_active ? 'Aktif' : 'Nonaktif' }}
-                                            </Badge>
-                                            <Badge variant="outline" class="text-xs px-1.5 py-0">
-                                                {{ periods[t.period] || t.period }}
-                                            </Badge>
-                                        </div>
+                        <!-- Accent bar + header -->
+                        <div
+                            class="h-1 w-full"
+                            :class="t.is_active ? 'bg-gradient-to-r from-primary to-primary/50' : 'bg-muted'"
+                        />
+                        <div class="px-4 pt-3 pb-2 flex items-start justify-between gap-3">
+                            <div class="flex items-start gap-3 min-w-0">
+                                <div
+                                    class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
+                                    :class="t.is_active ? 'bg-primary/10' : 'bg-muted'"
+                                >
+                                    <component
+                                        :is="periodIcons[t.period] || CalendarClock"
+                                        class="w-4.5 h-4.5"
+                                        :class="t.is_active ? 'text-primary' : 'text-muted-foreground'"
+                                    />
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <h3 class="text-sm font-semibold text-foreground leading-tight truncate">{{ t.name }}</h3>
+                                    <div class="flex items-center gap-1 mt-0.5">
+                                        <span
+                                            class="inline-flex items-center px-1.5 rounded-md text-[10px] font-semibold leading-5"
+                                            :class="t.is_active
+                                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                                : 'bg-muted text-muted-foreground'"
+                                        >{{ t.is_active ? 'Aktif' : 'Nonaktif' }}</span>
+                                        <span class="inline-flex items-center px-1.5 rounded-md text-[10px] font-medium leading-5 bg-primary/8 text-primary border border-primary/10">
+                                            {{ periods[t.period] || t.period }}
+                                        </span>
                                     </div>
                                 </div>
-
-                                <!-- Actions Dropdown -->
-                                <DropdownMenu v-if="hasPermission('manage_contribution_types')">
-                                    <DropdownMenuTrigger as-child>
-                                        <Button variant="ghost" size="icon" class="h-8 w-8 shrink-0 -mt-1 -mr-2">
-                                            <MoreVertical class="w-4 h-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" class="w-40">
-                                        <DropdownMenuItem @click="openEdit(t)">
-                                            <Pencil class="w-4 h-4 mr-2" />
-                                            Edit
-                                        </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem class="text-destructive" @click="confirmDelete(t)">
-                                            <Trash2 class="w-4 h-4 mr-2" />
-                                            Hapus
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
                             </div>
 
-                            <p v-if="t.description" class="text-xs text-muted-foreground mt-2 line-clamp-2">{{ t.description }}</p>
+                            <!-- Actions Dropdown -->
+                            <DropdownMenu v-if="hasPermission('manage_contribution_types')">
+                                <DropdownMenuTrigger as-child>
+                                    <Button variant="ghost" size="icon" class="h-7 w-7 shrink-0 -mt-0.5 -mr-1">
+                                        <MoreVertical class="w-4 h-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" class="w-36">
+                                    <DropdownMenuItem @click="openEdit(t)">
+                                        <Pencil class="w-3.5 h-3.5 mr-2" />
+                                        Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem class="text-destructive" @click="confirmDelete(t)">
+                                        <Trash2 class="w-3.5 h-3.5 mr-2" />
+                                        Hapus
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
 
-                        <!-- Amount -->
-                        <div class="px-5 pb-4">
-                            <p class="text-xl font-bold text-primary tabular-nums">{{ formatCurrency(t.amount) }}</p>
-                            <p v-if="getScheduleLabel(t)" class="text-xs text-muted-foreground mt-0.5">{{ getScheduleLabel(t) }}</p>
+                        <!-- Nominal -->
+                        <div class="px-4 pb-3">
+                            <p class="text-xl font-extrabold text-primary tabular-nums tracking-tight">{{ formatCurrency(t.amount) }}</p>
+                            <p v-if="getScheduleLabel(t)" class="text-[11px] text-muted-foreground mt-0.5">{{ getScheduleLabel(t) }}</p>
+                            <p v-if="t.description" class="text-[11px] text-muted-foreground mt-1 line-clamp-1">{{ t.description }}</p>
                         </div>
 
-                        <!-- Card Footer -->
-                        <div class="px-5 py-3 bg-muted/30 border-t flex items-center justify-between gap-3">
+                        <!-- Footer -->
+                        <div class="px-4 py-2 mt-auto bg-muted/20 border-t flex items-center justify-between gap-2">
                             <div class="flex items-center gap-1.5 min-w-0">
-                                <Wallet class="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                                <span v-if="t.wallet" class="text-xs font-medium text-foreground truncate">{{ t.wallet.name }}</span>
-                                <span v-else class="text-xs text-destructive italic">Belum diatur</span>
+                                <Wallet class="w-3 h-3 text-muted-foreground shrink-0" />
+                                <span v-if="t.wallet" class="text-[11px] font-medium text-foreground truncate">{{ t.wallet.name }}</span>
+                                <span v-else class="text-[11px] text-destructive italic">Belum diatur</span>
                             </div>
-                            <div class="flex items-center gap-3 shrink-0 text-xs text-muted-foreground">
-                                <span class="tabular-nums" :title="`${t.contributions_count || 0} pembayaran`">
-                                    {{ t.contributions_count || 0 }} trx
-                                </span>
-                                <span v-if="t.start_date || t.end_date" class="hidden sm:inline">
-                                    {{ t.start_date ? formatDate(t.start_date) : '...' }}
-                                    –
-                                    {{ t.end_date ? formatDate(t.end_date) : '...' }}
+                            <div class="flex items-center gap-2 shrink-0 text-[11px] text-muted-foreground">
+                                <span class="tabular-nums font-medium">{{ t.contributions_count || 0 }} trx</span>
+                                <span v-if="t.contributions_sum_amount" class="text-green-600 dark:text-green-400 font-semibold tabular-nums">
+                                    {{ formatCurrency(t.contributions_sum_amount) }}
                                 </span>
                             </div>
                         </div>
@@ -346,9 +336,9 @@ const executeDelete = () => {
                 </div>
 
                 <!-- Empty State -->
-                <div v-else class="bg-card border rounded-xl py-16 text-center">
-                    <div class="w-14 h-14 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                        <Settings2 class="w-7 h-7 text-muted-foreground" />
+                <div v-else class="bg-card border rounded-xl py-14 text-center">
+                    <div class="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+                        <Settings2 class="w-6 h-6 text-muted-foreground" />
                     </div>
                     <p class="text-sm font-semibold text-foreground mb-1">
                         {{ searchQuery ? 'Tidak ada hasil' : 'Belum ada jenis iuran' }}

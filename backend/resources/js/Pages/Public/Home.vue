@@ -124,19 +124,39 @@ const donationProgress = (donation) => {
                     <Transition appear enter-active-class="transition duration-1000 delay-100" enter-from-class="opacity-0 scale-75" enter-to-class="opacity-100 scale-100">
                         <div class="flex justify-center mb-6">
                             <div class="logo-container relative">
-                                <!-- Rotating gradient ring -->
-                                <div class="logo-ring-outer"></div>
-                                <div class="logo-ring-inner"></div>
+                                <!-- Circuit line SVG -->
+                                <svg class="circuit-svg" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Top traces -->
+                                    <path class="circuit-path circuit-delay-0" d="M100 72 L100 52 L120 52 L120 38" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <circle class="circuit-dot circuit-delay-0" cx="120" cy="36" r="2.5" fill="rgba(255,255,255,0.9)"/>
 
-                                <!-- Glow backdrop -->
-                                <div class="absolute inset-0 rounded-full bg-white/10 blur-xl scale-125 animate-pulse"></div>
+                                    <path class="circuit-path circuit-delay-1" d="M100 72 L100 52 L80 52 L80 34" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <circle class="circuit-dot circuit-delay-1" cx="80" cy="32" r="2" fill="rgba(255,255,255,0.75)"/>
 
-                                <!-- Orbit dots -->
-                                <div class="logo-orbit">
-                                    <span class="logo-dot logo-dot-1"></span>
-                                    <span class="logo-dot logo-dot-2"></span>
-                                    <span class="logo-dot logo-dot-3"></span>
-                                </div>
+                                    <!-- Right traces -->
+                                    <path class="circuit-path circuit-delay-2" d="M128 100 L148 100 L148 80 L162 80" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <circle class="circuit-dot circuit-delay-2" cx="164" cy="80" r="2.5" fill="rgba(255,255,255,0.9)"/>
+
+                                    <path class="circuit-path circuit-delay-3" d="M128 100 L148 100 L148 118 L166 118" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <circle class="circuit-dot circuit-delay-3" cx="168" cy="118" r="2" fill="rgba(255,255,255,0.65)"/>
+
+                                    <!-- Bottom traces -->
+                                    <path class="circuit-path circuit-delay-4" d="M100 128 L100 148 L118 148 L118 162" stroke="rgba(255,255,255,0.55)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <circle class="circuit-dot circuit-delay-4" cx="118" cy="164" r="2.5" fill="rgba(255,255,255,0.85)"/>
+
+                                    <path class="circuit-path circuit-delay-5" d="M100 128 L100 148 L82 148 L82 166" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <circle class="circuit-dot circuit-delay-5" cx="82" cy="168" r="2" fill="rgba(255,255,255,0.7)"/>
+
+                                    <!-- Left traces -->
+                                    <path class="circuit-path circuit-delay-6" d="M72 100 L52 100 L52 82 L36 82" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <circle class="circuit-dot circuit-delay-6" cx="34" cy="82" r="2.5" fill="rgba(255,255,255,0.9)"/>
+
+                                    <path class="circuit-path circuit-delay-7" d="M72 100 L52 100 L52 120 L34 120" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <circle class="circuit-dot circuit-delay-7" cx="32" cy="120" r="2" fill="rgba(255,255,255,0.65)"/>
+                                </svg>
+
+                                <!-- Soft glow -->
+                                <div class="logo-glow"></div>
 
                                 <!-- Logo itself -->
                                 <div class="logo-inner logo-float">
@@ -695,106 +715,103 @@ const donationProgress = (donation) => {
     animation: shimmer 2s ease-in-out infinite;
 }
 
-/* ========== Logo Hero Animations ========== */
+/* ========== Logo Hero Animations — Circuit Effect ========== */
 .logo-container {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 140px;
-    height: 140px;
+    width: 200px;
+    height: 200px;
 }
-
 @media (min-width: 640px) {
-    .logo-container { width: 168px; height: 168px; }
+    .logo-container { width: 200px; height: 200px; }
 }
 
-/* Rotating outer ring */
-.logo-ring-outer {
+/* Circuit SVG overlay */
+.circuit-svg {
     position: absolute;
-    inset: -4px;
-    border-radius: 9999px;
-    background: conic-gradient(from 0deg, transparent 30%, rgba(255,255,255,0.7) 50%, transparent 70%);
-    animation: logo-ring-spin 3s linear infinite;
-    filter: blur(1px);
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
 }
 
-/* Rotating inner ring (counter) */
-.logo-ring-inner {
-    position: absolute;
-    inset: 4px;
-    border-radius: 9999px;
-    background: conic-gradient(from 180deg, transparent 40%, rgba(255,255,255,0.25) 55%, transparent 70%);
-    animation: logo-ring-spin 5s linear infinite reverse;
+/* Animate each path with stroke-dashoffset flowing effect */
+.circuit-path {
+    stroke-dasharray: 80;
+    stroke-dashoffset: 80;
+    animation: circuit-flow 2.8s ease-in-out infinite;
+}
+.circuit-dot {
+    opacity: 0;
+    animation: circuit-dot-blink 2.8s ease-in-out infinite;
 }
 
-@keyframes logo-ring-spin {
-    to { transform: rotate(360deg); }
+.circuit-delay-0 { animation-delay: 0s; }
+.circuit-delay-1 { animation-delay: 0.35s; }
+.circuit-delay-2 { animation-delay: 0.7s; }
+.circuit-delay-3 { animation-delay: 1.05s; }
+.circuit-delay-4 { animation-delay: 1.4s; }
+.circuit-delay-5 { animation-delay: 1.75s; }
+.circuit-delay-6 { animation-delay: 2.1s; }
+.circuit-delay-7 { animation-delay: 2.45s; }
+
+@keyframes circuit-flow {
+    0%   { stroke-dashoffset: 80; opacity: 0; }
+    10%  { opacity: 1; }
+    60%  { stroke-dashoffset: 0; opacity: 1; }
+    80%  { stroke-dashoffset: 0; opacity: 0.5; }
+    100% { stroke-dashoffset: 0; opacity: 0; }
 }
 
-/* Logo inner circle (clipping area) */
+@keyframes circuit-dot-blink {
+    0%   { opacity: 0; }
+    55%  { opacity: 0; }
+    65%  { opacity: 1; }
+    85%  { opacity: 0.7; }
+    100% { opacity: 0; }
+}
+
+/* Logo inner circle */
 .logo-inner {
     position: relative;
     z-index: 10;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 110px;
-    height: 110px;
+    width: 118px;
+    height: 118px;
     border-radius: 9999px;
-    background: rgba(255,255,255,0.08);
-    backdrop-filter: blur(8px);
+    background: rgba(255,255,255,0.07);
     border: 1px solid rgba(255,255,255,0.2);
-    box-shadow: 0 0 30px rgba(255,255,255,0.15), inset 0 1px 1px rgba(255,255,255,0.2);
+    box-shadow: 0 0 24px rgba(255,255,255,0.12);
+}
+@media (min-width: 640px) {
+    .logo-inner { width: 128px; height: 128px; }
 }
 
-@media (min-width: 640px) {
-    .logo-inner { width: 130px; height: 130px; }
+/* Soft glow */
+.logo-glow {
+    position: absolute;
+    inset: -8px;
+    border-radius: 9999px;
+    background: radial-gradient(circle, rgba(255,255,255,0.09) 0%, transparent 70%);
+    animation: logo-glow-pulse 3s ease-in-out infinite;
+    z-index: 4;
+}
+@keyframes logo-glow-pulse {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50%       { opacity: 1;   transform: scale(1.06); }
 }
 
 /* Float animation */
 .logo-float {
     animation: logo-float 4s ease-in-out infinite;
 }
-
 @keyframes logo-float {
     0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
-}
-
-/* Orbit dots */
-.logo-orbit {
-    position: absolute;
-    inset: 0;
-    animation: logo-ring-spin 8s linear infinite;
-}
-
-.logo-dot {
-    position: absolute;
-    border-radius: 9999px;
-    background: white;
-}
-
-.logo-dot-1 {
-    width: 7px; height: 7px;
-    top: 0; left: 50%;
-    margin-left: -3.5px;
-    opacity: 0.85;
-    box-shadow: 0 0 6px 2px rgba(255,255,255,0.6);
-}
-
-.logo-dot-2 {
-    width: 5px; height: 5px;
-    bottom: 6px; right: 10px;
-    opacity: 0.6;
-    box-shadow: 0 0 4px 1px rgba(255,255,255,0.4);
-}
-
-.logo-dot-3 {
-    width: 4px; height: 4px;
-    bottom: 10px; left: 8px;
-    opacity: 0.45;
-    box-shadow: 0 0 4px 1px rgba(255,255,255,0.3);
+    50%       { transform: translateY(-6px); }
 }
 /* ========== Scroll Indicator ========== */
 .scroll-mouse {

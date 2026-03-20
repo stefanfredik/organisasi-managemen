@@ -171,129 +171,167 @@ const executeDelete = () => {
             </div>
         </template>
 
-        <div class="py-4">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-4">
+        <div class="py-3 sm:py-5">
+            <div class="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 space-y-3">
 
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     <div
                         v-for="type in types"
                         :key="type.id"
-                        class="group relative bg-card rounded-xl border shadow-sm overflow-hidden"
-                        :class="{ 'opacity-50': !type.is_active }"
+                        class="group relative bg-card rounded-xl border overflow-hidden flex flex-col transition-all duration-200 hover:shadow-md"
+                        :class="{ 'opacity-60': !type.is_active }"
                     >
-                        <!-- Gradient accent top -->
-                        <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary to-primary/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <!-- Accent bar — always visible, primary if active, muted if not -->
+                        <div
+                            class="h-1 w-full shrink-0 transition-all duration-200"
+                            :class="type.is_active ? 'bg-gradient-to-r from-primary via-primary/80 to-primary/40' : 'bg-muted'"
+                        />
 
                         <!-- Dropdown menu (edit/hapus) -->
-                        <div v-if="hasPermission('manage_contribution_types')" class="absolute top-3 right-3 z-10">
+                        <div v-if="hasPermission('manage_contribution_types')" class="absolute top-2.5 right-2.5 z-10">
                             <DropdownMenu>
                                 <DropdownMenuTrigger as-child>
-                                    <Button variant="ghost" size="icon" class="h-7 w-7 bg-card/80 backdrop-blur-sm shadow-sm border" @click.prevent.stop>
-                                        <MoreVertical class="w-3.5 h-3.5" />
+                                    <Button variant="ghost" size="icon" class="h-6 w-6 bg-card/90 shadow-sm border" @click.prevent.stop>
+                                        <MoreVertical class="w-3 h-3" />
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" class="w-40">
+                                <DropdownMenuContent align="end" class="w-36">
                                     <DropdownMenuItem @click="openEdit(type)">
-                                        <Pencil class="w-4 h-4 mr-2" />
+                                        <Pencil class="w-3.5 h-3.5 mr-2" />
                                         Edit
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem class="text-destructive" @click="confirmDelete(type)">
-                                        <Trash2 class="w-4 h-4 mr-2" />
+                                        <Trash2 class="w-3.5 h-3.5 mr-2" />
                                         Hapus
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>
 
-                        <!-- Nonaktif badge -->
-                        <div v-if="!type.is_active" class="absolute top-3 left-3 z-10">
-                            <Badge variant="secondary" class="text-[10px] bg-muted text-muted-foreground">Nonaktif</Badge>
-                        </div>
-
                         <Link
                             :href="route('contributions.monitoring.dashboard', type.id)"
-                            class="block p-5 pb-3 hover:bg-muted/30 transition-colors"
+                            class="flex-1 hover:bg-muted/20 transition-colors"
                         >
-                            <!-- Header -->
-                            <div class="flex justify-between items-start mb-4">
-                                <div class="flex items-center gap-3 min-w-0">
-                                    <div class="w-10 h-10 flex items-center justify-center bg-primary/10 text-primary rounded-xl group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300 shrink-0">
-                                        <Coins class="w-5 h-5" />
-                                    </div>
-                                    <div class="min-w-0">
-                                        <h3 class="font-semibold text-foreground text-sm leading-tight group-hover:text-primary transition-colors truncate">
-                                            {{ type.name }}
-                                        </h3>
-                                        <Badge variant="secondary" class="mt-1 text-[10px] uppercase tracking-wider">
-                                            {{ type.period === 'once' ? 'Sekali Bayar' : type.period }}
-                                        </Badge>
+                            <!-- Mobile: horizontal layout -->
+                            <div class="flex items-center gap-3 p-3 sm:hidden">
+                                <div
+                                    class="w-10 h-10 flex items-center justify-center rounded-xl shrink-0 transition-colors duration-200"
+                                    :class="type.is_active ? 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground' : 'bg-muted text-muted-foreground'"
+                                >
+                                    <Coins class="w-5 h-5" />
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="font-semibold text-foreground text-sm leading-tight truncate group-hover:text-primary transition-colors">{{ type.name }}</h3>
+                                    <div class="flex items-center gap-1 mt-0.5">
+                                        <span class="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px rounded"
+                                            :class="type.is_active ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-muted text-muted-foreground'"
+                                        >{{ type.is_active ? 'Aktif' : 'Nonaktif' }}</span>
+                                        <span class="text-[10px] text-muted-foreground uppercase">{{ type.period === 'once' ? 'Sekali' : type.period }}</span>
                                     </div>
                                 </div>
-                                <ChevronRight class="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-300 shrink-0" />
+                                <div class="text-right shrink-0">
+                                    <p class="text-sm font-extrabold text-foreground tabular-nums leading-tight">
+                                        {{ formatCurrency(type.collected_amount || 0).replace('Rp', '').trim() }}
+                                    </p>
+                                    <span
+                                        class="text-[11px] font-bold tabular-nums"
+                                        :class="((type.current_period_paid || 0) / (type.target_count || 1)) >= 1 ? 'text-green-600' : 'text-primary'"
+                                    >{{ ((type.current_period_paid || 0) / (type.target_count || 1) * 100).toFixed(0) }}%</span>
+                                </div>
                             </div>
-
-                            <!-- Collected amount -->
-                            <div class="bg-muted/50 rounded-lg p-3.5 mb-3">
-                                <div class="flex justify-between items-center mb-1.5">
-                                    <p class="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Terkumpul</p>
-                                    <span class="text-xs font-bold text-primary">
-                                        {{ ((type.current_period_paid || 0) / (type.target_count || 1) * 100).toFixed(0) }}%
-                                    </span>
-                                </div>
-                                <p class="text-xl font-extrabold text-foreground tracking-tight mb-2.5">
-                                    {{ formatCurrency(type.collected_amount || 0).replace('Rp', '').trim() }}
-                                    <span class="text-xs font-semibold text-muted-foreground">IDR</span>
-                                </p>
+                            <!-- Mobile: progress bar -->
+                            <div class="px-3 pb-2 sm:hidden">
                                 <div class="w-full bg-muted rounded-full h-1.5 overflow-hidden">
                                     <div
-                                        class="bg-gradient-to-r from-primary to-primary/70 h-1.5 rounded-full transition-all duration-500"
+                                        class="h-1.5 rounded-full transition-all duration-500"
+                                        :class="((type.current_period_paid || 0) / (type.target_count || 1)) >= 1 ? 'bg-green-500' : 'bg-gradient-to-r from-primary to-primary/70'"
                                         :style="{ width: `${Math.min(((type.current_period_paid || 0) / (type.target_count || 1) * 100), 100)}%` }"
                                     />
                                 </div>
                             </div>
+
+                            <!-- Desktop: vertical layout -->
+                            <div class="hidden sm:block p-4">
+                                <!-- Header -->
+                                <div class="flex items-start gap-2.5 mb-3 pr-5">
+                                    <div
+                                        class="w-9 h-9 flex items-center justify-center rounded-lg shrink-0 transition-colors duration-200"
+                                        :class="type.is_active ? 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground' : 'bg-muted text-muted-foreground'"
+                                    >
+                                        <Coins class="w-4 h-4" />
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <h3 class="font-semibold text-foreground text-sm leading-tight truncate group-hover:text-primary transition-colors">{{ type.name }}</h3>
+                                        <div class="flex items-center gap-1 mt-0.5">
+                                            <span class="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-px rounded"
+                                                :class="type.is_active ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-muted text-muted-foreground'"
+                                            >{{ type.is_active ? 'Aktif' : 'Nonaktif' }}</span>
+                                            <span class="text-[10px] text-muted-foreground uppercase">{{ type.period === 'once' ? 'Sekali' : type.period }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Nominal -->
+                                <div class="mb-2.5">
+                                    <div class="flex items-end justify-between gap-1 mb-1">
+                                        <p class="text-xl font-extrabold text-foreground tabular-nums leading-tight tracking-tight truncate">
+                                            {{ formatCurrency(type.collected_amount || 0).replace('Rp', '').trim() }}
+                                            <span class="text-[10px] font-medium text-muted-foreground ml-0.5">IDR</span>
+                                        </p>
+                                        <span
+                                            class="text-xs font-bold shrink-0 tabular-nums"
+                                            :class="((type.current_period_paid || 0) / (type.target_count || 1)) >= 1 ? 'text-green-600' : 'text-primary'"
+                                        >{{ ((type.current_period_paid || 0) / (type.target_count || 1) * 100).toFixed(0) }}%</span>
+                                    </div>
+                                    <div class="w-full bg-muted rounded-full h-2 overflow-hidden">
+                                        <div
+                                            class="h-2 rounded-full transition-all duration-500"
+                                            :class="((type.current_period_paid || 0) / (type.target_count || 1)) >= 1 ? 'bg-green-500' : 'bg-gradient-to-r from-primary to-primary/70'"
+                                            :style="{ width: `${Math.min(((type.current_period_paid || 0) / (type.target_count || 1) * 100), 100)}%` }"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
                         </Link>
 
-                        <!-- Stats list (compact vertical with percentage bars) -->
-                        <div class="px-5 pb-4 pt-0 space-y-0.5">
-                            <button @click.stop="fetchMembers(type.id, type.name, 'paid')" class="w-full flex items-center gap-2 py-1 rounded hover:bg-green-500/5 transition-colors cursor-pointer group/item">
-                                <span class="w-1 h-3.5 rounded-full bg-green-500 shrink-0" />
-                                <span class="text-[11px] text-muted-foreground group-hover/item:text-green-600 transition-colors">Lunas</span>
-                                <div class="flex-1 bg-muted rounded-full h-1 overflow-hidden mx-1">
-                                    <div class="bg-green-500 h-1 rounded-full transition-all duration-500" :style="{ width: `${Math.min(((type.lunas_count || 0) / (type.target_count || 1)) * 100, 100)}%` }" />
-                                </div>
-                                <span class="text-[11px] font-bold text-green-600 tabular-nums shrink-0">{{ type.lunas_count || 0 }}</span>
+                        <!-- Stats row: Lunas / Belum / Tunggak / Pending -->
+                        <div class="px-3 sm:px-4 pb-3 grid grid-cols-4 gap-1 border-t pt-2">
+                            <button
+                                @click.stop="fetchMembers(type.id, type.name, 'paid')"
+                                class="flex flex-col items-center gap-0.5 py-1 rounded hover:bg-green-500/10 transition-colors"
+                            >
+                                <span class="text-sm sm:text-base font-extrabold text-green-600 tabular-nums leading-none">{{ type.lunas_count || 0 }}</span>
+                                <span class="text-[9px] text-green-600/70 font-medium leading-tight">Lunas</span>
                             </button>
-                            <button @click.stop="fetchMembers(type.id, type.name, 'unpaid')" class="w-full flex items-center gap-2 py-1 rounded hover:bg-amber-500/5 transition-colors cursor-pointer group/item">
-                                <span class="w-1 h-3.5 rounded-full bg-amber-500 shrink-0" />
-                                <span class="text-[11px] text-muted-foreground group-hover/item:text-amber-600 transition-colors">Belum</span>
-                                <div class="flex-1 bg-muted rounded-full h-1 overflow-hidden mx-1">
-                                    <div class="bg-amber-500 h-1 rounded-full transition-all duration-500" :style="{ width: `${Math.min(((type.belum_count || 0) / (type.target_count || 1)) * 100, 100)}%` }" />
-                                </div>
-                                <span class="text-[11px] font-bold text-amber-600 tabular-nums shrink-0">{{ type.belum_count || 0 }}</span>
+                            <button
+                                @click.stop="fetchMembers(type.id, type.name, 'unpaid')"
+                                class="flex flex-col items-center gap-0.5 py-1 rounded hover:bg-amber-500/10 transition-colors"
+                            >
+                                <span class="text-sm sm:text-base font-extrabold text-amber-600 tabular-nums leading-none">{{ type.belum_count || 0 }}</span>
+                                <span class="text-[9px] text-amber-600/70 font-medium leading-tight">Belum</span>
                             </button>
-                            <button @click.stop="fetchMembers(type.id, type.name, 'arrears')" class="w-full flex items-center gap-2 py-1 rounded hover:bg-red-500/5 transition-colors cursor-pointer group/item">
-                                <span class="w-1 h-3.5 rounded-full bg-red-500 shrink-0" />
-                                <span class="text-[11px] text-muted-foreground group-hover/item:text-red-600 transition-colors">Tunggak</span>
-                                <div class="flex-1 bg-muted rounded-full h-1 overflow-hidden mx-1">
-                                    <div class="bg-red-500 h-1 rounded-full transition-all duration-500" :style="{ width: `${Math.min(((type.tunggak_count || 0) / (type.target_count || 1)) * 100, 100)}%` }" />
-                                </div>
-                                <span class="text-[11px] font-bold text-red-600 tabular-nums shrink-0">{{ type.tunggak_count || 0 }}</span>
+                            <button
+                                @click.stop="fetchMembers(type.id, type.name, 'arrears')"
+                                class="flex flex-col items-center gap-0.5 py-1 rounded hover:bg-red-500/10 transition-colors"
+                            >
+                                <span class="text-sm sm:text-base font-extrabold text-red-600 tabular-nums leading-none">{{ type.tunggak_count || 0 }}</span>
+                                <span class="text-[9px] text-red-600/70 font-medium leading-tight">Tunggak</span>
                             </button>
-                            <div class="flex items-center gap-2 py-1">
-                                <span class="w-1 h-3.5 rounded-full shrink-0" :class="(type.pending_count || 0) > 0 ? 'bg-blue-500' : 'bg-muted-foreground/30'" />
-                                <span class="text-[11px] text-muted-foreground">Pending</span>
-                                <div class="flex-1 bg-muted rounded-full h-1 overflow-hidden mx-1">
-                                    <div class="h-1 rounded-full transition-all duration-500" :class="(type.pending_count || 0) > 0 ? 'bg-blue-500' : ''" :style="{ width: `${Math.min(((type.pending_count || 0) / (type.target_count || 1)) * 100, 100)}%` }" />
-                                </div>
-                                <span class="text-[11px] font-bold tabular-nums shrink-0" :class="(type.pending_count || 0) > 0 ? 'text-blue-600' : 'text-muted-foreground'">{{ type.pending_count || 0 }}</span>
+                            <div class="flex flex-col items-center gap-0.5 py-1">
+                                <span
+                                    class="text-sm sm:text-base font-extrabold tabular-nums leading-none"
+                                    :class="(type.pending_count || 0) > 0 ? 'text-blue-600' : 'text-muted-foreground'"
+                                >{{ type.pending_count || 0 }}</span>
+                                <span class="text-[9px] text-muted-foreground font-medium leading-tight">Pending</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div v-if="types.length === 0" class="text-center py-12">
-                    <Coins class="w-10 h-10 text-muted-foreground/50 mx-auto mb-3" />
+                <div v-if="types.length === 0" class="bg-card border rounded-xl text-center py-12">
+                    <div class="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+                        <Coins class="w-6 h-6 text-muted-foreground/50" />
+                    </div>
                     <p class="text-sm text-muted-foreground mb-4">Belum ada jenis iuran.</p>
                     <Button v-if="hasPermission('manage_contribution_types')" size="sm" @click="openCreate">
                         <Plus class="w-4 h-4 mr-1" />

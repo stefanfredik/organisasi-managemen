@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import DataTable from "@/Components/DataTable.vue";
 import debounce from "lodash/debounce";
 import {
-    Plus, Search, SlidersHorizontal, X, MoreVertical, CheckCircle, Clock, XCircle, CreditCard, Banknote, Eye, Receipt, ArrowLeft, LayoutDashboard, Grid3x3, Coins } from 'lucide-vue-next';
+    Plus, Search, SlidersHorizontal, X, MoreVertical, CheckCircle, Clock, XCircle, CreditCard, Banknote, Eye, Receipt, ArrowLeft, LayoutDashboard, Grid3x3, Coins, ChevronRight } from 'lucide-vue-next';
 import {
     Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from '@/components/ui/sheet';
@@ -355,44 +355,42 @@ const closeDetailSheet = () => { showDetailSheet.value = false; detailRow.value 
                 />
 
                 <!-- Transaction History -->
-                <div class="bg-card rounded-xl border overflow-hidden">
+                <div class="bg-card rounded-xl border overflow-hidden shadow-sm">
                     <!-- Header + Search + Filter -->
-                    <div class="px-3 sm:px-5 py-2.5 sm:py-4 space-y-2 sm:space-y-3">
-                        <!-- Title row -->
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                                    <Receipt class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                    <div class="px-3 sm:px-5 py-3 space-y-2.5">
+                        <!-- Title + filter row -->
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 border border-primary/10">
+                                    <Receipt class="w-3.5 h-3.5 text-primary" />
                                 </div>
-                                <div>
-                                    <h3 class="text-xs sm:text-sm font-semibold text-foreground">Riwayat Pembayaran</h3>
-                                    <p class="text-xs text-muted-foreground hidden sm:block">Lacak transaksi dan status verifikasi</p>
+                                <div class="min-w-0">
+                                    <h3 class="text-xs sm:text-sm font-semibold text-foreground leading-tight">Riwayat Pembayaran</h3>
+                                    <p class="text-[10px] text-muted-foreground hidden sm:block leading-tight">{{ contributions.total || 0 }} transaksi ditemukan</p>
                                 </div>
                             </div>
                             <Button
                                 variant="outline"
                                 size="sm"
-                                class="h-7 sm:h-9"
+                                class="h-7 sm:h-8 gap-1.5 shrink-0"
                                 @click="showFiltersSheet = true"
                             >
-                                <SlidersHorizontal class="w-3.5 h-3.5 sm:w-4 sm:h-4 sm:mr-1.5" />
-                                <span class="hidden sm:inline">Filter</span>
-                                <Badge
+                                <SlidersHorizontal class="w-3.5 h-3.5" />
+                                <span class="hidden sm:inline text-xs">Filter</span>
+                                <span
                                     v-if="activeFilterCount"
-                                    class="ml-1 sm:ml-1.5 h-4 sm:h-5 min-w-4 sm:min-w-5 px-1 flex items-center justify-center text-[10px] sm:text-xs rounded-full"
-                                >
-                                    {{ activeFilterCount }}
-                                </Badge>
+                                    class="h-4 min-w-4 px-1 bg-primary text-primary-foreground rounded-full text-[10px] font-bold flex items-center justify-center"
+                                >{{ activeFilterCount }}</span>
                             </Button>
                         </div>
 
                         <!-- Search bar -->
                         <div class="relative">
-                            <Search class="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground pointer-events-none" />
+                            <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                             <Input
                                 v-model="contributionsFilters.search"
                                 placeholder="Cari nama anggota..."
-                                class="pl-8 sm:pl-9 h-7 sm:h-9 text-xs sm:text-sm bg-muted/40 border-transparent focus:bg-card focus:border-input transition-colors"
+                                class="pl-8 h-8 text-xs bg-muted/40 border-transparent focus:bg-card focus:border-input transition-colors"
                             />
                         </div>
 
@@ -402,15 +400,15 @@ const closeDetailSheet = () => { showDetailSheet.value = false; detailRow.value 
                                 v-for="f in activeFilters"
                                 :key="f.key"
                                 type="button"
-                                class="group inline-flex items-center gap-0.5 rounded-full bg-primary/10 text-primary pl-2 pr-1 py-px text-[10px] sm:text-xs font-medium hover:bg-primary/15 transition-colors"
+                                class="group inline-flex items-center gap-0.5 rounded-full bg-primary/10 text-primary pl-2 pr-1 py-px text-[10px] font-medium hover:bg-primary/15 transition-colors"
                                 @click="clearFilter(f.key)"
                             >
                                 <span>{{ f.label }}</span>
-                                <X class="w-2.5 h-2.5 sm:w-3 sm:h-3 opacity-50 group-hover:opacity-100" />
+                                <X class="w-2.5 h-2.5 opacity-50 group-hover:opacity-100" />
                             </button>
                             <button
                                 type="button"
-                                class="text-[10px] sm:text-xs text-muted-foreground hover:text-foreground font-medium transition-colors ml-1"
+                                class="text-[10px] text-muted-foreground hover:text-foreground font-medium transition-colors ml-1"
                                 @click="resetFilters"
                             >
                                 Hapus semua
@@ -420,53 +418,57 @@ const closeDetailSheet = () => { showDetailSheet.value = false; detailRow.value 
 
                     <div class="border-t" />
 
-                    <!-- Mobile: Compact List -->
+                    <!-- Mobile: Compact Card List -->
                     <div class="md:hidden divide-y">
                         <div
                             v-for="row in contributions.data"
                             :key="'m-' + row.id"
-                            class="px-3 py-2 flex items-center gap-2.5"
+                            class="px-3 py-2.5 flex items-center gap-3 active:bg-muted/40 transition-colors cursor-pointer"
                             @click="openDetailSheet(row)"
                         >
-                            <!-- Status dot -->
+                            <!-- Avatar berwarna sesuai status -->
                             <div
-                                class="w-1.5 h-1.5 rounded-full shrink-0"
-                                :class="row.status === 'paid' ? 'bg-green-500' : row.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'"
-                            />
+                                class="h-9 w-9 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
+                                :class="row.status === 'paid' ? 'bg-green-500' : row.status === 'pending' ? 'bg-amber-500' : 'bg-red-500'"
+                            >
+                                {{ (row.member?.full_name || '?').charAt(0).toUpperCase() }}
+                            </div>
                             <!-- Info -->
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center justify-between gap-1">
-                                    <p class="text-xs font-semibold text-foreground truncate">
-                                        {{ row.member?.full_name || '-' }}
-                                    </p>
-                                    <span class="text-xs font-bold text-primary tabular-nums shrink-0">{{ formatCurrency(row.amount) }}</span>
+                                    <p class="text-xs font-semibold text-foreground truncate">{{ row.member?.full_name || '-' }}</p>
+                                    <span
+                                        class="text-xs font-bold tabular-nums shrink-0"
+                                        :class="row.status === 'paid' ? 'text-green-600 dark:text-green-400' : row.status === 'pending' ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'"
+                                    >{{ formatCurrency(row.amount) }}</span>
                                 </div>
-                                <div class="flex items-center gap-1.5 text-[10px] text-muted-foreground mt-0.5">
-                                    <span>{{ row.type?.name || '-' }}</span>
-                                    <span class="text-border">·</span>
-                                    <span>{{ formatDate(row.payment_date) }}</span>
-                                    <span class="text-border">·</span>
-                                    <span>{{ row.payment_period || '-' }}</span>
+                                <div class="flex items-center gap-1.5 mt-0.5">
+                                    <span
+                                        class="inline-flex items-center px-1.5 py-px rounded-full text-[9px] font-bold uppercase tracking-wide"
+                                        :class="row.status === 'paid' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : row.status === 'pending' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : row.status === 'partial' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'"
+                                    >{{ getStatusLabel(row.status) }}</span>
+                                    <span class="text-[10px] text-muted-foreground truncate">{{ row.type?.name || '-' }}</span>
+                                    <span class="text-border text-[10px] shrink-0">·</span>
+                                    <span class="text-[10px] text-muted-foreground shrink-0">{{ formatDate(row.payment_date) }}</span>
                                 </div>
                             </div>
-                            <!-- Hamburger -->
-                            <Button variant="ghost" size="icon" class="h-7 w-7 shrink-0" @click.stop="openDetailSheet(row)">
-                                <MoreVertical class="w-4 h-4 text-muted-foreground" />
-                            </Button>
+                            <ChevronRight class="w-4 h-4 text-muted-foreground/40 shrink-0" />
                         </div>
-                        <div v-if="!contributions.data || contributions.data.length === 0" class="py-8 text-center">
-                            <Search class="h-6 w-6 text-muted-foreground/50 mx-auto mb-1.5" />
-                            <p class="text-xs text-muted-foreground">Data tidak ditemukan</p>
+                        <div v-if="!contributions.data || contributions.data.length === 0" class="py-10 text-center">
+                            <div class="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-2">
+                                <Receipt class="h-5 w-5 text-muted-foreground/50" />
+                            </div>
+                            <p class="text-xs text-muted-foreground">Belum ada data pembayaran</p>
                         </div>
                         <!-- Mobile Pagination -->
-                        <div v-if="contributions.total > contributions.per_page" class="px-3 py-2 flex items-center justify-between bg-muted/30">
+                        <div v-if="contributions.total > contributions.per_page" class="px-3 py-2 flex items-center justify-between bg-muted/20">
                             <p class="text-[10px] text-muted-foreground">{{ contributions.from }}-{{ contributions.to }} dari {{ contributions.total }}</p>
                             <div class="flex gap-1">
                                 <Button v-if="contributions.prev_page_url" variant="outline" size="sm" class="h-6 text-[10px] px-2" as-child>
-                                    <Link :href="contributions.prev_page_url">Sebelumnya</Link>
+                                    <Link :href="contributions.prev_page_url">← Prev</Link>
                                 </Button>
                                 <Button v-if="contributions.next_page_url" variant="outline" size="sm" class="h-6 text-[10px] px-2" as-child>
-                                    <Link :href="contributions.next_page_url">Selanjutnya</Link>
+                                    <Link :href="contributions.next_page_url">Next →</Link>
                                 </Button>
                             </div>
                         </div>
@@ -479,49 +481,45 @@ const closeDetailSheet = () => { showDetailSheet.value = false; detailRow.value 
                             :columns="columns"
                             :filters="contributionsFilters"
                             :searchRoute="searchRoute"
-                            :striped="true"
+                            :striped="false"
                             :dense="true"
                             :searchable="false"
                             class="!border-0 shadow-none"
                         >
                             <template #cell-member="{ row }">
                                 <div class="flex items-center gap-2.5">
-                                    <div class="h-8 w-8 shrink-0 rounded-full bg-primary/10 border flex items-center justify-center text-primary font-bold text-xs">
+                                    <div
+                                        class="h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-white font-bold text-xs"
+                                        :class="row.status === 'paid' ? 'bg-green-500' : row.status === 'pending' ? 'bg-amber-500' : 'bg-red-500'"
+                                    >
                                         {{ (row.member?.full_name || "?").charAt(0).toUpperCase() }}
                                     </div>
                                     <div class="min-w-0">
-                                        <p class="text-sm font-medium text-foreground leading-tight truncate">
-                                            {{ row.member?.full_name || "-" }}
-                                        </p>
-                                        <p class="text-[11px] text-muted-foreground font-mono">
-                                            {{ row.member?.member_code || "NON-MEMBER" }}
-                                        </p>
+                                        <p class="text-sm font-medium text-foreground leading-tight truncate">{{ row.member?.full_name || "-" }}</p>
+                                        <p class="text-[11px] text-muted-foreground font-mono">{{ row.member?.member_code || "NON-MEMBER" }}</p>
                                     </div>
                                 </div>
                             </template>
 
                             <template #cell-type="{ row }">
                                 <div>
-                                    <p class="text-sm font-medium text-foreground leading-tight">
-                                        {{ row.type?.name || "-" }}
-                                    </p>
-                                    <p class="text-[11px] text-muted-foreground">
-                                        {{ getPeriodLabel(row.type?.period) }}
-                                    </p>
+                                    <p class="text-sm font-medium text-foreground leading-tight">{{ row.type?.name || "-" }}</p>
+                                    <p class="text-[11px] text-muted-foreground">{{ getPeriodLabel(row.type?.period) }}</p>
                                 </div>
                             </template>
 
                             <template #cell-amount="{ row }">
-                                <span class="text-sm font-semibold text-foreground tabular-nums">
+                                <span
+                                    class="text-sm font-bold tabular-nums"
+                                    :class="row.status === 'paid' ? 'text-green-600 dark:text-green-400' : 'text-foreground'"
+                                >
                                     {{ formatCurrency(row.amount) }}
                                 </span>
                             </template>
 
                             <template #cell-payment_date="{ row }">
                                 <div>
-                                    <p class="text-sm text-foreground leading-tight">
-                                        {{ formatDate(row.payment_date) }}
-                                    </p>
+                                    <p class="text-sm text-foreground leading-tight">{{ formatDate(row.payment_date) }}</p>
                                     <p class="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
                                         <CreditCard v-if="row.payment_method === 'transfer'" class="w-3 h-3" />
                                         <Banknote v-else class="w-3 h-3" />
@@ -531,15 +529,15 @@ const closeDetailSheet = () => { showDetailSheet.value = false; detailRow.value 
                             </template>
 
                             <template #cell-payment_period="{ row }">
-                                <Badge variant="outline" class="text-[11px] font-mono">
+                                <span class="text-[11px] font-mono bg-muted/60 px-2 py-0.5 rounded text-muted-foreground">
                                     {{ row.payment_period || "-" }}
-                                </Badge>
+                                </span>
                             </template>
 
                             <template #cell-status="{ row }">
                                 <span
                                     :class="[
-                                        'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold',
+                                        'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold',
                                         getStatusBadge(row.status),
                                     ]"
                                 >
@@ -554,19 +552,13 @@ const closeDetailSheet = () => { showDetailSheet.value = false; detailRow.value 
                                         v-if="row.status === 'pending' && (userRole === 'admin' || userPosition === 'bendahara')"
                                         variant="ghost"
                                         size="icon"
-                                        class="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950/30"
+                                        class="h-7 w-7 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950/30"
                                         title="Verifikasi"
                                         @click="openVerifyModal(row)"
                                     >
                                         <CheckCircle class="w-4 h-4" />
                                     </Button>
-                                    <Button
-                                        as-child
-                                        variant="ghost"
-                                        size="icon"
-                                        class="h-8 w-8"
-                                        title="Detail"
-                                    >
+                                    <Button as-child variant="ghost" size="icon" class="h-7 w-7" title="Detail">
                                         <Link :href="route('contributions.show', row)">
                                             <Eye class="w-4 h-4" />
                                         </Link>
