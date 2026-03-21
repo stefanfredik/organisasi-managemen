@@ -10,7 +10,7 @@ class WalletController extends Controller
 {
     public function __construct()
     {
-        $this->authorizeResource(Wallet::class, 'wallet');
+        $this->authorizeResource(Wallet::class , 'wallet');
     }
     public function index()
     {
@@ -20,21 +20,21 @@ class WalletController extends Controller
 
         return Inertia::render('Wallets/Index', [
             'wallets' => Wallet::withCount(['finances', 'contributions'])
-                ->withSum([
-                    'finances as total_income' => function ($query) {
-                        $query->where('type', 'in');
-                    }
-                ], 'amount')
-                ->withSum([
-                    'finances as total_expense' => function ($query) {
-                        $query->where('type', 'out');
-                    }
-                ], 'amount')
-                ->get(),
+            ->withSum([
+                'finances as total_income' => function ($query) {
+            $query->where('type', 'in');
+        }
+            ], 'amount')
+            ->withSum([
+                'finances as total_expense' => function ($query) {
+            $query->where('type', 'out');
+        }
+            ], 'amount')
+            ->get(),
             'stats' => [
-                'total_balance' => (float) $total_balance,
-                'total_income' => (float) $total_income,
-                'total_expense' => (float) $total_expense,
+                'total_balance' => (float)$total_balance,
+                'total_income' => (float)$total_income,
+                'total_expense' => (float)$total_expense,
             ],
         ]);
     }
@@ -217,7 +217,7 @@ class WalletController extends Controller
     public function destroy(Wallet $wallet)
     {
         if ($wallet->balance > 0) {
-            return redirect()->back()->with('error', 'Gagal hapus: Dompet masih memiliki saldo (Rp ' . number_format((float) $wallet->balance, 0, ',', '.') . '). Silakan kosongkan terlebih dahulu.');
+            return redirect()->back()->with('error', 'Gagal hapus: Dompet masih memiliki saldo (Rp ' . number_format((float)$wallet->balance, 0, ',', '.') . '). Silakan kosongkan terlebih dahulu.');
         }
 
         if ($wallet->finances()->exists() || $wallet->contributions()->exists()) {
