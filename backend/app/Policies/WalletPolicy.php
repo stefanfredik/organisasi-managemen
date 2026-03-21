@@ -36,6 +36,7 @@ class WalletPolicy extends BasePolicy
      */
     public function update(?User $user, Wallet $wallet): bool
     {
+        if ($user && $user->role === 'admin') return true;
         return $this->hasAnyRole($user, ['admin', 'bendahara']);
     }
 
