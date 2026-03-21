@@ -28,7 +28,15 @@ const form = useForm({
 const currentCoverImage = props.album.cover_image ? `/storage/${props.album.cover_image}` : null;
 
 const submit = () => {
-    form.post(route("albums.update", props.album), {
+    const data = { ...form };
+    if (data.event_id === 'none') {
+        data.event_id = null;
+    }
+
+    form.transform((data) => ({
+        ...data,
+        event_id: data.event_id === 'none' ? null : data.event_id
+    })).post(route("albums.update", props.album), {
         preserveScroll: true,
     });
 };
@@ -124,7 +132,7 @@ const submit = () => {
                                     <SelectValue placeholder="Pilih event" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="">Tidak ada</SelectItem>
+                                    <SelectItem value="none">Tidak ada</SelectItem>
                                     <SelectItem v-for="event in events" :key="event.id" :value="event.id.toString()">
                                         {{ event.name }}
                                     </SelectItem>

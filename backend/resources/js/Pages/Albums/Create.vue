@@ -20,7 +20,7 @@ const form = useForm({
     name: "",
     description: "",
     category: "other",
-    event_id: "",
+    event_id: "none",
     status: "public",
     cover_image: null,
 });
@@ -67,7 +67,10 @@ const validateAll = () => {
 const submit = () => {
     if (!validateAll()) return;
 
-    form.post(route("albums.store"), {
+    form.transform((data) => ({
+        ...data,
+        event_id: data.event_id === 'none' ? null : data.event_id
+    })).post(route("albums.store"), {
         preserveScroll: true,
     });
 };
@@ -171,7 +174,7 @@ const submit = () => {
                                         <SelectValue placeholder="Pilih event" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="">Tidak ada</SelectItem>
+                                        <SelectItem value="none">Tidak ada</SelectItem>
                                         <SelectItem v-for="event in events" :key="event.id" :value="event.id.toString()">
                                             {{ event.name }}
                                         </SelectItem>
